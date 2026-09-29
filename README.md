@@ -1,30 +1,32 @@
-# Password Generator für macOS
+# Password Generator for macOS
 
-<img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator Icon">
+English | [Deutsch](README.de.md)
 
-[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+<img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator icon">
 
-Version 2.1.0, Build 4, wurde über Xcode von Apple notarisiert. Das veröffentlichte ZIP enthält die Developer-ID-signierte App mit angeheftetem Notarisierungsticket; Gatekeeper akzeptiert sie als `Notarized Developer ID`.
+[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.1.0“.
+Version 2.1.0, build 4, was notarized by Apple through Xcode. The published ZIP contains the Developer ID-signed app with a stapled notarization ticket; Gatekeeper accepts it as `Notarized Developer ID`.
 
-| Format | Länge | Alphabet | Angezeigte Entropie |
+A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.1.0”.
+
+| Format | Length | Alphabet | Displayed entropy |
 |---|---|---|---|
-| BIP39 | 12, 15, 18, 21 oder 24 Wörter | Offizielle englische Liste | 128, 160, 192, 224 oder 256 Bit |
-| EFF | 6 bis 60 Wörter | EFF Long Wordlist, 7.776 Wörter | Wörter × log₂(7.776) |
-| ASCII | 8 bis 256 Zeichen | 94 druckbare ASCII-Zeichen, `!` bis `~`, ohne Leerzeichen | Zeichen × log₂(94) |
-| PIN | 3 bis 256 Ziffern | `0` bis `9`, führende Nullen erlaubt | Ziffern × log₂(10) |
-| Hex | 1 bis 448 Hexzeichen | `0` bis `9`, `a` bis `f` oder `A` bis `F` | Zeichen × 4 Bit |
+| BIP39 | 12, 15, 18, 21, or 24 words | Official English wordlist | 128, 160, 192, 224, or 256 bits |
+| EFF | 6 to 60 words | EFF Long Wordlist, 7,776 words | Words × log₂(7,776) |
+| ASCII | 8 to 256 characters | 94 printable ASCII characters, `!` through `~`, without spaces | Characters × log₂(94) |
+| PIN | 3 to 256 digits | `0` through `9`, leading zeros allowed | Digits × log₂(10) |
+| Hex | 1 to 448 hexadecimal characters | `0` through `9`, `a` through `f` or `A` through `F` | Characters × 4 bits |
 
-Die Entropieanzeige beschreibt die Größe des gleichverteilt abgetasteten Ausgaberaums. Sie misst weder die Entropie der Mausbewegungen noch garantiert sie eine entsprechende Angriffssicherheit des Gesamtsystems. BIP39-Prüfsummen zählen nicht als zusätzliche Entropie. Wiederholte Wörter und Zeichen sind zulässig; zusätzliche Zusammensetzungsregeln würden den Ausgaberaum verändern.
+The entropy display describes the size of the uniformly sampled output space. It neither measures the entropy of mouse movements nor guarantees a corresponding level of resistance to attacks on the overall system. BIP39 checksum bits do not count as additional entropy. Repeated words and characters are allowed; additional composition rules would change the output space.
 
-## Exportformat
+## Export format
 
-Für EFF und BIP39 ist das Trennzeichen im Textfeld frei wählbar. Standard ist bei BIP39 ein Leerzeichen und bei EFF `-`. Ein leeres Feld verbindet die Wörter ohne Trennzeichen; Leerzeichen und mehrstellige Trenner sind ebenfalls möglich. Bei Hex wählst du kleine oder große Buchstaben. Die Optionen gelten für die Kopie in die Zwischenablage und können nach der Generierung geändert werden. Dabei bleiben die erzeugten Wörter beziehungsweise Hexwerte erhalten; es findet keine neue Zufallsziehung statt.
+For EFF and BIP39, the separator can be freely chosen in a text field. BIP39 defaults to a space, and EFF defaults to `-`. An empty field joins the words without a separator; spaces and separators containing multiple characters are also supported. Hex output can use lowercase or uppercase letters. These settings apply to clipboard output and can be changed after generation. The generated words or hexadecimal values remain the same; no new random selection takes place.
 
-BIP39-Wallets erwarten die Wörter üblicherweise mit Leerzeichen. Die interne BIP39-Prüfsumme wird immer über die ursprüngliche Wortfolge geprüft. Ohne Trennzeichen sind BIP39-Wortgrenzen nicht immer eindeutig rekonstruierbar; unterschiedliche gültige Wortfolgen können denselben zusammengefügten Text ergeben. Die angezeigte Entropie beschreibt deshalb die ursprüngliche Auswahl und ist kein Nachweis der Entropie beliebiger Exportdarstellungen. Groß-/Kleinschreibung von Hex und fest vorgegebene Trenner sind keine zusätzlichen Zufallsbits.
+BIP39 wallets usually expect words separated by spaces. The internal BIP39 checksum is always checked against the original word sequence. Without separators, BIP39 word boundaries cannot always be reconstructed unambiguously; different valid word sequences can produce the same concatenated text. The displayed entropy therefore describes the original selection and does not establish the entropy of arbitrary export representations. Hexadecimal letter case and fixed separators do not add random bits.
 
-## Start und Build
+## Running and building
 
 ```sh
 swift test -Xswiftc -warnings-as-errors
@@ -33,52 +35,52 @@ zsh Scripts/verify-release.sh
 open "build/Password Generator 2.1.0.app"
 ```
 
-Das Release ist für Apple Silicon (`arm64`) ab macOS 14 vorgesehen. Das signierte Bundle ist die verwendbare Anwendung. `swift run PasswordGeneratorApp` dient nur der Entwicklung; der nicht entsprechend signierte Prozess erfüllt die Laufzeitbedingungen zur Generierung nicht.
+The release targets Apple Silicon (`arm64`) running macOS 14 or later. Use the signed app bundle to run the application. `swift run PasswordGeneratorApp` is intended only for development; a process without the required signature does not satisfy the runtime conditions for generation.
 
-Das Paket-Skript erzeugt `build/Password Generator 2.1.0.app`, `build/Password.Generator-2.1.0.zip`, zwei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
+The packaging script creates `build/Password Generator 2.1.0.app`, `build/Password.Generator-2.1.0.zip`, two checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
 
-## Mauspool und Generierung
+## Mouse pool and generation
 
-1. Bewegungen im gesamten Appfenster einschließlich Bewegungen über Bedienelementen und Ziehbewegungen werden erfasst. Es gibt kein begrenztes Sammelfeld und keine globale Überwachung anderer Apps.
-2. Der Pool hält die letzten 4.096 vollständigen Mausereignisse. Die Generierung benötigt mindestens 4.096 Bewegungen. Weitere Bewegungen ersetzen den jeweils ältesten Datensatz; der Speicherbedarf bleibt begrenzt. Ein Datensatz enthält laufende Nummer, monotone Zeit, Ereigniszeit, Position, Delta, Fenstergröße, Modifikatortasten und gedrückte Maustasten.
-3. Ab dem Appstart läuft im Abstand von sechs Sekunden ein Fisher-Yates-Shuffle in der linearen Durstenfeld-Variante. Er permutiert die Datensätze mit Zufallsbytes aus `SecRandomCopyBytes`. Rejection Sampling vermeidet Modulo-Verzerrungen. Der Startdurchlauf auf dem noch leeren Pool ist ein Leerlauf. Während macOS die App suspendiert oder der Rechner schläft, kann kein Prozess einen Echtzeit-Takt garantieren.
-4. Bei der Generierung erfolgt erneut ein Shuffle. Erst danach werden die Datensätze in der gemischten Reihenfolge serialisiert und `Skein-1024-1024(pool)` sowie `SHA3-512(pool)` berechnet. Beim Sammeln und bei den periodischen Shuffles werden diese Poolhashes nicht berechnet. Die separaten Integritätsprüfungen der eingebetteten Wortlisten finden beim Laden statt.
-5. Die Digests werden in der Reihenfolge Skein, SHA3 zusammengefügt: 128 + 64 = 192 Byte beziehungsweise 1.536 Bit. Fisher-Yates permutiert anschließend alle 1.536 einzelnen Bits mit kryptografischen macOS-Zufallsbytes. Dieser zusätzliche Schritt mischt Bitpositionen, nicht lediglich die Reihenfolge der 192 Byte.
-6. XOR des gemischten 192-Byte-Werts mit 192 frisch angeforderten macOS-Zufallsbytes ergibt den Masterkey. Die Zufallsbytes für diesen XOR-Schritt werden getrennt von den Zufallsbytes für die Shuffles angefordert.
-7. Der Masterkey wird in dieser Reihenfolge in 128, 32 und 32 Byte aufgeteilt. Das erste Fragment initialisiert einen Skein-1024-XOF-Stream, die beiden übrigen Fragmente jeweils einen SHAKE256-Stream. Gleich lange Ausgaben dieser drei Streams werden byteweise XOR-verknüpft.
-8. Unmittelbar vor der Nutzung wird dieses Material nochmals mit gleich vielen frischen macOS-Zufallsbytes XOR-verknüpft. Bei Nachforderungen durch Rejection Sampling laufen die drei Streams weiter und erhalten jeweils einen neuen OS-Beitrag. Bereits gelesene Stream-Präfixe werden nicht erneut verwendet.
-9. BIP39 codiert die nötigen Entropiebytes mit der SHA256-Prüfsumme. EFF, ASCII, PIN und Hex verwenden unverzerrte Auswahl aus ihrem Alphabet.
+1. Mouse movements throughout the app window are captured, including movement over controls and dragging. There is no restricted collection area or global monitoring of other apps.
+2. The pool retains the latest 4,096 complete mouse events. Generation requires at least 4,096 movements. Each subsequent movement replaces the oldest record, keeping memory use bounded. Each record contains a sequence number, monotonic time, event timestamp, position, delta, window size, modifier keys, and pressed mouse buttons.
+3. Starting when the app launches, a Fisher-Yates shuffle using the linear-time Durstenfeld variant runs every six seconds. It permutes the records using random bytes from `SecRandomCopyBytes`. Rejection sampling avoids modulo bias. The initial pass over the empty pool is a no-op. No process can guarantee real-time scheduling while macOS suspends the app or the computer sleeps.
+4. Generation performs another shuffle. Only then are the records serialized in their shuffled order and `Skein-1024-1024(pool)` and `SHA3-512(pool)` computed. These pool hashes are not computed during collection or periodic shuffles. Separate integrity checks of the embedded wordlists run when the lists are loaded.
+5. The digests are concatenated in Skein, SHA3 order: 128 + 64 = 192 bytes, or 1,536 bits. Fisher-Yates then permutes all 1,536 individual bits using cryptographically secure random bytes from macOS. This additional step shuffles bit positions, rather than just the order of the 192 bytes.
+6. XORing the shuffled 192-byte value with 192 freshly requested macOS random bytes produces the master key. Random bytes for this XOR step are requested separately from the bytes used for the shuffles.
+7. The master key is split, in order, into 128, 32, and 32 bytes. The first fragment initializes a Skein-1024-XOF stream, and each remaining fragment initializes a SHAKE256 stream. Equal-length outputs from these three streams are combined using bytewise XOR.
+8. Immediately before use, this material is XORed with an equal number of fresh macOS random bytes. If rejection sampling requests more bytes, all three streams continue from their current positions and receive a fresh OS contribution. Previously consumed stream prefixes are not reused.
+9. BIP39 encodes the required entropy bytes together with the SHA256 checksum. EFF, ASCII, PIN, and Hex use unbiased selection from their respective alphabets.
 
-Die Hashlänge von insgesamt 1.536 Bit ist kein Nachweis für 1.536 Bit unabhängige Entropie. Eine Bitpermutation erhält die Anzahl der Einsen und Nullen und begründet allein keinen bestimmten Entropiezuwachs. Auch das XOR eines Skein-1024-XOF-Streams und zweier SHAKE256-Streams erlaubt keine Addition ihrer Sicherheitsstärken. Die Konstruktion wurde entsprechend der gewünschten Reihenfolge implementiert; sie ist keine standardisierte oder extern auditierte Zufallszahlenerzeugung. Die kryptografische Zufallsquelle des Betriebssystems bleibt die tragende Annahme.
+The combined hash length of 1,536 bits does not establish 1,536 bits of independent entropy. A bit permutation preserves the number of ones and zeros and does not, by itself, establish any particular entropy gain. XORing a Skein-1024-XOF stream with two SHAKE256 streams does not allow their security strengths to be added together either. This construction implements the requested sequence; it is not a standardized or externally audited random number generator. The operating system's cryptographic random source remains the underlying security assumption.
 
-## Schutz der Ausgabe
+## Output protection
 
-Die vorhandenen Laufzeitprüfungen bleiben erhalten: gültige laufende Code-Signatur, Hardened Runtime, minimale App Sandbox, deaktivierte POSIX-Core-Dumps und kein erkannter Debugger. Die Prüfung wird unmittelbar vor Generierung, Anzeige und Kopieren wiederholt.
+The existing runtime checks remain in place: a valid signature for the running code, Hardened Runtime, a minimal App Sandbox, disabled POSIX core dumps, and no detected debugger. These checks run again immediately before generation, display, and copying.
 
-Die Ausgabe erscheint zunächst verdeckt. Anzeigen erfordert eine Bestätigung und endet bestmöglich nach 60 Sekunden oder bei Kontextwechsel. Kopieren erfolgt nur auf ausdrücklichen Klick, mit `currentHostOnly`; die unveränderte Zwischenablage wird nach etwa 45 Sekunden bestmöglich geleert. Mauspool und temporäre Kryptopuffer werden beim Verwerfen bestmöglich überschrieben. Swift-Strings, Register- und Betriebssystemkopien können nicht garantiert vollständig gelöscht werden.
+Output is initially concealed. Revealing it requires confirmation; the app makes a best effort to hide it again after 60 seconds or on a context change. Copying requires an explicit click and uses `currentHostOnly`; the app makes a best effort to clear the clipboard after about 45 seconds if its contents remain unchanged. The mouse pool and temporary cryptographic buffers are overwritten on disposal on a best-effort basis. Complete erasure of Swift strings, registers, and operating system copies cannot be guaranteed.
 
-Die App speichert keine erzeugten Passwörter in Dateien oder Preferences. Bildschirmaufnahmen, eine externe Kamera oder ein kompromittiertes Betriebssystem kann eine lokale App nicht zuverlässig verhindern.
+The app does not save generated passwords to files or preferences. A local app cannot reliably prevent screenshots, recording with an external camera, or exposure on a compromised operating system.
 
-## Integrität und Tests
+## Integrity and tests
 
-Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Die exakte signierte App wird als ZIP zusätzlich mit beiden Verfahren gehasht. `verify-release.sh` prüft die Werte unabhängig mit Python, entpackt das ZIP und prüft Code-Signatur sowie Sandbox. Hashwerte allein beweisen keine Herkunft.
+Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The exact signed app is also packaged as a ZIP and hashed with both algorithms. `verify-release.sh` independently checks the values using Python, extracts the ZIP, and verifies the code signature and sandbox. Hash values alone do not prove provenance.
 
-Für Version 2.1.0 bestanden jeweils alle 71 Tests im Debug- und Release-Build ohne Fehler oder Compilerwarnungen. Dazu gehören drei unabhängig berechnete Referenzen der vollständigen Ableitung, 45 Passwortfälle sowie Prüfungen der Hash-/XOF-Funktionen, des Bit-Shuffles, der Streamfortsetzung, der Fehlerbehandlung und des App-Modells. Die konkreten Prüfungen und Release-Nachweise stehen im [Verifikationsabschnitt der technischen Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
+For version 2.1.0, all 71 tests passed in both Debug and Release builds with no errors or compiler warnings. These include three independently calculated references for the complete derivation, 45 password cases, and checks covering the hash/XOF functions, bit shuffle, stream continuation, error handling, and app model. Details of these checks and the release evidence are recorded in the [verification section of the technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 
-## Logo und Icon
+## Logo and icon
 
-`Assets/PasswordGeneratorIcon.png` ist die Vorlage für das macOS-Icon. `Assets/PasswordGeneratorLogo.png` enthält das freigestellte Markenzeichen für die Oberfläche. Die Erzeugung und die verwendeten Prompts sind in `Assets/README.md` dokumentiert. Das Paket-Skript erzeugt aus der Iconvorlage alle macOS-Icongrößen und `AppIcon.icns`.
+`Assets/PasswordGeneratorIcon.png` is the source for the macOS icon. `Assets/PasswordGeneratorLogo.png` contains the standalone brand symbol used in the interface. The generation process and prompts are documented in [Assets/README.md (German)](Assets/README.md). The packaging script generates all macOS icon sizes and `AppIcon.icns` from the icon source.
 
-## Quellen und Hinweise zu Fremdmaterial
+## Sources and third-party material
 
-[Third-party notices](THIRD_PARTY_NOTICES.md) nennen die Herkunft und Lizenzhinweise der eingebetteten Wortlisten und Testdaten.
+[Third-party notices](THIRD_PARTY_NOTICES.md) document the sources and licensing information for the embedded wordlists and test data.
 
-## Primärquellen
+## Primary sources
 
-- [BIP39-Spezifikation](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
+- [BIP39 specification](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki)
 - [EFF Long Wordlist](https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt)
 - [EFF: Dice-Generated Passphrases](https://www.eff.org/dice)
-- [Skein v1.3 und offizielle Testvektoren](https://www.schneier.com/academic/skein/)
-- [NIST FIPS 202: SHA3 und SHAKE](https://csrc.nist.gov/pubs/fips/202/final)
+- [Skein v1.3 and official test vectors](https://www.schneier.com/academic/skein/)
+- [NIST FIPS 202: SHA3 and SHAKE](https://csrc.nist.gov/pubs/fips/202/final)
 - [Durstenfeld: Algorithm 235, Random permutation](https://doi.org/10.1145/364520.364540)
 - [Apple: SecRandomCopyBytes](https://developer.apple.com/documentation/security/secrandomcopybytes(_:_:_:))
