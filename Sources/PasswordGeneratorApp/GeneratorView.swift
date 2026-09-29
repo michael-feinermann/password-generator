@@ -100,7 +100,7 @@ struct GeneratorView: View {
                 .frame(width: 58, height: 58)
                 .background(AppPalette.teal.opacity(0.12), in: RoundedRectangle(cornerRadius: 17))
             VStack(alignment: .leading, spacing: 4) {
-                Text("Password Generator")
+                Text(AppIdentity.displayName)
                     .font(.system(size: 29, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                 Text(tr("Seedphrasen, Wortpasswörter, ASCII, PINs und Hex. Lokal auf deinem Mac.", "Seed phrases, word passwords, ASCII, PINs, and hex. Locally on your Mac."))

@@ -1,6 +1,10 @@
 # Password Generator 2.1.0
 
+Aktualisiertes Paket: Build 4 mit Versionsnummer im Appnamen, Fenstertitel und Dateinamen, erneut mit Developer ID signiert.
+
 Die Ableitung des Passwort-Bytestroms verwendet jetzt Skein-1024-XOF und zwei SHAKE256-Streams. Die fünf Ausgabeformate, ihre Längenbereiche und die Exportoptionen bleiben erhalten.
+
+Der sichtbare Appname lautet „Password Generator 2.1.0“. Das App-Bundle heißt `Password Generator 2.1.0.app` und liegt nach dem lokalen Paket-Build unter `build/Password Generator 2.1.0.app`.
 
 1. Vor der Generierung wird der Pool aus 4.096 Mausereignissen erneut mit Fisher-Yates gemischt.
 2. Skein-1024-1024 und SHA3-512 liefern zusammen 192 Byte. Ihre 1.536 einzelnen Bits werden zusätzlich mit Fisher-Yates und frischen macOS-CSPRNG-Werten gemischt.

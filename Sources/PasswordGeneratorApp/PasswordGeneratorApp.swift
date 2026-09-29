@@ -1,13 +1,17 @@
 import AppKit
 import SwiftUI
 
+enum AppIdentity {
+    static let displayName = "Password Generator \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.1.0")"
+}
+
 @main
 struct PasswordGeneratorApplication: App {
     @NSApplicationDelegateAdaptor(AppLifecycleDelegate.self) private var appDelegate
     @StateObject private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup("Password Generator") {
+        WindowGroup(AppIdentity.displayName) {
             GeneratorView()
                 .environmentObject(model)
                 .background(
@@ -27,7 +31,7 @@ struct PasswordGeneratorApplication: App {
         .defaultSize(width: 1_060, height: 840)
         .commands {
             CommandGroup(replacing: .newItem) { }
-            CommandMenu("Password Generator") {
+            CommandMenu(AppIdentity.displayName) {
                 Button(
                     model.language.text(
                         "Passwort verdecken",

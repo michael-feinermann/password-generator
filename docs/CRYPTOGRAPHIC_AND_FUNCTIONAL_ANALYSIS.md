@@ -67,11 +67,13 @@ Die Primitivprüfungen umfassen 49 Skein-1024-1024-, 81 SHA3-512- und 538 SHAKE2
 
 Das endgültige `arm64`-Bundle für macOS 14 wurde mit Developer ID signiert. Die strenge Signaturprüfung und die Prüfung der minimalen Sandbox bestanden auch nach dem Entpacken des Release-ZIPs. SHA256 und SHA3-512 des gesamten ZIPs wurden unabhängig mit Swift und Python gegengeprüft. Der Release ist nicht notarisiert, da das vorhandene Apple-Profil nicht akzeptiert wird. Diese internen Prüfungen sind kein externes Sicherheitsaudit und kein formaler Beweis vollständiger Fehlerfreiheit.
 
+Build 4 ergänzt die Versionsnummer im sichtbaren Appnamen, Fenstertitel, Menü und Bundle-Dateinamen (`Password Generator 2.1.0.app`). Die kryptografische Ableitung bleibt gegenüber dem mit 71 Tests je Konfiguration geprüften Stand unverändert. Für Build 4 wurden der Release-Build, die Developer-ID-Signatur, die ZIP-Prüfsummen und der sichtbare Versionsname in der geöffneten App erneut geprüft. Die folgenden Hashwerte beziehen sich auf Build 4.
+
 SHA256 des App-ZIPs `Password.Generator-2.1.0.zip`:
-`e2cc4eb5db5f49d7eb1f9c47130c7bd2b6e28c3739538494e87c4726e5fa8253`
+`0f9f369a31e830d61a3ab558e568fd79820206049101bcff6761638b58fffca3`
 
 SHA3-512 desselben App-ZIPs:
-`82f780ad5d2bc567235ddd81de8ccb08d87c9a520369a8116ae77d19e9e4219b56dace8f6b5d6c9b2c63fa3ea6b7c4173432dd1eb2f67543dc6f190593269165`
+`5a9f78e1f1d98ba8900c17984ae3d936ca58523d9ee5ddb2b4817c2fb038a0c917d7be822c1838c624ffede8e4ef4d38a280744b2f65d2609ad2f0e14b43e6fb`
 
 ## Quellen
 

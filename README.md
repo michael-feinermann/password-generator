@@ -4,7 +4,7 @@
 
 [App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App.
+Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.1.0“.
 
 | Format | Länge | Alphabet | Angezeigte Entropie |
 |---|---|---|---|
@@ -28,12 +28,12 @@ BIP39-Wallets erwarten die Wörter üblicherweise mit Leerzeichen. Die interne B
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator.app"
+open "build/Password Generator 2.1.0.app"
 ```
 
 Das Release ist für Apple Silicon (`arm64`) ab macOS 14 vorgesehen. Das signierte Bundle ist die verwendbare Anwendung. `swift run PasswordGeneratorApp` dient nur der Entwicklung; der nicht entsprechend signierte Prozess erfüllt die Laufzeitbedingungen zur Generierung nicht.
 
-Das Paket-Skript erzeugt `build/Password Generator.app`, `build/Password.Generator-2.1.0.zip`, zwei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
+Das Paket-Skript erzeugt `build/Password Generator 2.1.0.app`, `build/Password.Generator-2.1.0.zip`, zwei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
 
 ## Mauspool und Generierung
 
@@ -61,7 +61,7 @@ Die App speichert keine erzeugten Passwörter in Dateien oder Preferences. Bilds
 
 Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Die exakte signierte App wird als ZIP zusätzlich mit beiden Verfahren gehasht. `verify-release.sh` prüft die Werte unabhängig mit Python, entpackt das ZIP und prüft Code-Signatur sowie Sandbox. Hashwerte allein beweisen keine Herkunft.
 
-Für Version 2.1.0 stehen die abschließenden Test- und Releaseprüfungen noch aus. Die geänderte Ableitung erfordert insbesondere Referenzprüfungen des zusätzlichen Bit-Shuffles, der Masterkey-Aufteilung in 128/32/32 Byte, des Skein-1024-XOF-Streams, der zwei fortgesetzten SHAKE256-Streams und beider OS-XOR-Schritte. Die vorhandenen Tests für Wortlisten, Ausgabeformate, Poolgrenzen, Fehlerbehandlung und App-Modell müssen für den neuen Stand erneut bestehen. Prüfergebnisse und Release-Hashes früherer Versionen belegen Version 2.1.0 nicht. Der aktuelle Prüfstand steht in [der technischen Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md).
+Für Version 2.1.0 bestanden jeweils alle 71 Tests im Debug- und Release-Build ohne Fehler oder Compilerwarnungen. Dazu gehören drei unabhängig berechnete Referenzen der vollständigen Ableitung, 45 Passwortfälle sowie Prüfungen der Hash-/XOF-Funktionen, des Bit-Shuffles, der Streamfortsetzung, der Fehlerbehandlung und des App-Modells. Die konkreten Prüfungen und Release-Nachweise stehen im [Verifikationsabschnitt der technischen Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 
 ## Logo und Icon
 

@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
-APP_PATH="$BUILD_DIR/Password Generator.app"
+APP_PATH="$BUILD_DIR/Password Generator 2.1.0.app"
 ICONSET_PATH="$BUILD_DIR/AppIcon.iconset"
 ICON_SOURCE="$BUILD_DIR/AppIcon-1024.png"
 ZIP_NAME="Password.Generator-2.1.0.zip"
@@ -20,7 +20,7 @@ if [[ "$SIGN_IDENTITY" != "-" && "$SIGN_IDENTITY" != "Developer ID Application:"
     exit 1
 fi
 
-if [[ "$APP_PATH" != "$PROJECT_DIR/build/Password Generator.app" ]]; then
+if [[ "$APP_PATH" != "$PROJECT_DIR/build/Password Generator 2.1.0.app" ]]; then
     echo "Unerwarteter App-Zielpfad; Abbruch."
     exit 1
 fi
@@ -176,6 +176,7 @@ fi
     printf 'coverage=complete-signed-app-archive\n'
     printf 'bundle-identifier=local.passwordgenerator.generator\n'
     printf 'bundle-version=2.1.0\n'
+    printf 'bundle-build=4\n'
     printf 'architecture=arm64\n'
     printf 'minimum-macos=14.0\n'
     printf 'signature-mode=%s\n' "$SIGNATURE_MODE"

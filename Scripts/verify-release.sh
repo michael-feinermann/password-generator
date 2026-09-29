@@ -76,7 +76,7 @@ if [[ "$VERIFY_TEMP_DIR" != /var/folders/*/T/* && "$VERIFY_TEMP_DIR" != /tmp/* ]
 fi
 trap 'rm -rf -- "$VERIFY_TEMP_DIR"' EXIT
 ditto -x -k "$ZIP_PATH" "$VERIFY_TEMP_DIR"
-EXTRACTED_APP="$VERIFY_TEMP_DIR/Password Generator.app"
+EXTRACTED_APP="$VERIFY_TEMP_DIR/Password Generator 2.1.0.app"
 codesign --verify --deep --strict --verbose=2 "$EXTRACTED_APP"
 
 ENTITLEMENTS="$(codesign -d --entitlements :- "$EXTRACTED_APP" 2>/dev/null)"
