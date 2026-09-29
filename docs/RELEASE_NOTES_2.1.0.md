@@ -1,6 +1,6 @@
 # Password Generator 2.1.0
 
-Aktualisiertes Paket: Build 4 mit Versionsnummer im Appnamen, Fenstertitel und Dateinamen, erneut mit Developer ID signiert.
+Aktualisiertes Paket: Build 4 mit Versionsnummer im Appnamen, Fenstertitel und Dateinamen, mit Developer ID signiert und über Xcode von Apple notarisiert.
 
 Die Ableitung des Passwort-Bytestroms verwendet jetzt Skein-1024-XOF und zwei SHAKE256-Streams. Die fünf Ausgabeformate, ihre Längenbereiche und die Exportoptionen bleiben erhalten.
 
@@ -16,7 +16,7 @@ Der ausklappbare Bereich der App erklärt die vollständige Ableitung auf Deutsc
 
 Skein-XOF verwendet die in Skein v1.3 Abschnitt 4.12 beschriebene Konfiguration für unbekannte Ausgabelänge (`N_o = 2^64 − 1`). Unabhängige Referenzberechnungen und die konkreten Prüfergebnisse sind in der technischen Analyse dokumentiert. Die Prüfungen sind kein externer Sicherheitsaudit oder formaler Fehlerfreiheitsnachweis.
 
-Für Apple Silicon ab macOS 14. Das ZIP enthält die mit Developer ID signierte App, ist jedoch nicht notarisiert, da das vorhandene Apple-Notarisierungsprofil nicht akzeptiert wird. macOS kann deshalb die Ausführung nach einem Download blockieren. Die Sandbox und Laufzeitschutzmaßnahmen bleiben aktiviert.
+Für Apple Silicon ab macOS 14. Xcode hat die App über „Direct Distribution“ eingereicht; Apple hat sie am 29. September 2026 zur Verteilung freigegeben. Das ZIP enthält den Export von „Export Notarized App“ mit angeheftetem Ticket. Code-Signatur und Ticket wurden auch nach dem Entpacken geprüft; Gatekeeper akzeptiert die App als `Notarized Developer ID`. Die Sandbox und Laufzeitschutzmaßnahmen bleiben aktiviert.
 
 Zum Download gehören das App-ZIP, passende SHA256- und SHA3-512-Prüfsummendateien sowie das Integritätsmanifest.
 

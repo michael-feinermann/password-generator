@@ -4,6 +4,8 @@
 
 [App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
+Version 2.1.0, Build 4, wurde über Xcode von Apple notarisiert. Das veröffentlichte ZIP enthält die Developer-ID-signierte App mit angeheftetem Notarisierungsticket; Gatekeeper akzeptiert sie als `Notarized Developer ID`.
+
 Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.1.0“.
 
 | Format | Länge | Alphabet | Angezeigte Entropie |

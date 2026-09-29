@@ -65,15 +65,19 @@ Die Primitivprüfungen umfassen 49 Skein-1024-1024-, 81 SHA3-512- und 538 SHAKE2
 
 45 unabhängig berechnete Passwortfälle prüfen die Kombination aus neuer Streamableitung und Zeichenauswahl für alle fünf Formate, sämtliche BIP39-Wortanzahlen und relevante Randlängen. Weitere Tests zählen die akzeptierten Auswahlwerte im vollständigen Ein- und Zwei-Byte-Eingaberaum, prüfen ungültige Längen, führende Nullen, freie Trennzeichen, Hex-Schreibweise, Poolgrenzen, Timer, Runtime-Prüfungen und Verdeckung. Die bereits vom Nutzer geprüfte Oberfläche wurde für diese Änderung nicht erneut per GUI-Automation getestet.
 
-Das endgültige `arm64`-Bundle für macOS 14 wurde mit Developer ID signiert. Die strenge Signaturprüfung und die Prüfung der minimalen Sandbox bestanden auch nach dem Entpacken des Release-ZIPs. SHA256 und SHA3-512 des gesamten ZIPs wurden unabhängig mit Swift und Python gegengeprüft. Der Release ist nicht notarisiert, da das vorhandene Apple-Profil nicht akzeptiert wird. Diese internen Prüfungen sind kein externes Sicherheitsaudit und kein formaler Beweis vollständiger Fehlerfreiheit.
+Das endgültige `arm64`-Bundle für macOS 14 wurde mit Developer ID signiert und über Xcode 27 „Direct Distribution“ bei Apple notarisiert. Die strenge Signaturprüfung und die Prüfung der minimalen Sandbox bestanden auch nach dem Entpacken des Release-ZIPs. SHA256 und SHA3-512 des gesamten ZIPs wurden unabhängig mit Swift und Python gegengeprüft. `xcrun stapler validate` bestätigt das angeheftete Ticket; `spctl --assess --type execute --verbose=2` meldet `accepted`, `source=Notarized Developer ID`. Diese internen Prüfungen und die Apple-Notarisierung sind kein externes kryptografisches Sicherheitsaudit und kein formaler Beweis vollständiger Fehlerfreiheit.
 
 Build 4 ergänzt die Versionsnummer im sichtbaren Appnamen, Fenstertitel, Menü und Bundle-Dateinamen (`Password Generator 2.1.0.app`). Die kryptografische Ableitung bleibt gegenüber dem mit 71 Tests je Konfiguration geprüften Stand unverändert. Für Build 4 wurden der Release-Build, die Developer-ID-Signatur, die ZIP-Prüfsummen und der sichtbare Versionsname in der geöffneten App erneut geprüft. Die folgenden Hashwerte beziehen sich auf Build 4.
 
+Notarisierung: Einreichung am 29. September 2026 um 09:54 Uhr MESZ; Freigabe um 09:57 Uhr. Xcode zeigt „Ready to distribute“. Submission-ID: `398D2CB0-5B59-4D75-AACA-3E92BCF0ED80`. Veröffentlicht wird der geprüfte Xcode-Export mit angeheftetem Ticket, ohne anschließenden Neubuild oder erneute Signierung. Der CodeDirectory-Hash dieses Exports lautet `29f8530e98bb506ced4c6eb034b05f41753217fe`.
+
+Der Programmcode wurde vor und nach dem Xcode-Export verglichen: Nach Signaturentfernung ausschließlich auf temporären Dateikopien sind die Mach-O-Dateien byteidentisch (1.323.744 Byte, SHA256 `4c1fc4b2d804535f615d2a62873ed8f49c2660e026c2ed91b631f6d1dc93ece5`). Info.plist, sämtliche Ressourcen und Sandbox-Entitlements sind ebenfalls unverändert. Unterschiede beschränken sich auf die Signatur und das angeheftete Ticket; die geprüften Originaldateien wurden dabei nicht verändert.
+
 SHA256 des App-ZIPs `Password.Generator-2.1.0.zip`:
-`0f9f369a31e830d61a3ab558e568fd79820206049101bcff6761638b58fffca3`
+`cf893f58927495d75cb2c3ad4d7d4c0720ac1c6ba39a1787a91ba43876c6fb04`
 
 SHA3-512 desselben App-ZIPs:
-`5a9f78e1f1d98ba8900c17984ae3d936ca58523d9ee5ddb2b4817c2fb038a0c917d7be822c1838c624ffede8e4ef4d38a280744b2f65d2609ad2f0e14b43e6fb`
+`b30394f6efcc649714f46f9fac608d7e1c0c0fd1c4b2f73e7480af32dc52d0010d40556f4d0f536e3cd03bfd567f246942abbba4adcc03b695de9df153d204c4`
 
 ## Quellen
 
