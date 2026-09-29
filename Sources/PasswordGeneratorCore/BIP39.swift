@@ -1,0 +1,190 @@
+import CryptoKit
+import Foundation
+
+public enum MnemonicWordCount: Int, CaseIterable, Identifiable, Sendable {
+    case twelve = 12
+    case fifteen = 15
+    case eighteen = 18
+    case twentyOne = 21
+    case twentyFour = 24
+
+    public var id: Int { rawValue }
+
+    public var entropyByteCount: Int {
+        switch self {
+        case .twelve: 16
+        case .fifteen: 20
+        case .eighteen: 24
+        case .twentyOne: 28
+        case .twentyFour: 32
+        }
+    }
+
+    public var entropyBitCount: Int { entropyByteCount * 8 }
+    public var checksumBitCount: Int { entropyBitCount / 32 }
+}
+
+public enum BIP39Error: LocalizedError, Equatable {
+    case resourceMissing
+    case wordListIntegrityFailure
+    case invalidWordList
+    case invalidEntropyLength(Int)
+    case invalidWordCount(Int)
+    case unknownWord(String)
+    case invalidChecksum
+
+    public var errorDescription: String? {
+        switch self {
+        case .resourceMissing:
+            "Die offizielle BIP-39-Wortliste wurde nicht gefunden."
+        case .wordListIntegrityFailure:
+            "Die BIP-39-Wortliste hat den doppelten Integritätstest nicht bestanden."
+        case .invalidWordList:
+            "Die BIP-39-Wortliste ist ungültig."
+        case let .invalidEntropyLength(length):
+            "Ungültige Entropielänge: \(length) Byte."
+        case let .invalidWordCount(count):
+            "Ungültige Wortanzahl: \(count)."
+        case let .unknownWord(word):
+            "Unbekanntes BIP-39-Wort: \(word)."
+        case .invalidChecksum:
+            "Die BIP-39-Prüfsumme ist ungültig."
+        }
+    }
+}
+
+public struct WordListIntegrity: Equatable, Sendable {
+    public let sha256: String
+    public let sha3_512: String
+
+    public static let expected = WordListIntegrity(
+        sha256: "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda",
+        sha3_512: "862e1642f46f0e81d81fa48ad5a806a12a5578130ddf13c4c302aec44a03c710bc6574e965f9084b1918b4ce0a95dac282499e2cdcd8cf50e48f3851e2f32d32"
+    )
+}
+
+public struct BIP39: Sendable {
+    public let words: [String]
+    public let wordListIntegrity: WordListIntegrity
+    private let indexByWord: [String: Int]
+
+    public init() throws {
+        let resourceURL = Bundle.main.url(forResource: "english", withExtension: "txt")
+            ?? Bundle.module.url(forResource: "english", withExtension: "txt")
+        guard let resourceURL else { throw BIP39Error.resourceMissing }
+        // Copy one immutable snapshot so hashing and parsing see identical bytes.
+        let data = try Data(contentsOf: resourceURL)
+        try self.init(verifiedWordListData: data)
+    }
+
+    public init(verifiedWordListData data: Data) throws {
+        let integrity = WordListIntegrity(
+            sha256: Self.hex(Data(SHA256.hash(data: data))),
+            sha3_512: Self.hex(SHA3.hash512(data))
+        )
+        guard integrity == .expected else {
+            throw BIP39Error.wordListIntegrityFailure
+        }
+        guard let text = String(data: data, encoding: .utf8) else {
+            throw BIP39Error.invalidWordList
+        }
+        let parsedWords = text.split(whereSeparator: \Character.isNewline).map(String.init)
+        guard parsedWords.count == 2_048,
+              Set(parsedWords).count == 2_048,
+              parsedWords == parsedWords.sorted(),
+              parsedWords.first == "abandon",
+              parsedWords.last == "zoo"
+        else {
+            throw BIP39Error.invalidWordList
+        }
+
+        words = parsedWords
+        wordListIntegrity = integrity
+        indexByWord = Dictionary(uniqueKeysWithValues: parsedWords.enumerated().map { ($1, $0) })
+    }
+
+    public func mnemonic(from entropy: [UInt8]) throws -> [String] {
+        guard let wordCount = Self.wordCount(forEntropyByteCount: entropy.count) else {
+            throw BIP39Error.invalidEntropyLength(entropy.count)
+        }
+
+        let checksum = [UInt8](SHA256.hash(data: Data(entropy)))
+        let totalBitCount = wordCount.entropyBitCount + wordCount.checksumBitCount
+        var result: [String] = []
+        result.reserveCapacity(wordCount.rawValue)
+
+        for wordOffset in 0..<wordCount.rawValue {
+            var index = 0
+            for bitOffset in 0..<11 {
+                let sourceBit = wordOffset * 11 + bitOffset
+                index <<= 1
+                if sourceBit < wordCount.entropyBitCount {
+                    index |= Self.bit(at: sourceBit, in: entropy)
+                } else {
+                    index |= Self.bit(
+                        at: sourceBit - wordCount.entropyBitCount,
+                        in: checksum
+                    )
+                }
+            }
+            result.append(words[index])
+        }
+
+        precondition(result.count * 11 == totalBitCount)
+        return result
+    }
+
+    public func validate(_ mnemonicWords: [String]) -> Bool {
+        do {
+            var recoveredEntropy = try entropy(from: mnemonicWords)
+            defer {
+                _ = recoveredEntropy.withUnsafeMutableBytes {
+                    $0.initializeMemory(as: UInt8.self, repeating: 0)
+                }
+            }
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    public func entropy(from mnemonicWords: [String]) throws -> [UInt8] {
+        guard let wordCount = MnemonicWordCount(rawValue: mnemonicWords.count) else {
+            throw BIP39Error.invalidWordCount(mnemonicWords.count)
+        }
+
+        var allBits: [UInt8] = []
+        allBits.reserveCapacity(mnemonicWords.count * 11)
+        for word in mnemonicWords {
+            guard let index = indexByWord[word] else { throw BIP39Error.unknownWord(word) }
+            for shift in stride(from: 10, through: 0, by: -1) {
+                allBits.append(UInt8((index >> shift) & 1))
+            }
+        }
+
+        var entropy = [UInt8](repeating: 0, count: wordCount.entropyByteCount)
+        for bitIndex in 0..<wordCount.entropyBitCount where allBits[bitIndex] == 1 {
+            entropy[bitIndex / 8] |= UInt8(1 << (7 - (bitIndex % 8)))
+        }
+
+        let digest = [UInt8](SHA256.hash(data: Data(entropy)))
+        for checksumIndex in 0..<wordCount.checksumBitCount {
+            let supplied = allBits[wordCount.entropyBitCount + checksumIndex]
+            let expected = UInt8(Self.bit(at: checksumIndex, in: digest))
+            guard supplied == expected else { throw BIP39Error.invalidChecksum }
+        }
+        return entropy
+    }
+
+    private static func bit(at bitIndex: Int, in bytes: [UInt8]) -> Int {
+        Int((bytes[bitIndex / 8] >> (7 - (bitIndex % 8))) & 1)
+    }
+
+    private static func wordCount(forEntropyByteCount count: Int) -> MnemonicWordCount? {
+        MnemonicWordCount.allCases.first { $0.entropyByteCount == count }
+    }
+
+    private static func hex(_ data: Data) -> String {
+        data.map { String(format: "%02x", $0) }.joined()
+    }
+}
