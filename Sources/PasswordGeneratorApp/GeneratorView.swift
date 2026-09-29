@@ -437,12 +437,10 @@ struct GeneratorView: View {
             }
             .buttonStyle(.plain)
             if showIntegrityDetails {
-                Text(tr(
-                    "Vor jeder Generierung: Fisher-Yates mit macOS-Zufallsbytes, Skein-1024-1024 und SHA3-512 über den Mauspool, XOR mit 192 macOS-Zufallsbytes, sechs SHAKE256-Ströme aus je 256 Bit. Die Ströme werden per XOR kombiniert und vor Verwendung erneut mit macOS-Zufallsbytes verknüpft.",
-                    "Before each generation: Fisher-Yates using macOS random bytes, Skein-1024-1024 and SHA3-512 over the mouse pool, XOR with 192 macOS random bytes, then six SHAKE256 streams seeded with 256 bits each. The streams are combined using XOR and mixed again with macOS random bytes before use."
-                ))
+                Text(LocalizedMessage.randomGenerationExplanation.value(in: model.language))
                     .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(AppPalette.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let integrity = model.wordListIntegrity {
                     HashRow(name: "BIP39 SHA-256", value: integrity.sha256)
                     HashRow(name: "BIP39 SHA3-512", value: integrity.sha3_512)

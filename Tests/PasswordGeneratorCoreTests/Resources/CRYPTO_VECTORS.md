@@ -43,6 +43,33 @@ Bekannte Testvektoren prüfen Implementierungsfehler. Sie sind weder eine CAVP-Z
 
 ## Vollständige Ableitungskette
 
-`pipeline_expected.json` wurde unabhängig mit der offiziellen C-Referenz für Skein v1.3 und Python `hashlib` für SHA3/SHAKE berechnet. Die Eingabe enthält 4096 Records zu je 89 Byte, Python-Format `<BQQdddddddQQ`. Für Index i: Version 1, Sequenz i, Uptime i+1, Zeit i/120, x=i%127, y=i%83, dx=1.2, dy=-0.8, Breite 800, Höhe 600, Modifier 0, Buttons 0. Nullbytes als Shufflequelle ergeben die Reihenfolge 1 bis 4095, danach 0. Poolgröße 364544 Byte; SHA256 `ea963f6f8c9a61cce3fe2988f576f5081f8bb1f4624dd85cd594e45257a98929`.
+`pipeline_expected.json`, Version 2, wurde unabhängig mit der offiziellen C-Referenz für Skein v1.3 und Python `hashlib` für SHA3/SHAKE berechnet. Der reproduzierbare Generator `generate_pipeline_vectors.py` führt keinen Swift-Produktionscode aus. Er kompiliert `skein.c` und `skein_block.c` aus `NIST/CD/Reference_Implementation` mit einem kleinen Ein-/Ausgabe-Harness:
 
-Der Masterkey entsteht aus Skein-1024-1024 || SHA3-512, XOR mit 192 Bytes 0xA5. Seine sechs 32-Byte-Fragmente initialisieren SHAKE256. 160 Bytes jeder SHAKE-Ausgabe werden per XOR kombiniert und mit 160 Bytes 0x5A verknüpft. Der Swift-Test liest 137 und anschließend 23 Bytes und prüft so auch Streamfortsetzung und erneute OS-Mischung.
+```sh
+python3 Tests/PasswordGeneratorCoreTests/Resources/generate_pipeline_vectors.py /pfad/zu/NIST/CD/Reference_Implementation
+```
+
+Die Einträge enthalten Datensätze zu je 89 Byte, Python-Format `<BQQdddddddQQ`. Für Index i: Version 1, Sequenz i, Uptime i+1, Zeit i/120, x=i%127, y=i%83, dx=1.2, dy=-0.8, Breite 800, Höhe 600, Modifier 0, Buttons 0. Im Pool bleiben genau die letzten 4096 Datensätze. Seine Größe beträgt 364544 Byte.
+
+Die Ableitung besteht aus:
+
+1. Fisher-Yates über die Reihenfolge der Datensätze unmittelbar vor der Generierung.
+2. `D = Skein-1024-1024(pool) || SHA3-512(pool)`.
+3. Fisher-Yates über alle 1536 Einzelbits von D. Bitindex 0 bezeichnet das niederwertigste Bit von Byte 0; die Schleife läuft von 1535 bis 1.
+4. XOR mit einer 192 Byte langen OS-Testmaske zum Masterkey.
+5. Skein-1024-XOF über die ersten 128 Masterbytes, SHAKE256 über die nächsten 32 und SHAKE256 über die letzten 32 Bytes.
+6. XOR der drei fortlaufenden Ausgaben und einer weiteren OS-Testmaske.
+
+Die Skein-XOF-Konfiguration verwendet `UINT64_MAX` als Ausgabelänge in Bit gemäß Skein v1.3, Abschnitt 4.12. Der Harness ruft `Skein1024_Init(UINT64_MAX)`, `Update` und `Final_Pad` auf. Erst nach dem vollständigen Absorbieren der Konfiguration und Nachricht setzt er das Kontextfeld `hashBitLen` auf die gewünschte Testausgabelänge, um die unveränderte offizielle Funktion `Skein1024_Output` zu begrenzen. Das verändert den bereits gebildeten Chaining-State nicht. Die zusätzliche Primitive-Provenienz steht in `SKEIN_XOF_VECTORS.md`.
+
+Jeder Fisher-Yates-Lauf hat einen eigenen 4096-Byte-Puffer. Kandidaten sind Little-Endian-UInt32; der unvollständige letzte Modulo-Bucket wird verworfen. Nicht verbrauchte Pufferbytes werden nach dem jeweiligen Shuffle nicht weiterverwendet. Die JSON-Datei hält die genaue Folge der OS-Anforderungsgrößen vor dem ersten Output-Read fest.
+
+Es gibt drei Szenarien:
+
+* `zero_shuffle`: 4096 Datensätze, keine vorherigen Shuffles, Nullbytes für beide Shuffle-Arten, Mastermaske 0xA5 und Ausgabemaske 0x5A. Die Datensatzreihenfolge ist 1 bis 4095, danach 0. Der Pool-SHA256 bleibt `ea963f6f8c9a61cce3fe2988f576f5081f8bb1f4624dd85cd594e45257a98929`. Der Bitshuffle entspricht einer Rotation der gesamten LSB-indizierten Bitfolge um eine Position.
+* `patterned_shuffle`: 4096 Datensätze, variierte Shuffle-Kandidaten einschließlich absichtlich verworfener `0xffffffff`-Werte. Die ersten beiden UInt32 jedes Puffers sind `0xffffffff`, der dritte ist 0. Für die restlichen gilt mit Pufferindex b und Wortindex i: `((b * 1024 + i) * 0x9e3779b9 + 0x7f4a7c15) mod 2^32`. Masterbyte i ist `(37*i + 0xA5) mod 256`, Ausgabemaskenbyte i ist `(53*i + 0x5A) mod 256`.
+* `wrapped_pool_with_intermediate_shuffles`: dieselbe variierte Testquelle, 8193 aufgenommene Datensätze sowie zusätzliche Pool-Shuffles nach 2048, 4096 und 6144 Aufnahmen. Damit wird insbesondere geprüft, dass die begrenzte Speicherung nach Shuffles weiterhin die ältesten Datensätze überschreibt.
+
+Die deterministischen Quellen sind ausschließlich Testdaten, keine Ersatz-Zufallsquelle für die Anwendung. Jede Fixture enthält den Digest vor und nach dem Bitshuffle, den Masterkey, 1024 Ausgabebytes sowie 15 unabhängig berechnete Generatorergebnisse. Diese decken alle fünf BIP39-Wortanzahlen, minimale und maximale EFF-, ASCII- und PIN-Längen sowie Hex mit 1, 3, 447 und 448 Zeichen ab.
+
+Die Swift-Tests vergleichen die vollständige Ableitung und die Zwischenwerte. Unterschiedliche Aufteilungen der Reads bei 127/128/129 und 135/136/137 Byte müssen bei identischem fortlaufendem OS-Maskenstrom dieselben Bytes liefern. Zusätzlich prüfen sie Identitäts-Swaps, Swaps innerhalb eines Bytes und über Bytegrenzen, die Erhaltung der Anzahl gesetzter Bits, Rejection Sampling und den Abbruch bei Fehlern in beiden Bitshuffle-Puffern sowie nach bereits erfolgreich gelesenen Ausgabebytes.

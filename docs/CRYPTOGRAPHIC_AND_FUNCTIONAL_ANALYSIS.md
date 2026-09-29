@@ -1,6 +1,6 @@
-# Technische Analyse von Password Generator 2.0.0
+# Technische Analyse von Password Generator 2.1.0
 
-Stand: 29. September 2026. Diese Datei beschreibt die aktuelle Implementierung. Frühere Ergebnisse der Seed-Phrase-App 1.0.0 belegen den neuen Build nicht.
+Stand: 29. September 2026. Diese Datei beschreibt die implementierte und getestete Ableitung für Version 2.1.0. Die unten aufgeführten Prüfergebnisse und Release-Hashes beziehen sich auf diesen Stand.
 
 ## Datenfluss
 
@@ -10,25 +10,34 @@ Ein Ringpuffer ersetzt die ältesten Datensätze. Eine getrennte Indexpermutatio
 
 Bei jedem Shuffle läuft der Index von `n - 1` bis `1`. Der Tauschindex liegt gleichverteilt in `0...index`, einschließlich der aktuellen Position. 32-Bit-Werte werden aus gepufferten macOS-Zufallsbytes gelesen. Werte außerhalb des größten durch die jeweilige Bereichsgröße teilbaren Präfixes von `0...2³²-1` werden verworfen. Damit ist die Auswahl unverzerrt. Wiederholt unbrauchbare Bytes führen zum Fehler, statt die App endlos zu blockieren.
 
-Die Hashberechnung des Pools findet ausschließlich beim Generieren statt:
+Die Hashberechnung und die folgende Ableitung finden ausschließlich beim Generieren statt:
 
 ```text
-shuffle(records)
+shuffle(records)                               // Fisher-Yates mit macOS-CSPRNG
 P = serialize(records in shuffled order)
-D = Skein-1024-1024(P) || SHA3-512(P)              // 192 Byte
-M = D XOR fresh_macOS_random(192)
-F[i] = M[32*i ..< 32*(i+1)]                      // i = 0...5
-X = SHAKE256(F[0]) XOR ... XOR SHAKE256(F[5])
-output_bytes = X XOR fresh_macOS_random(length(X))
+D = Skein-1024-1024(P) || SHA3-512(P)              // 128 + 64 = 192 Byte
+B = fisher_yates_shuffle_all_bits(D)            // alle 1536 Bitpositionen
+M = B XOR fresh_macOS_random(192)               // 192-Byte-Masterkey
+S0 = Skein1024XOF(M[0..<128])                    // erstes Fragment: 128 Byte
+S1 = SHAKE256(M[128..<160])                      // zweites Fragment: 32 Byte
+S2 = SHAKE256(M[160..<192])                      // drittes Fragment: 32 Byte
+X = read(S0, n) XOR read(S1, n) XOR read(S2, n)
+output_bytes = X XOR fresh_macOS_random(n)
 ```
 
-Die sechs SHAKE-Zustände werden pro Generierung genau einmal initialisiert und fortlaufend gelesen. Auch bei verworfenen Auswahlwerten wird kein bereits verwendetes Stream-Präfix erneut ausgegeben. Jeder Nachladevorgang fordert einen frischen gleich langen OS-Beitrag an. Hashes der Ressourcen zur Integritätskontrolle sind hiervon getrennt und werden beim Laden geprüft.
+Der zweite Fisher-Yates-Durchlauf permutiert sämtliche einzelnen Bits des zusammengesetzten Hashwerts. Er ist vom Shuffle der Mausdatensätze getrennt und findet nach beiden Poolhashes, aber vor dem Masterkey-XOR statt. Seine Tauschindizes stammen ebenfalls aus kryptografischen macOS-Zufallsbytes. Es werden weder nur ganze Bytes vertauscht noch die Hashwerte jeweils getrennt gemischt. Nach der Bitpermutation umfasst der Wert weiterhin 192 Byte. Für das anschließende XOR werden weitere 192 frische OS-Bytes angefordert.
+
+Die Skein-1024-XOF-Konvention folgt Skein v1.3, Abschnitt 4.12: Das Ausgabelängenfeld `N_o` der Konfiguration ist `2^64 - 1`, also acht Byte `FF`. Das erste 128-Byte-Masterkey-Fragment wird als Nachricht ohne separaten Skein-Schlüsselparameter absorbiert. Die Ausgabe entsteht gemäß Abschnitt 3.5.3 über fortlaufende UBI-Ausgabeblöcke vom Typ 63. Jeder Block verwendet einen fortlaufenden, als Little-Endian-64-Bit-Wert codierten Zähler. Diese XOF-Konfiguration ist vom zuvor verwendeten Poolhash Skein-1024-1024 mit fester Ausgabelänge getrennt.
+
+Die drei XOF-Zustände werden pro Generierung genau einmal mit ihren jeweiligen Masterkey-Fragmenten initialisiert und fortlaufend gelesen. Die Skein-1024-XOF-Ausgabe verwendet das erste 128-Byte-Fragment; die beiden SHAKE256-Ausgaben verwenden die folgenden 32-Byte-Fragmente. Die gleich langen Ausgaben werden byteweise XOR-verknüpft. Auch bei verworfenen Auswahlwerten wird kein bereits verwendetes Stream-Präfix erneut ausgegeben. Jeder Nachladevorgang fordert zusätzlich einen frischen, gleich langen OS-Beitrag für das letzte XOR an.
+
+Hashes der Ressourcen zur Integritätskontrolle sind von dieser Ableitung getrennt und werden beim Laden geprüft. Der Sechs-Sekunden-Task mischt ausschließlich den Mauspool. Er berechnet keine Poolhashes, permutiert keine Digest-Bits und erzeugt keinen Masterkey.
 
 ## Aussage der Entropieanzeige
 
 Für EFF, ASCII, PIN und Hex berechnet die App `H = Länge × log₂(Alphabetgröße)` mit 7.776, 94, 10 beziehungsweise 16 Auswahlmöglichkeiten. Hex hat somit nominell vier Bit pro Zeichen, bei 448 Zeichen maximal 1.792 Bit im Auswahlraum. BIP39 verwendet `ENT`, ohne die abgeleiteten Prüfsummenbits mitzuzählen. Die Anzeige ist die nominelle Entropie unter der Annahme gleichverteilter, unabhängiger Auswahl.
 
-Es werden keine Entropiebits für einzelne Mausbewegungen gutgeschrieben. 4.096 Ereignisse sind eine Bedienanforderung, kein kryptografischer Entropienachweis. Das Aneinanderhängen zweier Hashwerte über dieselben Daten vermehrt die enthaltene Entropie nicht automatisch. Sechs SHAKE256-Streams ergeben durch XOR keine bewiesene 1.536-Bit-Sicherheitsstärke. Das OS-XOR stützt die Ausgabe auf frische kryptografische Systemzufallsbytes; die Eigenschaft hängt von deren Unvorhersagbarkeit auch unter Kenntnis des anderen Operanden ab.
+Es werden keine Entropiebits für einzelne Mausbewegungen gutgeschrieben. 4.096 Ereignisse sind eine Bedienanforderung, kein kryptografischer Entropienachweis. Das Aneinanderhängen zweier Hashwerte über dieselben Daten vermehrt die enthaltene Entropie nicht automatisch. Die Bitpermutation erhält das Hamming-Gewicht, also die Anzahl der gesetzten Bits; aus ihr folgt kein bestimmter Entropiezuwachs. Auch die XOR-Verknüpfung eines Skein-1024-XOF-Streams mit zwei SHAKE256-Streams beweist keine 1.536-Bit-Sicherheitsstärke. Die Sicherheitsstärken der beteiligten Funktionen dürfen nicht einfach addiert werden. Das OS-XOR stützt die Ausgabe auf frische kryptografische Systemzufallsbytes; die Eigenschaft hängt von deren Unvorhersagbarkeit auch unter Kenntnis des anderen Operanden ab.
 
 ## Exportformatierung
 
@@ -46,19 +55,23 @@ Ein periodischer Task mischt ab Appstart etwa alle sechs Sekunden, auch nach abg
 
 ## Verifikation
 
-Am 29. September 2026 bestanden alle 57 XCTest-Tests: 39 Core-Tests und 18 App-Modelltests, ohne Fehler oder Compilerwarnungen (`swift test -Xswiftc -warnings-as-errors`). Dazu gehören die Längengrenzen aller fünf Formate, ungerade Hexlängen, Groß-/Kleinschreibung, frei wählbare und leere Trenner, getrennte BIP39-/EFF-Standards sowie Kopieren ohne neue Zufallsziehung. Die Zwischenablagetests verwenden eine eigene Testzwischenablage.
+Am 29. September 2026 bestanden jeweils alle 71 XCTest-Tests im Debug- und im optimierten Release-Build: 53 Core-Tests und 18 App-Modelltests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`.
 
-Die Kryptografietests prüfen 49 Skein-, 81 SHA3-512- und 538 SHAKE256-Referenzvektoren. SHAKE-Ausgaben über einer Rate-Länge werden zusätzlich in mehreren Teilstücken gelesen. Ein unabhängig mit der offiziellen Skein-C-Referenz und Python berechneter Erwartungswert prüft die vollständige Ableitung aus 4.096 Ereignissen einschließlich Masterkey-Aufteilung und beider OS-XOR-Schritte. Herkunft und Auswahl stehen in `Tests/PasswordGeneratorCoreTests/Resources/CRYPTO_VECTORS.md`.
+Die vollständige Ableitung stimmt in drei Szenarien mit unabhängig erzeugten Referenzwerten überein: Nullwerte für die Shuffle-Kandidaten, variierte Werte einschließlich gezielter Rejections und ein mehrfach überschreibender Ringpuffer mit zwischenzeitlichen Shuffles. Erwartungswerte stammen aus der offiziellen Skein-C-Referenz und Python `hashlib`, nicht aus dem Swift-Produktionscode. Der reproduzierbare Generator und Zwischenwerte stehen unter `Tests/PasswordGeneratorCoreTests/Resources/`; die Provenienz beschreibt `CRYPTO_VECTORS.md`.
 
-Der Release-Build wurde mit Compilerwarnungen als Fehler erstellt, mit Developer ID signiert und anschließend als vollständiges ZIP unabhängig mit Swift und Python gegen SHA256 und SHA3-512 geprüft. Das entpackte Bundle bestand die strenge Code-Signaturprüfung und besitzt ausschließlich die minimale App-Sandbox. Das Binary ist `arm64`, die Mindestversion macOS 14. Logo und mehrstufiges `AppIcon.icns` sind im versiegelten Bundle enthalten. Der Release ist nicht notarisiert; das vorhandene Schlüsselbundprofil wird von Apple nicht akzeptiert.
+Gezielte Tests prüfen die Permutation aller 1.536 Bits, Identitätstausche, Swaps innerhalb eines Bytes und über Bytegrenzen, die Erhaltung der gesetzten Bits, die unverzerrte Indexauswahl und den Fehlerabbruch in beiden Bitshuffle-Puffern. Getrennte Reads vor, auf und nach 128- und 136-Byte-Grenzen ergeben bei identischem fortlaufendem OS-Maskenstrom dieselbe Ausgabe. Ein OS-Fehler nach erfolgreicher Teilausgabe macht den gesamten Passwortstream unbrauchbar.
 
-Die gestartete signierte App zeigte aktiven Laufzeitschutz, die korrekten Standardtrenner, ein tatsächlich leeres Exportfeld sowie Hexlängen 1 und 448 mit den passenden Entropiewerten. Der periodische Mischzähler stieg während dieser Bedienprüfung weiter. Zusätzlich wurden Ansichten mit synthetischen Testwerten bei 900 Punkt Fensterbreite gerendert und visuell geprüft, einschließlich EFF mit 60 Wörtern und Hex mit 448 Großbuchstaben. Die synthetischen Ansichten prüfen das Layout, nicht die Zufallsqualität. Diese Prüfungen ersetzen kein externes Sicherheitsaudit.
+Die Primitivprüfungen umfassen 49 Skein-1024-1024-, 81 SHA3-512- und 538 SHAKE256-Referenzvektoren sowie 22 neue Skein-1024-XOF-Vektoren. Zusätzlich werden segmentierte Ausgaben und XOF-Präfixe verglichen, bei Skein bis zum Übergang des Ausgabeblockzählers von 255 auf 256. Die XOF-Konvention und die unabhängige Erzeugung beschreibt `SKEIN_XOF_VECTORS.md`.
 
-SHA256 des veröffentlichten App-ZIPs:
-`667c3d94274a7775fcb1c595dc832b645bc9e19e76234dc453cc2a81b1145872`
+45 unabhängig berechnete Passwortfälle prüfen die Kombination aus neuer Streamableitung und Zeichenauswahl für alle fünf Formate, sämtliche BIP39-Wortanzahlen und relevante Randlängen. Weitere Tests zählen die akzeptierten Auswahlwerte im vollständigen Ein- und Zwei-Byte-Eingaberaum, prüfen ungültige Längen, führende Nullen, freie Trennzeichen, Hex-Schreibweise, Poolgrenzen, Timer, Runtime-Prüfungen und Verdeckung. Die bereits vom Nutzer geprüfte Oberfläche wurde für diese Änderung nicht erneut per GUI-Automation getestet.
+
+Das endgültige `arm64`-Bundle für macOS 14 wurde mit Developer ID signiert. Die strenge Signaturprüfung und die Prüfung der minimalen Sandbox bestanden auch nach dem Entpacken des Release-ZIPs. SHA256 und SHA3-512 des gesamten ZIPs wurden unabhängig mit Swift und Python gegengeprüft. Der Release ist nicht notarisiert, da das vorhandene Apple-Profil nicht akzeptiert wird. Diese internen Prüfungen sind kein externes Sicherheitsaudit und kein formaler Beweis vollständiger Fehlerfreiheit.
+
+SHA256 des App-ZIPs `Password.Generator-2.1.0.zip`:
+`e2cc4eb5db5f49d7eb1f9c47130c7bd2b6e28c3739538494e87c4726e5fa8253`
 
 SHA3-512 desselben App-ZIPs:
-`4385cc7951b656980912f33f5fcac11615a51993ab4591dbc624d0e5d35dbbd2dd06e515e0d44e109fdb56d290c368b64709b39fade70177fc30c0fe79b5a6ba`
+`82f780ad5d2bc567235ddd81de8ccb08d87c9a520369a8116ae77d19e9e4219b56dace8f6b5d6c9b2c63fa3ea6b7c4173432dd1eb2f67543dc6f190593269165`
 
 ## Quellen
 

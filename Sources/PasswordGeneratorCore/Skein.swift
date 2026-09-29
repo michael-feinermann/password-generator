@@ -4,7 +4,7 @@ import Darwin
 /// The configuration, UBI and Threefish steps follow sections 3.3–3.5 of:
 /// https://www.schneier.com/wp-content/uploads/2015/01/skein.pdf
 public enum Skein {
-    private static let blockByteCount = 128
+    fileprivate static let blockByteCount = 128
     private static let wordCount = 16
     private static let keyScheduleConstant: UInt64 = 0x1BD11BDAA9FC1A22
 
@@ -22,10 +22,16 @@ public enum Skein {
 
     /// Computes exactly 128 bytes. This is not Skein-1024 with a truncated output setting.
     public static func hash1024(_ bytes: [UInt8]) -> [UInt8] {
-        var chain = [UInt64](repeating: 0, count: wordCount)
+        var chain = messageChain(bytes, outputBitCount: 1024)
         defer { clear(&chain) }
 
-        // 32-byte configuration: "SHA3", version 1, output length 1024 bits,
+        return outputBlock(chain: chain, counter: 0)
+    }
+
+    fileprivate static func messageChain(_ bytes: [UInt8], outputBitCount: UInt64) -> [UInt64] {
+        var chain = [UInt64](repeating: 0, count: wordCount)
+
+        // 32-byte configuration: "SHA3", version 1, configured output length,
         // and zero tree parameters (sequential mode). Integers are little-endian.
         var configuration = [UInt8](repeating: 0, count: 32)
         configuration[0] = 0x53
@@ -33,14 +39,22 @@ public enum Skein {
         configuration[2] = 0x41
         configuration[3] = 0x33
         configuration[4] = 1
-        configuration[9] = 4
+        for index in 0..<8 {
+            configuration[8 + index] = UInt8(truncatingIfNeeded: outputBitCount >> (index * 8))
+        }
         ubi(configuration, type: 4, chain: &chain)
         ubi(bytes, type: 48, chain: &chain)
+        return chain
+    }
 
-        // A 1024-bit digest needs only output block counter 0, encoded in 8 bytes.
-        ubi([UInt8](repeating: 0, count: 8), type: 63, chain: &chain)
+    fileprivate static func outputBlock(chain: [UInt64], counter: UInt64) -> [UInt8] {
+        // Each output counter starts from the same finalized message chain.
+        var outputChain = chain
+        defer { clear(&outputChain) }
+        let counterBytes = (0..<8).map { UInt8(truncatingIfNeeded: counter >> ($0 * 8)) }
+        ubi(counterBytes, type: 63, chain: &outputChain)
         return (0..<blockByteCount).map {
-            UInt8(truncatingIfNeeded: chain[$0 / 8] >> (($0 % 8) * 8))
+            UInt8(truncatingIfNeeded: outputChain[$0 / 8] >> (($0 % 8) * 8))
         }
     }
 
@@ -131,10 +145,68 @@ public enum Skein {
     }
 
     /// Best effort only: Swift may retain register values or earlier value-type copies.
-    private static func clear<T>(_ array: inout [T]) {
+    fileprivate static func clear<T>(_ array: inout [T]) {
         array.withUnsafeMutableBytes { buffer in
             guard let base = buffer.baseAddress, !buffer.isEmpty else { return }
             _ = memset_s(base, buffer.count, 0, buffer.count)
         }
+    }
+}
+
+/// Byte-oriented Skein-1024 XOF using the fixed `N_o = 2^64 - 1` configuration
+/// described in Skein 1.3 section 4.12. Input is an unkeyed message, not a MAC key.
+/// Successive reads share the same output prefix, unlike separately configured
+/// fixed-length Skein hashes. Call `clear()` when the stream is no longer needed.
+/// Copying this value copies its logical stream state; clearing cannot erase copies.
+public struct Skein1024XOFStream {
+    // The final seven configured bits are omitted by this byte-aligned API.
+    private static let maximumOutputBytes = UInt64.max / 8
+
+    private var chain: [UInt64]
+    private var block: [UInt8] = []
+    private var position = 0
+    private var nextBlockCounter: UInt64 = 0
+    private var emittedByteCount: UInt64 = 0
+    private var isCleared = false
+
+    public init(_ bytes: [UInt8]) {
+        chain = Skein.messageChain(bytes, outputBitCount: UInt64.max)
+    }
+
+    /// Returns subsequent output bytes without changing the configured output length.
+    /// At most floor((2^64 - 1) / 8) complete bytes may be read from one stream.
+    public mutating func read(count: Int) -> [UInt8] {
+        precondition(count >= 0)
+        precondition(!isCleared, "A cleared Skein XOF stream cannot be read.")
+        precondition(UInt64(count) <= Self.maximumOutputBytes - emittedByteCount)
+        var output = [UInt8](repeating: 0, count: count)
+        var outputOffset = 0
+        while outputOffset < count {
+            if position == block.count {
+                Skein.clear(&block)
+                block = Skein.outputBlock(chain: chain, counter: nextBlockCounter)
+                // The configured byte limit prevents counter overflow.
+                nextBlockCounter += 1
+                position = 0
+            }
+            let copied = min(block.count - position, count - outputOffset)
+            output.replaceSubrange(
+                outputOffset..<(outputOffset + copied),
+                with: block[position..<(position + copied)]
+            )
+            position += copied
+            outputOffset += copied
+        }
+        emittedByteCount += UInt64(count)
+        return output
+    }
+
+    public mutating func clear() {
+        Skein.clear(&chain)
+        Skein.clear(&block)
+        position = 0
+        nextBlockCounter = 0
+        emittedByteCount = 0
+        isCleared = true
     }
 }

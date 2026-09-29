@@ -5,11 +5,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
-ZIP_NAME="Password.Generator-2.0.0.zip"
+ZIP_NAME="Password.Generator-2.1.0.zip"
 ZIP_PATH="$BUILD_DIR/$ZIP_NAME"
 SHA256_PATH="$ZIP_PATH.sha256"
 SHA3_PATH="$ZIP_PATH.sha3-512"
-MANIFEST_PATH="$BUILD_DIR/Password.Generator-2.0.0.integrity.txt"
+MANIFEST_PATH="$BUILD_DIR/Password.Generator-2.1.0.integrity.txt"
 MODULE_CACHE_DIR="$PROJECT_DIR/.build/ModuleCache"
 
 for REQUIRED_PATH in "$ZIP_PATH" "$SHA256_PATH" "$SHA3_PATH" "$MANIFEST_PATH"; do

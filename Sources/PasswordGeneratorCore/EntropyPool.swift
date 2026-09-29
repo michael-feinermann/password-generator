@@ -115,9 +115,31 @@ public final class EntropyPool {
         skeinDigest = Skein.hash1024(serializedPool)
         sha3Digest = SHA3.hash512(serializedPool)
         master = skeinDigest + sha3Digest
+        try Self.shuffleDigestBits(&master, randomProvider: randomProvider)
         operatingSystemBytes = try checkedRandomBytes(count: 192, provider: randomProvider)
         for index in master.indices { master[index] ^= operatingSystemBytes[index] }
         return PasswordByteStream(master: master, randomProvider: randomProvider)
+    }
+
+    /// Permute all 1,536 individual digest bits before mixing in the OS mask.
+    /// Bit zero is the least significant bit of byte zero. The permutation uses
+    /// fresh, buffered OS randomness and unbiased descending Fisher-Yates swaps.
+    static func shuffleDigestBits(
+        _ bytes: inout [UInt8],
+        randomProvider: @escaping (Int) throws -> [UInt8]
+    ) throws {
+        precondition(bytes.count == 192)
+        var random = PoolRandomReader(provider: randomProvider)
+        defer { random.clear() }
+        for index in stride(from: bytes.count * 8 - 1, through: 1, by: -1) {
+            let selected = try random.uniform(upperBound: index + 1)
+            let firstByte = index / 8
+            let secondByte = selected / 8
+            let difference = ((bytes[firstByte] >> (index % 8))
+                ^ (bytes[secondByte] >> (selected % 8))) & 1
+            bytes[firstByte] ^= difference << (index % 8)
+            bytes[secondByte] ^= difference << (selected % 8)
+        }
     }
 
     public func clear() {
@@ -134,19 +156,24 @@ public final class EntropyPool {
     }
 }
 
-/// Six separate SHAKE256 states, seeded with the six consecutive 32-byte
-/// master fragments. They are consumed only once, including across refills.
+/// Three advancing streams seeded with consecutive 128-, 32- and 32-byte master
+/// fragments. Skein-1024-XOF and two SHAKE256 streams retain their own positions
+/// across refills. Each XOR-combined chunk receives a fresh OS-random mask.
 public final class PasswordByteStream {
-    private var streams: [SHAKE256Stream] = []
+    private var skeinStream: Skein1024XOFStream
+    private var shakeStreams: [SHAKE256Stream] = []
     private let randomProvider: (Int) throws -> [UInt8]
     private var isCleared = false
 
     init(master: [UInt8], randomProvider: @escaping (Int) throws -> [UInt8]) {
         precondition(master.count == 192)
         self.randomProvider = randomProvider
-        for index in 0..<6 {
-            var fragment = Array(master[(index * 32)..<((index + 1) * 32)])
-            streams.append(SHAKE256Stream(fragment))
+        var skeinFragment = Array(master[0..<128])
+        skeinStream = Skein1024XOFStream(skeinFragment)
+        wipePoolBytes(&skeinFragment)
+        for offset in stride(from: 128, to: 192, by: 32) {
+            var fragment = Array(master[offset..<(offset + 32)])
+            shakeStreams.append(SHAKE256Stream(fragment))
             wipePoolBytes(&fragment)
         }
     }
@@ -156,10 +183,10 @@ public final class PasswordByteStream {
         guard (0...1_048_576).contains(count) else {
             throw EntropyPoolError.invalidByteCount(count)
         }
-        var result = [UInt8](repeating: 0, count: count)
+        var result = skeinStream.read(count: count)
         do {
-            for index in streams.indices {
-                var fragment = streams[index].read(count: count)
+            for index in shakeStreams.indices {
+                var fragment = shakeStreams[index].read(count: count)
                 for offset in result.indices { result[offset] ^= fragment[offset] }
                 wipePoolBytes(&fragment)
             }
@@ -176,13 +203,15 @@ public final class PasswordByteStream {
     }
 
     public func clear() {
-        for index in streams.indices { streams[index].clear() }
-        streams.removeAll(keepingCapacity: false)
+        skeinStream.clear()
+        for index in shakeStreams.indices { shakeStreams[index].clear() }
+        shakeStreams.removeAll(keepingCapacity: false)
         isCleared = true
     }
 
     deinit {
-        for index in streams.indices { streams[index].clear() }
+        skeinStream.clear()
+        for index in shakeStreams.indices { shakeStreams[index].clear() }
     }
 }
 

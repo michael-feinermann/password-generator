@@ -48,6 +48,19 @@ struct LocalizedMessage: Equatable, Sendable {
         language.text(german, english)
     }
 
+    static let randomGenerationExplanation = LocalizedMessage(
+        german: """
+        Vor jeder Generierung mischt Fisher-Yates die 4.096 Mausereignisse mit kryptografischen macOS-Zufallsbytes. Skein-1024-1024 liefert danach 128 Byte und SHA3-512 weitere 64 Byte. Die Hashwerte werden in dieser Reihenfolge verbunden. Anschließend mischt Fisher-Yates alle 1.536 einzelnen Bits dieser 192 Byte erneut mit kryptografischen macOS-Zufallsbytes. XOR mit 192 weiteren frischen macOS-Zufallsbytes ergibt den Masterkey.
+
+        Die ersten 128 Byte initialisieren einen Skein-1024-XOF-Stream. Die folgenden zwei Fragmente mit je 32 Byte initialisieren je einen SHAKE256-Stream. Gleich lange Ausgaben der drei Streams werden per XOR kombiniert und unmittelbar vor der Zeichenauswahl nochmals mit gleich vielen frischen macOS-Zufallsbytes XOR-verknüpft. Bei Nachforderungen laufen alle drei Streams weiter. Die periodische Mischung alle sechs Sekunden betrifft nur den Mauspool; die Ableitung erfolgt ausschließlich bei der Generierung.
+        """,
+        english: """
+        Before each generation, Fisher-Yates shuffles the 4,096 mouse records using cryptographic macOS random bytes. Skein-1024-1024 then produces 128 bytes and SHA3-512 another 64 bytes. The hashes are concatenated in that order. Fisher-Yates then shuffles all 1,536 individual bits of these 192 bytes using cryptographic macOS random bytes again. XOR with another 192 fresh macOS random bytes produces the master key.
+
+        The first 128 bytes initialize one Skein-1024-XOF stream. The following two fragments of 32 bytes each initialize one SHAKE256 stream each. Equal-length outputs of the three streams are combined using XOR, then XORed with an equal number of fresh macOS random bytes immediately before character selection. All three streams continue when more bytes are requested. The periodic shuffle every six seconds only affects the mouse pool; derivation occurs exclusively during generation.
+        """
+    )
+
     static let clipboardFailed = LocalizedMessage(
         german: "Das Passwort konnte nicht in die Zwischenablage kopiert werden.",
         english: "The password could not be copied to the clipboard."
