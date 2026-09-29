@@ -37,7 +37,7 @@ open "build/Password Generator 2.1.0.app"
 
 The release targets Apple Silicon (`arm64`) running macOS 14 or later. Use the signed app bundle to run the application. `swift run PasswordGeneratorApp` is intended only for development; a process without the required signature does not satisfy the runtime conditions for generation.
 
-The packaging script creates `build/Password Generator 2.1.0.app`, `build/Password.Generator-2.1.0.zip`, two checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
+The packaging script creates `build/Password Generator 2.1.0.app`, `build/Password.Generator-2.1.0.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
 
 ## Mouse pool and generation
 
@@ -63,7 +63,11 @@ The app does not save generated passwords to files or preferences. A local app c
 
 ## Integrity and tests
 
-Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The exact signed app is also packaged as a ZIP and hashed with both algorithms. `verify-release.sh` independently checks the values using Python, extracts the ZIP, and verifies the code signature and sandbox. Hash values alone do not prove provenance.
+Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.1.0.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
+
+`Scripts/verify-release.sh` independently checks SHA256 and SHA3-512 using Python. It checks Skein-1024-1024 through `Scripts/skein-reference-checksum.sh`, which uses the official C reference implementation in `Tests/Reference/Skein`. The verifier also extracts the ZIP and checks the code signature and sandbox.
+
+These additional integrity checksums do not replace or change Apple's Developer ID signing process. The notarized app package remains byte-for-byte identical; the third checksum is added in an external file and the integrity manifest. Hash values alone do not prove provenance.
 
 For version 2.1.0, all 71 tests passed in both Debug and Release builds with no errors or compiler warnings. These include three independently calculated references for the complete derivation, 45 password cases, and checks covering the hash/XOF functions, bit shuffle, stream continuation, error handling, and app model. Details of these checks and the release evidence are recorded in the [verification section of the technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 

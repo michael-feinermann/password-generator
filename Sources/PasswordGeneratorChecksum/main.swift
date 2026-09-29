@@ -9,7 +9,7 @@ struct PasswordGeneratorChecksum {
         let arguments = CommandLine.arguments
         guard arguments.count == 3 else {
             FileHandle.standardError.write(
-                Data("Aufruf: PasswordGeneratorChecksum <sha256|sha3-512> <Datei>\n".utf8)
+                Data("Aufruf: PasswordGeneratorChecksum <sha256|sha3-512|skein-1024-1024> <Datei>\n".utf8)
             )
             Darwin.exit(64)
         }
@@ -24,6 +24,8 @@ struct PasswordGeneratorChecksum {
             digest = Data(SHA256.hash(data: data))
         case "sha3-512":
             digest = SHA3.hash512(data)
+        case "skein-1024-1024":
+            digest = Data(Skein.hash1024(Array(data)))
         default:
             FileHandle.standardError.write(
                 Data("Unbekannter Algorithmus: \(arguments[1])\n".utf8)

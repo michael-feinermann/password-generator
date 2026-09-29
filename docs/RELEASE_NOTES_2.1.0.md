@@ -20,9 +20,13 @@ Skein-XOF uses the configuration for an unknown output length described in Skein
 
 For Apple Silicon running macOS 14 or later. Xcode submitted the app through “Direct Distribution”; Apple approved it for distribution on September 29, 2026. The ZIP contains the output of “Export Notarized App” with a stapled ticket. The code signature and ticket were also checked after extraction; Gatekeeper accepts the app as `Notarized Developer ID`. The sandbox and runtime protections remain enabled.
 
-Downloads include the app ZIP, matching SHA256 and SHA3-512 checksum files, and the integrity manifest.
+Downloads include the app ZIP, three matching checksum files for SHA256, SHA3-512, and Skein-1024-1024, and the integrity manifest. All three algorithms hash the complete final ZIP. The new file is named `Password.Generator-2.1.0.zip.skein-1024-1024`; its value is also recorded in the manifest field `skein-1024-1024`.
 
-Verified: 71 passing tests in each of the Debug and Release builds, including three complete derivation references, 45 independently calculated password cases, and reference vectors for the hash/XOF functions used. The code signature and both ZIP checksums were verified against the finished package.
+`Scripts/verify-release.sh` checks SHA256 and SHA3-512 independently using Python. It checks Skein-1024-1024 through `Scripts/skein-reference-checksum.sh` using the official C reference implementation in `Tests/Reference/Skein`.
+
+Adding this third integrity checksum leaves the notarized app package byte-for-byte identical. The extra checksum files do not replace or change Apple's Developer ID signing process.
+
+Verified: 71 passing tests in each of the Debug and Release builds, including three complete derivation references, 45 independently calculated password cases, and reference vectors for the hash/XOF functions used. The code signature and all three ZIP checksums were verified against the finished package; the Skein checksum also matches the official C reference implementation.
 
 ## Deutsch
 
@@ -44,6 +48,10 @@ Skein-XOF verwendet die in Skein v1.3 Abschnitt 4.12 beschriebene Konfiguration 
 
 Für Apple Silicon ab macOS 14. Xcode hat die App über „Direct Distribution“ eingereicht; Apple hat sie am 29. September 2026 zur Verteilung freigegeben. Das ZIP enthält den Export von „Export Notarized App“ mit angeheftetem Ticket. Code-Signatur und Ticket wurden auch nach dem Entpacken geprüft; Gatekeeper akzeptiert die App als `Notarized Developer ID`. Die Sandbox und Laufzeitschutzmaßnahmen bleiben aktiviert.
 
-Zum Download gehören das App-ZIP, passende SHA256- und SHA3-512-Prüfsummendateien sowie das Integritätsmanifest.
+Zum Download gehören das App-ZIP, drei passende Prüfsummendateien für SHA256, SHA3-512 und Skein-1024-1024 sowie das Integritätsmanifest. Alle drei Verfahren hashen das vollständige finale ZIP. Die neue Datei heißt `Password.Generator-2.1.0.zip.skein-1024-1024`; ihr Wert steht zusätzlich im Manifestfeld `skein-1024-1024`.
 
-Verifiziert: jeweils 71 bestandene Tests im Debug- und Release-Build, darunter drei vollständige Ableitungsreferenzen, 45 unabhängig berechnete Passwortfälle und Referenzvektoren der verwendeten Hash-/XOF-Funktionen. Die Code-Signatur und beide ZIP-Prüfsummen wurden am fertigen Paket geprüft.
+`Scripts/verify-release.sh` prüft SHA256 und SHA3-512 unabhängig mit Python. Skein-1024-1024 wird über `Scripts/skein-reference-checksum.sh` mit der offiziellen C-Referenzimplementierung unter `Tests/Reference/Skein` kontrolliert.
+
+Das notarisierte App-Paket bleibt beim Ergänzen dieser dritten Integritätsprüfsumme byteidentisch. Die zusätzlichen Prüfsummendateien ersetzen oder ändern Apples Developer-ID-Signaturverfahren nicht.
+
+Verifiziert: jeweils 71 bestandene Tests im Debug- und Release-Build, darunter drei vollständige Ableitungsreferenzen, 45 unabhängig berechnete Passwortfälle und Referenzvektoren der verwendeten Hash-/XOF-Funktionen. Die Code-Signatur und alle drei ZIP-Prüfsummen wurden am fertigen Paket geprüft; der Skein-Wert stimmt zusätzlich mit der offiziellen C-Referenzimplementierung überein.

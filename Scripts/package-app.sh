@@ -51,7 +51,7 @@ fi
 
 rm -rf "$APP_PATH"
 rm -rf "$ICONSET_PATH"
-rm -f "$ZIP_PATH" "$ZIP_PATH.sha256" "$ZIP_PATH.sha3-512" "$INTEGRITY_MANIFEST_PATH"
+rm -f "$ZIP_PATH" "$ZIP_PATH.sha256" "$ZIP_PATH.sha3-512" "$ZIP_PATH.skein-1024-1024" "$INTEGRITY_MANIFEST_PATH"
 mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
 
 install -m 755 "$BINARY_PATH" "$APP_PATH/Contents/MacOS/PasswordGeneratorApp"
@@ -159,9 +159,11 @@ if [[ -n "$NOTARY_PROFILE" ]]; then
 fi
 SHA256_VALUE="$("$BIN_DIR/PasswordGeneratorChecksum" sha256 "$ZIP_PATH")"
 SHA3_VALUE="$("$BIN_DIR/PasswordGeneratorChecksum" sha3-512 "$ZIP_PATH")"
+SKEIN_VALUE="$("$BIN_DIR/PasswordGeneratorChecksum" skein-1024-1024 "$ZIP_PATH")"
 
 printf '%s  %s\n' "$SHA256_VALUE" "$ZIP_NAME" > "$ZIP_PATH.sha256"
 printf '%s  %s\n' "$SHA3_VALUE" "$ZIP_NAME" > "$ZIP_PATH.sha3-512"
+printf '%s  %s\n' "$SKEIN_VALUE" "$ZIP_NAME" > "$ZIP_PATH.skein-1024-1024"
 
 if [[ "$SIGN_IDENTITY" == "-" ]]; then
     SIGNATURE_MODE="local-ad-hoc"
@@ -182,6 +184,7 @@ fi
     printf 'signature-mode=%s\n' "$SIGNATURE_MODE"
     printf 'sha256=%s\n' "$SHA256_VALUE"
     printf 'sha3-512=%s\n' "$SHA3_VALUE"
+    printf 'skein-1024-1024=%s\n' "$SKEIN_VALUE"
     printf 'authenticity-note=hashes-detect-change-but-require-a-trusted-publication-channel\n'
 } > "$INTEGRITY_MANIFEST_PATH"
 
@@ -193,6 +196,10 @@ if [[ "$("$BIN_DIR/PasswordGeneratorChecksum" sha3-512 "$ZIP_PATH")" != "$SHA3_V
     echo "SHA3-512-Gesamtprüfung des Release-Archivs fehlgeschlagen."
     exit 1
 fi
+if [[ "$("$BIN_DIR/PasswordGeneratorChecksum" skein-1024-1024 "$ZIP_PATH")" != "$SKEIN_VALUE" ]]; then
+    echo "Skein-1024-1024-Gesamtprüfung des Release-Archivs fehlgeschlagen."
+    exit 1
+fi
 unzip -t "$ZIP_PATH" >/dev/null
 
 echo "App-Bundle: $APP_PATH"
@@ -200,6 +207,7 @@ echo "Release-ZIP: $ZIP_PATH"
 echo "Integritätsmanifest: $INTEGRITY_MANIFEST_PATH"
 echo "SHA-256:     $SHA256_VALUE"
 echo "SHA3-512:   $SHA3_VALUE"
+echo "Skein-1024-1024: $SKEIN_VALUE"
 if [[ "$SIGN_IDENTITY" == "-" ]]; then
     echo "Signatur:     lokal/ad hoc (für Veröffentlichung Developer ID verwenden)"
 else

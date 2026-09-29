@@ -4,15 +4,16 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BUILD_DIR="$PROJECT_DIR/build"
+BUILD_DIR="$(cd "${RELEASE_BUILD_DIR:-$PROJECT_DIR/build}" && pwd)"
 ZIP_NAME="Password.Generator-2.1.0.zip"
 ZIP_PATH="$BUILD_DIR/$ZIP_NAME"
 SHA256_PATH="$ZIP_PATH.sha256"
 SHA3_PATH="$ZIP_PATH.sha3-512"
+SKEIN_PATH="$ZIP_PATH.skein-1024-1024"
 MANIFEST_PATH="$BUILD_DIR/Password.Generator-2.1.0.integrity.txt"
 MODULE_CACHE_DIR="$PROJECT_DIR/.build/ModuleCache"
 
-for REQUIRED_PATH in "$ZIP_PATH" "$SHA256_PATH" "$SHA3_PATH" "$MANIFEST_PATH"; do
+for REQUIRED_PATH in "$ZIP_PATH" "$SHA256_PATH" "$SHA3_PATH" "$SKEIN_PATH" "$MANIFEST_PATH"; do
     if [[ ! -f "$REQUIRED_PATH" ]]; then
         echo "Release-Datei fehlt: $REQUIRED_PATH"
         exit 1
@@ -29,10 +30,13 @@ CHECKSUM_BIN="$BIN_DIR/PasswordGeneratorChecksum"
 
 EXPECTED_SHA256="$(awk 'NR == 1 {print $1}' "$SHA256_PATH")"
 EXPECTED_SHA3="$(awk 'NR == 1 {print $1}' "$SHA3_PATH")"
+EXPECTED_SKEIN="$(awk 'NR == 1 {print $1}' "$SKEIN_PATH")"
 MANIFEST_SHA256="$(awk -F= '$1 == "sha256" {print $2}' "$MANIFEST_PATH")"
 MANIFEST_SHA3="$(awk -F= '$1 == "sha3-512" {print $2}' "$MANIFEST_PATH")"
+MANIFEST_SKEIN="$(awk -F= '$1 == "skein-1024-1024" {print $2}' "$MANIFEST_PATH")"
 ACTUAL_SHA256="$("$CHECKSUM_BIN" sha256 "$ZIP_PATH")"
 ACTUAL_SHA3="$("$CHECKSUM_BIN" sha3-512 "$ZIP_PATH")"
+ACTUAL_SKEIN="$("$CHECKSUM_BIN" skein-1024-1024 "$ZIP_PATH")"
 
 if [[ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" || "$ACTUAL_SHA256" != "$MANIFEST_SHA256" ]]; then
     echo "SHA-256-Gesamtprüfung fehlgeschlagen."
@@ -40,6 +44,10 @@ if [[ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" || "$ACTUAL_SHA256" != "$MANIFEST_S
 fi
 if [[ "$ACTUAL_SHA3" != "$EXPECTED_SHA3" || "$ACTUAL_SHA3" != "$MANIFEST_SHA3" ]]; then
     echo "SHA3-512-Gesamtprüfung fehlgeschlagen."
+    exit 1
+fi
+if [[ "$ACTUAL_SKEIN" != "$EXPECTED_SKEIN" || "$ACTUAL_SKEIN" != "$MANIFEST_SKEIN" ]]; then
+    echo "Skein-1024-1024-Gesamtprüfung fehlgeschlagen."
     exit 1
 fi
 
@@ -64,6 +72,12 @@ PYTHON_SHA3="$(
 )"
 if [[ "$PYTHON_SHA256" != "$ACTUAL_SHA256" || "$PYTHON_SHA3" != "$ACTUAL_SHA3" ]]; then
     echo "Die unabhängige Python-Hashimplementierung liefert andere Gesamtwerte."
+    exit 1
+fi
+
+REFERENCE_SKEIN="$(zsh "$SCRIPT_DIR/skein-reference-checksum.sh" "$ZIP_PATH")"
+if [[ "$REFERENCE_SKEIN" != "$ACTUAL_SKEIN" ]]; then
+    echo "Die unabhängige Skein-C-Referenz liefert einen anderen Gesamtwert."
     exit 1
 fi
 
@@ -105,5 +119,7 @@ fi
 echo "Gesamt-App-Integrität bestanden."
 echo "SHA-256:   $ACTUAL_SHA256"
 echo "SHA3-512: $ACTUAL_SHA3"
-echo "Unabhängige Python-Gegenprüfung: identisch"
+echo "Skein-1024-1024: $ACTUAL_SKEIN"
+echo "Unabhängige Python-Gegenprüfung (SHA256/SHA3-512): identisch"
+echo "Unabhängige C-Referenzprüfung (Skein-1024-1024): identisch"
 echo "Signatur und minimale Sandbox des entpackten App-Bundles: gültig"
