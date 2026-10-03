@@ -19,7 +19,7 @@ final class EntropyPoolTests: XCTestCase {
         let stream = try pool.makeStream()
         defer { stream.clear() }
         XCTAssertEqual(try stream.bytes(count: 32).count, 32)
-        XCTAssertEqual(requests.suffix(2), [192, 32])
+        XCTAssertEqual(requests.suffix(2), [256, 32])
     }
 
     func testBoundedRecordsContinueCollectingAndShuffleOnlyUsesRandomness() throws {
@@ -39,7 +39,7 @@ final class EntropyPoolTests: XCTestCase {
     }
 
     func testPoolFailsClosedAtShuffleMasterAndOutputRandomFailures() throws {
-        for failedCount in [4_096, 192, 32] {
+        for failedCount in [4_096, 256, 32] {
             let pool = try EntropyPool { count in
                 [UInt8](repeating: 0, count: count == failedCount ? count - 1 : count)
             }
@@ -88,7 +88,7 @@ final class EntropyPoolTests: XCTestCase {
         }
     }
 
-    func testFullPipelineAgainstOfficialSkeinReferenceAndPythonHashlib() throws {
+    func testFullPipelineAgainstOfficialSkeinReferenceHashlibAndOpenSSL() throws {
         for fixture in try pipelineFixtures() {
             let source = PipelineRandomSource(style: fixture.randomStyle)
             let pool = try EntropyPool(randomProvider: source.bytes(count:))
@@ -103,10 +103,10 @@ final class EntropyPoolTests: XCTestCase {
             XCTAssertEqual(pool.shuffleCount, 2 + fixture.shuffleAfterRecords.count, fixture.name)
             XCTAssertEqual(source.requests, fixture.randomRequestByteCounts, fixture.name)
 
-            // These cumulative positions cross both XOF block boundaries, including
+            // These cumulative positions cross all three stream block boundaries, including
             // positions 127/128/129 and 135/136/137. OS bytes advance independently.
             var output: [UInt8] = []
-            for count in [0, 127, 1, 1, 6, 1, 1, 119, 128, 136, 137, 367] {
+            for count in [0, 1, 14, 1, 1, 110, 1, 1, 6, 1, 1, 119, 128, 136, 137, 367] {
                 output += try stream.bytes(count: count)
             }
             XCTAssertEqual(output, try hexBytes(fixture.output), fixture.name)
@@ -127,24 +127,24 @@ final class EntropyPoolTests: XCTestCase {
     }
 
     func testDigestBitShuffleIdentitySameByteAndCrossByteSwaps() throws {
-        var identity = (0..<192).map { UInt8(truncatingIfNeeded: $0 * 73 + 19) }
+        var identity = (0..<256).map { UInt8(truncatingIfNeeded: $0 * 73 + 19) }
         let original = identity
         XCTAssertEqual(try shuffleWithSelections(&identity), [4_096, 4_096])
         XCTAssertEqual(identity, original)
 
-        var sameByte = [UInt8](repeating: 0, count: 192)
+        var sameByte = [UInt8](repeating: 0, count: 256)
         sameByte[0] = 1 << 2
         _ = try shuffleWithSelections(&sameByte, overrides: [7: 2])
-        XCTAssertEqual(sameByte, [0x80] + [UInt8](repeating: 0, count: 191))
+        XCTAssertEqual(sameByte, [0x80] + [UInt8](repeating: 0, count: 255))
 
-        var crossByte = [UInt8](repeating: 0, count: 192)
+        var crossByte = [UInt8](repeating: 0, count: 256)
         crossByte[0] = 1
         _ = try shuffleWithSelections(&crossByte, overrides: [8: 0])
-        XCTAssertEqual(crossByte, [0, 1] + [UInt8](repeating: 0, count: 190))
+        XCTAssertEqual(crossByte, [0, 1] + [UInt8](repeating: 0, count: 254))
     }
 
-    func testZeroShuffleWordsRotateTheEntire1536BitArray() throws {
-        var bytes = (0..<192).map { UInt8(truncatingIfNeeded: $0 * 73 + 19) }
+    func testZeroShuffleWordsRotateTheEntire2048BitArray() throws {
+        var bytes = (0..<256).map { UInt8(truncatingIfNeeded: $0 * 73 + 19) }
         let original = bytes
         let expected = original.indices.map { index in
             (original[index] >> 1) | ((original[(index + 1) % original.count] & 1) << 7)
@@ -154,11 +154,11 @@ final class EntropyPoolTests: XCTestCase {
     }
 
     func testDigestBitShuffleRejectsIncompleteUInt32Bucket() throws {
-        var bytes = [UInt8](repeating: 0, count: 192)
-        bytes[191] = 0x80
+        var bytes = [UInt8](repeating: 0, count: 256)
+        bytes[255] = 0x40
         let original = bytes
-        // At bound 1536, UInt32.max is in the incomplete final bucket. Rejecting
-        // it then selecting the current index must preserve this final one-bit.
+        // Bound 2048 accepts every UInt32; at the next bound 2047, UInt32.max
+        // is rejected. Selecting each current index must preserve all bits.
         _ = try shuffleWithSelections(&bytes, rejectedPrefix: [UInt32.max])
         XCTAssertEqual(bytes, original)
     }
@@ -166,7 +166,7 @@ final class EntropyPoolTests: XCTestCase {
     func testDigestBitShuffleFailsOnEitherRandomBufferAndBoundsStalledSource() {
         for failedRequest in [1, 2] {
             var requests = 0
-            var bytes = [UInt8](repeating: 0x55, count: 192)
+            var bytes = [UInt8](repeating: 0x55, count: 256)
             XCTAssertThrowsError(try EntropyPool.shuffleDigestBits(&bytes) { count in
                 requests += 1
                 return [UInt8](repeating: 0, count: count - (requests == failedRequest ? 1 : 0))
@@ -176,14 +176,14 @@ final class EntropyPoolTests: XCTestCase {
             XCTAssertEqual(requests, failedRequest)
         }
         var requests = 0
-        var bytes = [UInt8](repeating: 0x55, count: 192)
+        var bytes = [UInt8](repeating: 0x55, count: 256)
         XCTAssertThrowsError(try EntropyPool.shuffleDigestBits(&bytes) { count in
             requests += 1
             return [UInt8](repeating: 0xff, count: count)
         }) {
             XCTAssertEqual($0 as? EntropyPoolError, .randomSourceStalled)
         }
-        XCTAssertEqual(requests, 4)
+        XCTAssertEqual(requests, 5)
     }
 
     func testPoolAbortsWhenEitherDigestShuffleBufferFails() throws {
@@ -203,13 +203,13 @@ final class EntropyPoolTests: XCTestCase {
         }
     }
 
-    func testByteStreamChunkingIsIndependentOfReadLengthsAtBothBlockBoundaries() throws {
+    func testByteStreamChunkingIsIndependentOfReadLengthsAtAllBlockBoundaries() throws {
         for fixture in try pipelineFixtures() {
             let expected = try hexBytes(fixture.output)
             let master = try hexBytes(fixture.master)
-            for firstRead in [127, 128, 129, 135, 136, 137, 1_024] {
+            for firstRead in [0, 1, 15, 16, 17, 127, 128, 129, 135, 136, 137, 1_024] {
                 let source = PipelineRandomSource(style: fixture.randomStyle)
-                let stream = PasswordByteStream(master: master, randomProvider: source.outputBytes(count:))
+                let stream = try PasswordByteStream(master: master, randomProvider: source.outputBytes(count:))
                 defer { stream.clear() }
                 let first = try stream.bytes(count: firstRead)
                 XCTAssertEqual(try stream.bytes(count: 0), [])
@@ -224,7 +224,7 @@ final class EntropyPoolTests: XCTestCase {
         enum RandomFailure: Error { case unavailable }
         for malformedReturn in [false, true] {
             var calls = 0
-            let stream = PasswordByteStream(master: [UInt8](repeating: 0x42, count: 192)) { count in
+            let stream = try PasswordByteStream(master: [UInt8](repeating: 0x42, count: 256)) { count in
                 calls += 1
                 if calls == 2 {
                     if malformedReturn { return [UInt8](repeating: 0, count: count - 1) }
@@ -248,7 +248,7 @@ final class EntropyPoolTests: XCTestCase {
             for expected in fixture.passwords {
                 let mode = try XCTUnwrap(GeneratorMode(rawValue: expected.mode))
                 let source = PipelineRandomSource(style: fixture.randomStyle)
-                let stream = PasswordByteStream(master: master, randomProvider: source.outputBytes(count:))
+                let stream = try PasswordByteStream(master: master, randomProvider: source.outputBytes(count:))
                 defer { stream.clear() }
                 let configuration = GeneratorConfiguration(mode: mode, length: expected.length)
                 let password = try generator.generate(configuration: configuration, randomProvider: stream.bytes(count:))
@@ -261,7 +261,7 @@ final class EntropyPoolTests: XCTestCase {
     }
 
     func testSystemSourceValidatesCounts() throws {
-        XCTAssertEqual(try SecureRandom.bytes(count: 192).count, 192)
+        XCTAssertEqual(try SecureRandom.bytes(count: 256).count, 256)
         XCTAssertEqual(try SecureRandom.bytes(count: 0), [])
         XCTAssertThrowsError(try SecureRandom.bytes(count: -1))
     }
@@ -275,7 +275,7 @@ final class EntropyPoolTests: XCTestCase {
     private func pipelineFixtures() throws -> [PipelineFixture] {
         let url = try XCTUnwrap(Bundle.module.url(forResource: "pipeline_expected", withExtension: "json"))
         let fixtures = try JSONDecoder().decode(PipelineFixtures.self, from: Data(contentsOf: url))
-        XCTAssertEqual(fixtures.version, 2)
+        XCTAssertEqual(fixtures.version, 3)
         XCTAssertEqual(fixtures.cases.count, 3)
         return fixtures.cases
     }
@@ -297,9 +297,10 @@ final class EntropyPoolTests: XCTestCase {
         overrides: [Int: Int] = [:],
         rejectedPrefix: [UInt32] = []
     ) throws -> [Int] {
-        let candidates = rejectedPrefix + stride(from: 1_535, through: 1, by: -1).map {
+        var candidates = stride(from: 2_047, through: 1, by: -1).map {
             UInt32(overrides[$0] ?? $0)
         }
+        candidates.insert(contentsOf: rejectedPrefix, at: 1)
         let encoded = candidates.flatMap { candidate in
             stride(from: 0, to: 32, by: 8).map { UInt8(truncatingIfNeeded: candidate >> $0) }
         }
@@ -354,7 +355,7 @@ private final class PipelineRandomSource {
         requests.append(count)
         if !masterRead {
             if count == 4_096 { return shuffleBuffer() }
-            precondition(count == 192)
+            precondition(count == 256)
             masterRead = true
             return (0..<count).map { style == "zero" ? 0xa5 : UInt8(truncatingIfNeeded: $0 * 37 + 0xa5) }
         }

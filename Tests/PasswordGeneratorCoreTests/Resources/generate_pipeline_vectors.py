@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Regenerate pipeline KATs using the official Skein C code and Python hashlib.
+"""Regenerate pipeline KATs using the official Skein C code, Python hashlib and the OpenSSL CLI.
 
-Usage: python3 generate_pipeline_vectors.py /path/to/Reference_Implementation
+Usage: python3 generate_pipeline_vectors.py [path/to/Reference_Implementation]
 No production Swift code is executed or translated by this generator.
 """
 
@@ -11,6 +11,7 @@ import json
 import pathlib
 import struct
 import subprocess
+import sys
 import tempfile
 
 
@@ -78,8 +79,8 @@ class ReferenceRandom:
         return struct.pack("<1024I", *words)
 
     def master_mask(self):
-        self.requests.append(192)
-        return bytes(0xa5 if self.style == "zero" else (i * 37 + 0xa5) & 255 for i in range(192))
+        self.requests.append(256)
+        return bytes(0xa5 if self.style == "zero" else (i * 37 + 0xa5) & 255 for i in range(256))
 
     def output_mask(self, count):
         return bytes(0x5a if self.style == "zero" else (i * 53 + 0x5a) & 255 for i in range(count))
@@ -162,22 +163,24 @@ def make_fixture(name, record_count, shuffle_after_records, style, skein, word_l
     permute(order, random)
     pool = b"".join(records[index] for index in order)
     record_shuffle_requests = random.shuffle_buffer_index
-    digest = skein("hash", pool, 128) + hashlib.sha3_512(pool).digest()
+    digest = skein("hash", pool, 128) + hashlib.sha3_512(pool).digest() + hashlib.sha512(pool).digest()
     digest_bits = [(byte >> bit) & 1 for byte in digest for bit in range(8)]
     permute(digest_bits, random)
-    shuffled_digest = bytes(sum(digest_bits[index * 8 + bit] << bit for bit in range(8)) for index in range(192))
+    shuffled_digest = bytes(sum(digest_bits[index * 8 + bit] << bit for bit in range(8)) for index in range(256))
     master = xor(shuffled_digest, random.master_mask())
     output_count = 1024
     material = xor(
         skein("xof", master[:128], output_count),
         hashlib.shake_256(master[128:160]).digest(output_count),
         hashlib.shake_256(master[160:192]).digest(output_count),
+        aes_ctr(master[192:224], output_count),
+        aes_ctr(master[224:256], output_count),
     )
     output = xor(material, random.output_mask(output_count))
     configurations = (
         [("bip39", count) for count in [12, 15, 18, 21, 24]]
-        + [("eff", 6), ("eff", 60), ("ascii", 8), ("ascii", 256)]
-        + [("pin", 3), ("pin", 256), ("hex", 1), ("hex", 3), ("hex", 447), ("hex", 448)]
+        + [("eff", 6), ("eff", 128), ("ascii", 8), ("ascii", 256)]
+        + [("pin", 3), ("pin", 512), ("hex", 1), ("hex", 3), ("hex", 511), ("hex", 512)]
     )
     return {
         "name": name,
@@ -199,9 +202,20 @@ def make_fixture(name, record_count, shuffle_after_records, style, skein, word_l
     }
 
 
+def aes_ctr(key, count):
+    # Test-only, public fixture keys. This executes LibreSSL/OpenSSL AES, never CommonCrypto.
+    output = subprocess.run([
+        "openssl", "enc", "-aes-256-ctr", "-nosalt", "-nopad",
+        "-K", key.hex(), "-iv", "00" * 16,
+    ], input=bytes(count), check=True, capture_output=True).stdout
+    assert len(output) == count
+    return output
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("reference_directory", type=pathlib.Path)
+    parser.add_argument("reference_directory", type=pathlib.Path, nargs="?",
+                        default=pathlib.Path(__file__).resolve().parents[2] / "Reference/Skein")
     parser.add_argument("--output", type=pathlib.Path, default=pathlib.Path(__file__).with_name("pipeline_expected.json"))
     args = parser.parse_args()
     reference = args.reference_directory.resolve()
@@ -216,8 +230,12 @@ def main():
         harness = directory / "reference.c"
         executable = directory / "reference"
         harness.write_text(C_HARNESS)
-        subprocess.run([
-            "clang", "-std=c99", "-O2", "-DSKEIN_ERR_CHECK=1", "-I", str(reference),
+        compiler = ["clang"]
+        if sys.platform == "darwin":
+            sdk = subprocess.check_output(["xcrun", "--sdk", "macosx", "--show-sdk-path"], text=True).strip()
+            compiler = ["xcrun", "--sdk", "macosx", "clang", "-isysroot", sdk]
+        subprocess.run(compiler + [
+            "-std=c99", "-O2", "-DSKEIN_ERR_CHECK=1", "-I", str(reference),
             str(harness), str(reference / "skein.c"), str(reference / "skein_block.c"), "-o", str(executable),
         ], check=True)
 
@@ -234,8 +252,10 @@ def main():
             make_fixture("wrapped_pool_with_intermediate_shuffles", 8193, [2048, 4096, 6144], "patterned", skein, word_lists),
         ]
     args.output.write_text(json.dumps({
-        "version": 2,
+        "version": 3,
         "skeinXOFConfigurationOutputBits": str(2**64 - 1),
+        "aesCTRInitialCounter": "00" * 16,
+        "aesCTRIncrement": "128-bit big-endian, no wrap",
         "cases": fixtures,
     }, indent=2) + "\n")
     for fixture in fixtures:

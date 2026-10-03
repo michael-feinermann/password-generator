@@ -12,10 +12,10 @@ public enum GeneratorMode: String, CaseIterable, Identifiable, Sendable {
     public var lengthRange: ClosedRange<Int> {
         switch self {
         case .bip39: 12...24
-        case .eff: 6...60
+        case .eff: 6...128
         case .ascii: 8...256
-        case .pin: 3...256
-        case .hex: 1...448
+        case .pin: 3...512
+        case .hex: 1...512
         }
     }
 

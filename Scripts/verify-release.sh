@@ -5,12 +5,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BUILD_DIR="$(cd "${RELEASE_BUILD_DIR:-$PROJECT_DIR/build}" && pwd)"
-ZIP_NAME="Password.Generator-2.1.0.zip"
+ZIP_NAME="Password.Generator-2.2.0.zip"
 ZIP_PATH="$BUILD_DIR/$ZIP_NAME"
 SHA256_PATH="$ZIP_PATH.sha256"
 SHA3_PATH="$ZIP_PATH.sha3-512"
 SKEIN_PATH="$ZIP_PATH.skein-1024-1024"
-MANIFEST_PATH="$BUILD_DIR/Password.Generator-2.1.0.integrity.txt"
+MANIFEST_PATH="$BUILD_DIR/Password.Generator-2.2.0.integrity.txt"
 MODULE_CACHE_DIR="$PROJECT_DIR/.build/ModuleCache"
 
 for REQUIRED_PATH in "$ZIP_PATH" "$SHA256_PATH" "$SHA3_PATH" "$SKEIN_PATH" "$MANIFEST_PATH"; do
@@ -90,7 +90,7 @@ if [[ "$VERIFY_TEMP_DIR" != /var/folders/*/T/* && "$VERIFY_TEMP_DIR" != /tmp/* ]
 fi
 trap 'rm -rf -- "$VERIFY_TEMP_DIR"' EXIT
 ditto -x -k "$ZIP_PATH" "$VERIFY_TEMP_DIR"
-EXTRACTED_APP="$VERIFY_TEMP_DIR/Password Generator 2.1.0.app"
+EXTRACTED_APP="$VERIFY_TEMP_DIR/Password Generator 2.2.0.app"
 codesign --verify --deep --strict --verbose=2 "$EXTRACTED_APP"
 
 ENTITLEMENTS="$(codesign -d --entitlements :- "$EXTRACTED_APP" 2>/dev/null)"

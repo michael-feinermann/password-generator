@@ -157,12 +157,14 @@ final class AppModelTests: XCTestCase {
             )
             defer { model.prepareForTermination() }
             model.selectedMode = mode
+            model.selectedLength = mode.lengthRange.upperBound
             XCTAssertEqual(model.wordSeparator, mode == .bip39 ? " " : "-")
             collectMinimum(on: model)
             model.userConfirmedSecureEnvironment = true
             model.generate()
             model.revealMnemonic()
             let original = try XCTUnwrap(model.generatedPassword)
+            XCTAssertEqual(original.components.count, mode.lengthRange.upperBound)
             let originalRandomCalls = randomCalls
             let originalShuffleCount = model.poolShuffleCount
             XCTAssertEqual(original.text, original.components.joined(separator: " "))
@@ -203,7 +205,7 @@ final class AppModelTests: XCTestCase {
         )
         defer { model.prepareForTermination() }
         model.selectedMode = .hex
-        model.selectedLength = 448
+        model.selectedLength = 512
         XCTAssertFalse(model.uppercaseHex)
         collectMinimum(on: model)
         model.userConfirmedSecureEnvironment = true
@@ -212,8 +214,8 @@ final class AppModelTests: XCTestCase {
         let original = try XCTUnwrap(model.generatedPassword)
         let originalRandomCalls = randomCalls
         let originalShuffleCount = model.poolShuffleCount
-        XCTAssertEqual(original.text.count, 448)
-        XCTAssertEqual(original.entropyBits, 1792)
+        XCTAssertEqual(original.text.count, 512)
+        XCTAssertEqual(original.entropyBits, 2048)
         XCTAssertEqual(original.text, original.text.lowercased())
         for uppercase in [false, true, false] {
             model.uppercaseHex = uppercase
@@ -223,7 +225,7 @@ final class AppModelTests: XCTestCase {
             model.copyMnemonic()
             XCTAssertEqual(pasteboard.string(forType: .string), expected)
             XCTAssertEqual(model.generatedPassword, original)
-            XCTAssertEqual(model.selectedEntropyBits, 1792)
+            XCTAssertEqual(model.selectedEntropyBits, 2048)
             XCTAssertEqual(randomCalls, originalRandomCalls)
             XCTAssertEqual(model.poolShuffleCount, originalShuffleCount)
             XCTAssertTrue(model.isMnemonicVisible)
@@ -236,8 +238,8 @@ final class AppModelTests: XCTestCase {
         let model = secureModel()
         defer { model.prepareForTermination() }
         model.selectedMode = .hex
-        XCTAssertEqual(model.lengthRange, 1...448)
-        for length in [1, 3, 447, 448] {
+        XCTAssertEqual(model.lengthRange, 1...512)
+        for length in [1, 3, 447, 448, 511, 512] {
             model.selectedLength = length
             XCTAssertNotNil(model.configuration)
             XCTAssertEqual(model.selectedEntropyBits, Double(length * 4))
@@ -250,11 +252,20 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.bip39Separator, "")
         XCTAssertTrue(model.uppercaseHex)
         XCTAssertEqual(model.selectedMode, .hex)
-        XCTAssertEqual(model.selectedLength, 448)
+        XCTAssertEqual(model.selectedLength, 512)
     }
 
     func testInvalidLengthBlocksGenerationAndEntropyDisplay() {
-        let model = secureModel()
+        let assessment = secureRuntimeAssessment()
+        var randomCalls = 0
+        let model = AppModel(
+            secureRuntimeCheck: { assessment },
+            randomProvider: { count in
+                randomCalls += 1
+                return [UInt8](repeating: 0, count: count)
+            },
+            shuffleInterval: .seconds(3600)
+        )
         defer { model.prepareForTermination() }
         model.userConfirmedSecureEnvironment = true
         collectMinimum(on: model)
@@ -265,13 +276,37 @@ final class AppModelTests: XCTestCase {
                 XCTAssertNil(model.configuration)
                 XCTAssertNil(model.selectedEntropyBits)
                 XCTAssertFalse(model.canGenerate)
+                let callsBeforeGeneration = randomCalls
                 model.generate()
                 XCTAssertNil(model.generatedPassword)
+                XCTAssertEqual(randomCalls, callsBeforeGeneration)
             }
         }
         model.selectedMode = .bip39
         model.selectedLength = 13
         XCTAssertFalse(model.canGenerate)
+    }
+
+    func testExpandedModelLimitsAndEntropyAreAvailableBeforeGeneration() throws {
+        let model = secureModel()
+        defer { model.prepareForTermination() }
+        let limits: [(GeneratorMode, ClosedRange<Int>, Double)] = [
+            (.eff, 6...128, 1_654.37600046154),
+            (.pin, 3...512, 1_700.8271845823295),
+            (.hex, 1...512, 2_048),
+        ]
+        for (mode, expectedRange, expectedEntropy) in limits {
+            model.selectedMode = mode
+            XCTAssertEqual(model.lengthRange, expectedRange)
+            model.selectedLength = expectedRange.lowerBound
+            XCTAssertNotNil(model.configuration)
+            model.selectedLength = expectedRange.upperBound
+            XCTAssertNotNil(model.configuration)
+            XCTAssertEqual(try XCTUnwrap(model.selectedEntropyBits), expectedEntropy, accuracy: 1e-10)
+            model.selectedLength = expectedRange.upperBound + 1
+            XCTAssertNil(model.configuration)
+            XCTAssertNil(model.selectedEntropyBits)
+        }
     }
 
     func testPeriodicShuffleRunsBeforeReadinessAndAfterGenerationThenStops() async throws {

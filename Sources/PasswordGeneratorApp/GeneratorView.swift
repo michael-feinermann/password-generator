@@ -467,10 +467,10 @@ struct GeneratorView: View {
     private var modeDescription: String {
         switch model.selectedMode {
         case .bip39: tr("Englische BIP39-Wortliste mit Prüfsumme: 12, 15, 18, 21 oder 24 Wörter.", "English BIP39 word list with checksum: 12, 15, 18, 21, or 24 words.")
-        case .eff: tr("EFF Large Wordlist: 7776 englische Wörter, 6 bis 60 Wörter pro Passwort.", "EFF Large Wordlist: 7776 English words, 6 to 60 words per password.")
+        case .eff: tr("EFF Large Wordlist: 7776 englische Wörter, 6 bis 128 Wörter pro Passwort.", "EFF Large Wordlist: 7776 English words, 6 to 128 words per password.")
         case .ascii: tr("94 druckbare ASCII-Zeichen ohne Leerzeichen (! bis ~), 8 bis 256 Zeichen.", "94 printable ASCII characters without spaces (! through ~), 8 to 256 characters.")
-        case .pin: tr("Ziffern 0 bis 9, 3 bis 256 Zeichen. Führende Nullen bleiben erhalten.", "Digits 0 through 9, 3 to 256 characters. Leading zeroes are preserved.")
-        case .hex: tr("Hexadezimale Zeichen 0 bis 9 und a bis f, 1 bis 448 Zeichen. Jedes Zeichen entspricht 4 Bit.", "Hexadecimal characters 0 through 9 and a through f, 1 to 448 characters. Each character represents 4 bits.")
+        case .pin: tr("Ziffern 0 bis 9, 3 bis 512 Zeichen. Führende Nullen bleiben erhalten.", "Digits 0 through 9, 3 to 512 characters. Leading zeroes are preserved.")
+        case .hex: tr("Hexadezimale Zeichen 0 bis 9 und a bis f, 1 bis 512 Zeichen. Jedes Zeichen entspricht 4 Bit.", "Hexadecimal characters 0 through 9 and a through f, 1 to 512 characters. Each character represents 4 bits.")
         }
     }
 

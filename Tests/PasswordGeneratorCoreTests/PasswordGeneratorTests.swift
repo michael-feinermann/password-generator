@@ -73,13 +73,31 @@ final class PasswordGeneratorTests: XCTestCase {
         XCTAssertEqual(password.entropyBits, 3 * log2(10), accuracy: 1e-12)
     }
 
+    func testExpandedFormatLimitsAndMaximumEntropy() throws {
+        // Values independently calculated from n * ln(alphabet size) / ln(2).
+        let limits: [(GeneratorMode, ClosedRange<Int>, Double)] = [
+            (.eff, 6...128, 1_654.37600046154),
+            (.pin, 3...512, 1_700.8271845823295),
+            (.hex, 1...512, 2_048),
+        ]
+        for (mode, expectedRange, expectedEntropy) in limits {
+            XCTAssertEqual(mode.lengthRange, expectedRange)
+            XCTAssertEqual(mode.supportedLengths, Array(expectedRange))
+            let maximum = GeneratorConfiguration(mode: mode, length: expectedRange.upperBound)
+            XCTAssertNoThrow(try maximum.validate())
+            XCTAssertEqual(maximum.entropyBits, expectedEntropy, accuracy: 1e-10)
+        }
+        XCTAssertEqual(GeneratorMode.ascii.lengthRange, 8...256)
+        XCTAssertEqual(GeneratorMode.bip39.supportedLengths, [12, 15, 18, 21, 24])
+    }
+
     func testInvalidLengthsNeverReadRandomSource() {
         for (mode, lengths) in [
             (GeneratorMode.bip39, [0, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25]),
-            (.eff, [-1, 0, 5, 61]),
+            (.eff, [-1, 0, 5, 129]),
             (.ascii, [0, 7, 257]),
-            (.pin, [0, 2, 257]),
-            (.hex, [-1, 0, 449, Int.max]),
+            (.pin, [0, 2, 513]),
+            (.hex, [-1, 0, 513, Int.max]),
         ] {
             for length in lengths {
                 let configuration = GeneratorConfiguration(mode: mode, length: length)
@@ -195,7 +213,7 @@ final class PasswordGeneratorTests: XCTestCase {
     }
 
     func testHexOddLengthsRetainLeadingZeroAndExactEntropy() throws {
-        for length in [1, 3, 63, 447, 448] {
+        for length in [1, 3, 63, 447, 448, 511, 512] {
             var requests: [Int] = []
             let password = try generator.generate(
                 configuration: GeneratorConfiguration(mode: .hex, length: length)
@@ -227,13 +245,14 @@ final class PasswordGeneratorTests: XCTestCase {
         XCTAssertEqual(password.entropyBits, 1_024)
     }
 
-    func testWordExportsPreserveCanonicalMnemonicAndEntropy() throws {
+    func testWordExportsAtMaximumLengthPreserveCanonicalMnemonicAndEntropy() throws {
         for mode in [GeneratorMode.bip39, .eff] {
             let password = try generator.generate(
-                configuration: GeneratorConfiguration(mode: mode, length: mode.defaultLength),
+                configuration: GeneratorConfiguration(mode: mode, length: mode.lengthRange.upperBound),
                 randomProvider: { [UInt8](repeating: 0, count: $0) }
             )
             let original = password
+            XCTAssertEqual(password.components.count, mode.lengthRange.upperBound)
             let defaultSeparator = mode == .bip39 ? " " : "-"
             XCTAssertEqual(password.exportText(), password.components.joined(separator: defaultSeparator))
             XCTAssertEqual(password.exportText(wordSeparator: nil), password.exportText())
@@ -251,13 +270,15 @@ final class PasswordGeneratorTests: XCTestCase {
         }
     }
 
-    func testExportLetterCaseAppliesOnlyToHexWithoutChangingResult() throws {
+    func testExportAtMaximumLengthAppliesLetterCaseOnlyToHexWithoutChangingResult() throws {
         for mode in [GeneratorMode.hex, .ascii, .pin] {
+            let length = mode.lengthRange.upperBound
             let password = try generator.generate(
-                configuration: GeneratorConfiguration(mode: mode, length: mode.defaultLength),
+                configuration: GeneratorConfiguration(mode: mode, length: length),
                 randomProvider: { [UInt8](repeating: 0xaf, count: $0) }
             )
             let original = password
+            XCTAssertEqual(password.text.count, length)
             XCTAssertEqual(password.exportText(), password.text)
             XCTAssertEqual(password.exportText(wordSeparator: "separator"), password.text)
             XCTAssertEqual(
@@ -265,8 +286,8 @@ final class PasswordGeneratorTests: XCTestCase {
                 mode == .hex ? password.text.uppercased() : password.text
             )
             if mode == .hex {
-                XCTAssertEqual(password.text, String(repeating: "f", count: mode.defaultLength))
-                XCTAssertEqual(password.exportText(uppercaseHex: true), String(repeating: "F", count: mode.defaultLength))
+                XCTAssertEqual(password.text, String(repeating: "f", count: length))
+                XCTAssertEqual(password.exportText(uppercaseHex: true), String(repeating: "F", count: length))
             }
             XCTAssertEqual(password, original)
         }

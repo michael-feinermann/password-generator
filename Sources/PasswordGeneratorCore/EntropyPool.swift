@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import Darwin
 
 public enum EntropyPoolError: LocalizedError, Equatable {
@@ -103,32 +104,35 @@ public final class EntropyPool {
         for index in order { serializedPool.append(contentsOf: records[index]) }
         var skeinDigest: [UInt8] = []
         var sha3Digest: [UInt8] = []
+        var sha512Digest: [UInt8] = []
         var master: [UInt8] = []
         var operatingSystemBytes: [UInt8] = []
         defer {
             wipePoolBytes(&serializedPool)
             wipePoolBytes(&skeinDigest)
             wipePoolBytes(&sha3Digest)
+            wipePoolBytes(&sha512Digest)
             wipePoolBytes(&master)
             wipePoolBytes(&operatingSystemBytes)
         }
         skeinDigest = Skein.hash1024(serializedPool)
         sha3Digest = SHA3.hash512(serializedPool)
-        master = skeinDigest + sha3Digest
+        sha512Digest = Array(SHA512.hash(data: Data(serializedPool)))
+        master = skeinDigest + sha3Digest + sha512Digest
         try Self.shuffleDigestBits(&master, randomProvider: randomProvider)
-        operatingSystemBytes = try checkedRandomBytes(count: 192, provider: randomProvider)
+        operatingSystemBytes = try checkedRandomBytes(count: 256, provider: randomProvider)
         for index in master.indices { master[index] ^= operatingSystemBytes[index] }
-        return PasswordByteStream(master: master, randomProvider: randomProvider)
+        return try PasswordByteStream(master: master, randomProvider: randomProvider)
     }
 
-    /// Permute all 1,536 individual digest bits before mixing in the OS mask.
+    /// Permute all 2,048 individual digest bits before mixing in the OS mask.
     /// Bit zero is the least significant bit of byte zero. The permutation uses
     /// fresh, buffered OS randomness and unbiased descending Fisher-Yates swaps.
     static func shuffleDigestBits(
         _ bytes: inout [UInt8],
         randomProvider: @escaping (Int) throws -> [UInt8]
     ) throws {
-        precondition(bytes.count == 192)
+        precondition(bytes.count == 256)
         var random = PoolRandomReader(provider: randomProvider)
         defer { random.clear() }
         for index in stride(from: bytes.count * 8 - 1, through: 1, by: -1) {
@@ -156,17 +160,18 @@ public final class EntropyPool {
     }
 }
 
-/// Three advancing streams seeded with consecutive 128-, 32- and 32-byte master
-/// fragments. Skein-1024-XOF and two SHAKE256 streams retain their own positions
-/// across refills. Each XOR-combined chunk receives a fresh OS-random mask.
+/// Five advancing streams: Skein-1024-XOF (128-byte seed), two SHAKE256 streams
+/// and two AES-256-CTR streams (32-byte seeds each). Both AES counters start at
+/// zero under the newly derived keys. Each combined chunk receives a fresh OS mask.
 public final class PasswordByteStream {
     private var skeinStream: Skein1024XOFStream
     private var shakeStreams: [SHAKE256Stream] = []
+    private var aesStreams: [AES256CTRStream] = []
     private let randomProvider: (Int) throws -> [UInt8]
     private var isCleared = false
 
-    init(master: [UInt8], randomProvider: @escaping (Int) throws -> [UInt8]) {
-        precondition(master.count == 192)
+    init(master: [UInt8], randomProvider: @escaping (Int) throws -> [UInt8]) throws {
+        precondition(master.count == 256)
         self.randomProvider = randomProvider
         var skeinFragment = Array(master[0..<128])
         skeinStream = Skein1024XOFStream(skeinFragment)
@@ -175,6 +180,16 @@ public final class PasswordByteStream {
             var fragment = Array(master[offset..<(offset + 32)])
             shakeStreams.append(SHAKE256Stream(fragment))
             wipePoolBytes(&fragment)
+        }
+        do {
+            for offset in stride(from: 192, to: 256, by: 32) {
+                var fragment = Array(master[offset..<(offset + 32)])
+                defer { wipePoolBytes(&fragment) }
+                aesStreams.append(try AES256CTRStream(key: fragment))
+            }
+        } catch {
+            clear()
+            throw error
         }
     }
 
@@ -187,6 +202,11 @@ public final class PasswordByteStream {
         do {
             for index in shakeStreams.indices {
                 var fragment = shakeStreams[index].read(count: count)
+                for offset in result.indices { result[offset] ^= fragment[offset] }
+                wipePoolBytes(&fragment)
+            }
+            for stream in aesStreams {
+                var fragment = try stream.read(count: count)
                 for offset in result.indices { result[offset] ^= fragment[offset] }
                 wipePoolBytes(&fragment)
             }
@@ -206,13 +226,12 @@ public final class PasswordByteStream {
         skeinStream.clear()
         for index in shakeStreams.indices { shakeStreams[index].clear() }
         shakeStreams.removeAll(keepingCapacity: false)
+        for stream in aesStreams { stream.clear() }
+        aesStreams.removeAll(keepingCapacity: false)
         isCleared = true
     }
 
-    deinit {
-        skeinStream.clear()
-        for index in shakeStreams.indices { shakeStreams[index].clear() }
-    }
+    deinit { clear() }
 }
 
 /// Buffered OS calls avoid one syscall per swap without substituting a PRNG.
