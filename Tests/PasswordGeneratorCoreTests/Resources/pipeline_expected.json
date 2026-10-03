@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "skeinXOFConfigurationOutputBits": "18446744073709551615",
   "aesCTRInitialCounter": "00000000000000000000000000000000",
   "aesCTRIncrement": "128-bit big-endian, no wrap",
@@ -15,6 +15,7 @@
         4096,
         4096,
         4096,
+        256,
         4096,
         4096,
         256
@@ -22,84 +23,87 @@
       "poolByteCount": 364544,
       "poolSHA256": "ea963f6f8c9a61cce3fe2988f576f5081f8bb1f4624dd85cd594e45257a98929",
       "digest": "70f6e1963e6b1e9ed4b3dea5345f2803fe71efe1c63bc7adc65461bc5569857c24759aa64c418e34be6e8d145e702d4aede0cea1d1aef31d936875c93d8f936209e7c39ceb887db9d840a2ea010e7c57e8c9a38f62d35e4dfbd2bf3b94344ce4b4dc1a3c103b0419ab17c11c8dbcb88df39f34f12247d5a67321ef840d68b9172fec1bd2540fcc08b525b244103ae42140ead032879bd15e8bc6515407c1aa53e66e4de4328d2a8aee93c9a7996daeaa569b5d67d630702a85fb291fa5f06eea70a83418272294aa0d4a9bf0805bda0aedf5133763abb247591a07eaca3b313f97295096355c73507a3dbbb1f0cb2f840cf4f2bf483e9f5944b83ccdf3ba8b33",
-      "shuffledDigest": "38fb704b9f350f4fea59ef529a2f9401ffb8f770e39de35663aa30deaab4423e923a4d53a620471a5fb7460a2fb816a57670e7d068d7f98e49b4bae49ec749b184f361ce75c4be5c6c2051f50007be2bf4e4d147b169afa67de9df1d4a1a26725a6e0d1e881d828cd58b608e465edcc6f94f9a7891a36ad3b99077c206b4dc8b17f60d69aa076684da125922081df21020756899c3cd68af45e328aa8360d52973b7267299461545f7c9e4d3cc365755abcdae336b183895c2fd948f5278377538541a8c13114ad506a54d78c02d6d85f6fa899bb155d9a32c8d0375e59d989fcb1428cb1aae3928bd9edd58f8e51742067af95f249fcf2c225c9ee679ddc519",
-      "master": "9d5ed5ee3a90aaea4ffc4af73f8a31a45a1d52d5463846f3c60f957b0f11e79b379fe8f60385e2bffa12e3af8a1db300d3d54275cd725c2bec111f413b62ec142156c46bd0611bf9c985f450a5a21b8e514174e214cc0a03d84c7ab8efbf83d7ffcba8bb2db82729702ec52be3fb79635cea3fdd3406cf761c35d267a311792eb253a8cc0fa2c3217fb7fc87adb857b585d0cd3c6668cd0ae0468d0f26c5708cd61283d73ce3b0e0526c41766993f2f00e680b96cebd9d306758312af7dd92d09df1bf29b6b4ef70a300e8dd6588c820535f2c3e14f07c068928a6d040383d3a6eb18d6ebf0b9c8d183b78fd5d40b2e7a3df5cfa813a6a8987f93b43dc7860bc",
-      "output": "189eeca8f236c24d1498c2c76688b0086c5c7fc739e9de6cc39b98bedbb80bd282ae33a825b2c95e8ea6dd6656d5e412bdbb11763c4f24ddf029cb1c039e8190fba429665f0e8e94711371fe5582a0bd10160479599e0a95aff770a3d43eb74e71be9ea5e2649a993fbe8fe0af67449936783cedceea14f02971a0aafc9ae28fa3f5a55dfc7181981cf2e23d920e982d3d88e12c3608f353b93c58476672ec8d07b047be6dae9be5fc25634b861eb9a0d3f11d5c1193389fe2d1a1dda1493a4266f250e75b0e3ad0dff17a989c9fe6abe97efcf45d624c41995c032da3f9e673860711de8d6c6dc79f047a7e0ea954709f8a9b894d6c16bc06a17dce877df284944736ae254c49e7907695efcdceb0c15f72b079bfd88279181fe31543ec896d177bdd4e99c6b09964056ae4c53104d6804a6b09ebc4c99fde3da2dd88ff82d30e9d0c315a8db0864dcf918d27bfb54a96c35c70b2f0e131df1c1e906d736b0b6c3d387599f590964a836edc238365fdc97511ecbd4e479358c25c7376d18fd2172ac90379fe0e8b7b09ba6908449be15abae00b13e563709f4375b0fdac70c67ce9fbfcb38f1f59f8037c293525eadfa14c791ff51962de576e76c98533856d6e67701fdeb37eb24da3abf3a9ead513a1ed06289b2fa4cf716d415cedb3aa4daef6a7ab7abebcdaa5d6f34df6503abb8b7a8cecabcb34d1dfb9ffe03978e39e732b4aac83e548a14e6b1c6c8a8f5c25b8f56ca874b595a5cace3a5fe8949c6a80db64e6e3abed6dbf6e3135ef66185178945da46bc56abe85835c7a261189e5f71c0aa618f5f2db55207394b9ddf15b30227abfcfa4b86894e455a8f2f2ab7efe64594d405821124c3828e2fecb998f86d1a680521938142149083ad6bdec9c6caf31687a5ab02316e68aa41daea3a60576a4601a8b742d8f82e72bfa4cc39d0fcfd5be591cd10258260b96279bdcecb9fa9c6403a5f63a9a0bfe2a7a842da5f6e802772861a0bf546401e298221e45df6e7715fa0a0cff32ff97665d9a7647f6fd5be7c7947d81c22e86a8a8ea911db52fec321c78b68117d5180af706e985a0a73c2753260f8029de0c7ae527da8e9b0e07f8890fe6bba0580e17e4e32e22af4bf5b7028d0a49fb444ece2c932d724a58abf2e2ec2e7653f75902e6edec1ebb15853878d74a9aead7fbdb21c468fb58d4b652dbd4e6331cc98946af4cdb8dac6e59eb2cfe888039ff404282fe30e6724837f6d141154cad4110ba07214111b0a72a64274ed2d995c75256cf776501a7592383c20e18ea7728c2629251336aa5b75efa4fad4b3653c55bcbe071c644dadec2b0195f9a8ca0a254ced33b93f6bfe0d6232f80de6264d65d54c1bf5c0120e67439d2a68a984c372ddfd213fba8b840e733e2f159ae84803853bfa9f232f68abda697027bbe7cdf8d785ce7ec80",
+      "preShuffleMask": "3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c",
+      "maskedDigest": "4ccaddaa025722a2e88fe2990863143fc24dd3ddfa07fb91fa685d806955b9401849a69a707db2088252b128624c1176d1dcf29ded92cf21af5449f501b3af5e35dbffa0d7b44185e47c9ed63d32406bd4f59fb35eef6271c7ee8307a80870d888e026002c073825972bfd20b18084b1cfa308cd1e7be99a4f1dd3b83154852b13d027ee6833f03489198e782c06d81d7cd6ec0ebba7ed62b7fa6d683bfd966fda5271d80eb116b6d2aff59ba55192966aa7615bea0c4c16b9c7152399cc52d64c9408241b1ea8963176a7ccbc67e636d1c92f0b5f978e7b65263bd6f6070d03ab156caa09604f6c4601878dccf713b830c8ce837402a365788400f1cf86b70f",
+      "shuffledDigest": "26e56e55812b1151f447f14c84318a1fe1a6e96efd83fd487db42ec0b4aa5c208c24534db83e590441a9581431a608bb686ef9ce76c9e79057aaa4fa80d957af9aed7fd06bdaa042723e4feb1e19a035eafacf59af77b1b863f7c1035404386c4470130096039c92cb957e905840c2d8e75184668fbd74cda78e69dc18aac29509e81377b419789ac40c473c1603ec0e3e6b7687ddd376b15bfd36b49d7ecb376da9386c87580b5be9d7facdd228494bb5d3b02d7506268bdce38a914c66296b264a04920d0f54cb18bb5366de33739be8e49785af4bc7bd32931d6bfb838681d50a36d504b02736a380c346e6fb095c1864e7413a81d1323c4280f867c3db07",
+      "masterMask": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "master": "8340cbf0248eb4f451e254e921942fba44034ccb582658edd8118b65110ff9852981f6e81d9bfca1e40cfdb19403ad1ecdcb5c6bd36c4235f20f015f257cf20a3f48da75ce7f05e7d79bea4ebbbc05904f5f6afc0ad2141dc65264a6f1a19dc9e1d5b6a533a639376e30db35fde5677d42f421c32a18d168022bcc79bd0f6730ac4db6d211bcdd3f61a9e299b3a649ab9bced3227876d314fe58931138db6e92c80c9dc922fdaefe4c725f68778decee10761588d0a3832e79462f34e9c38cce83efa137a8aaf16ebd1ef6c37b96d63e4d4132200aee62189736b8ce5e26232470af9370a1158293062566e3435eacf9bdc142e49f24749799e7255dc2667ea2",
+      "output": "347e3794d0ac33e90c7056c7eba70dbfc337b9d4fe1ffe5539d986a2bd0f2c3feeef16fdf2f6b01f500ad9effaf2e3db3f5307c36668dfe515bc56dc8ab123e46c9763d274f0cdc23ec05d5c8016baea54469d9e7e35b3417fc5e2dcbcee16199da233190e31e00ff3ab9f0c7cadc3cd0a8cecc193b46ce3f3d81165a67f328d5a9bdd66efaa5796c7f2c65c780c6374dcd97649fe57aaa9c260ebf499f54c123a84c69350cca96198ad84d0d75699ad76e657509142e124e91969920be229bb3bf2445280a34cffd9e40def5bbe1c4a46ec6d630b1bb509c4b9ec8e5318003da5ed6b48fdcad1bdca46e3eebb3f533f34830e4b13e149060086912be7f5391cfdac40afe78e75783aaf9c77803c7a86f92e7360a7acd08fdc400bbbce7c620d389b608da4dc5e26c8dfb3cbc82298936fd00c28ca39d50454ed6266e6b260e3917e5c438b8a19eba231f316a4419caf4c8d0e0cc4025e9bc83df42032e7977559c8f16363b0d2e42ada4a4df310225549d523777ca16a7c9254648248ead5a903dd9772fea55120070edabbdc855f2c492fec11d05d241750c72169f48fb072ffa0599ceb1e28cd80baa67db588bd6bb5c733f034b9c34eeb937a99df0c1e5e7e31d48c50af4b607358f875f07cf3bf074fbd40958dadb8fdc98ec1dcecc1544cb1999b5ab852b13a19defe5fcb133ca82d275b414e21ed2edbfb0bbdb8033bf381a14fe44b895f2bba0a3fd2aa7601e77b3ac01b201254a7b9a394b71cd7f4a5ec47b0699705d54bb78e70a59a4d70688b9e3d2313fd0421026c4d09629181faf3952ba32682fffd6532bdfb25e5557f7cc96dc7530fb3cbb5650ef0f616745e7fdaa50c2d6c2217b91e66dfa0e6249621bc5fb7dd5a2ef6325337da3f4e15dc733fea2c70cbac22b0287dea9b06717cc7365c6fbb6727e5b9574e23d41a082ae2570cc726c9ff8c71da5c6ebe345adcdc718a37bf070a086936078ec735e8aab99ffbcd54608cd1ca2481bed8f7bb183ccdc6e5a85f0893a13444afcc6492e26bd963d4481a43219e535bfe925274000210ede98b2e1b9ef60698e7d9372f90863d0a9ee92521307dc2bb4b05876358dfefae5b04c695ba141d0c846bad1914cbcc1dbf3816878f5ed289456d8a2459fd353c728e9b27cb90c961789d744af531fa061ea96536f82df025b90a0a95761964a59c0846f77cec3526b71c7612d166ab6edab6d6abab38ab6cb6ebd3006de25ba38f0244e85748300f690fc020c1709426dd10e2a60ce8a57c9dcd7c03aed78908dcb6cd39dda855c8de6bd8c8cccc0ad0ac0521751bf9d3ab890e5bdf2f7dd8c8ad7ff8bf41f358a84703a204aedeb55493a0b3de382d56fee81b69fa17ddd33ea1f35223531b632c1c391cf309fa74a2ee789f2b00491318140916ba5473f2f39ff068af1830af6c97a1fdc8",
       "passwords": [
         {
           "mode": "bip39",
           "length": 12,
-          "text": "blush wash clay tongue history charge fame blue shuffle crowd clown away"
+          "text": "crucial vast topple pattern segment virus crack approve side frog sell left"
         },
         {
           "mode": "bip39",
           "length": 15,
-          "text": "blush wash clay tongue history charge fame blue shuffle crowd clown awkward shift divide burden"
+          "text": "crucial vast topple pattern segment virus crack approve side frog sell legend cricket table fatigue"
         },
         {
           "mode": "bip39",
           "length": 18,
-          "text": "blush wash clay tongue history charge fame blue shuffle crowd clown awkward shift divide brother diamond taxi good"
+          "text": "crucial vast topple pattern segment virus crack approve side frog sell legend cricket table fault sentence wrestle post"
         },
         {
           "mode": "bip39",
           "length": 21,
-          "text": "blush wash clay tongue history charge fame blue shuffle crowd clown awkward shift divide brother diamond taxi gravity tragic cousin tube"
+          "text": "crucial vast topple pattern segment virus crack approve side frog sell legend cricket table fault sentence wrestle prefer island ask climb"
         },
         {
           "mode": "bip39",
           "length": 24,
-          "text": "blush wash clay tongue history charge fame blue shuffle crowd clown awkward shift divide brother diamond taxi gravity tragic cousin unit swing consider during"
+          "text": "crucial vast topple pattern segment virus crack approve side frog sell legend cricket table fault sentence wrestle prefer island ask cloth maple rail trial"
         },
         {
           "mode": "eff",
           "length": 6,
-          "text": "starlet spectator waged had removal headgear"
+          "text": "scared student thyself roulette hatchery taking"
         },
         {
           "mode": "eff",
           "length": 128,
-          "text": "starlet spectator waged had removal headgear goal spirits overview declared undercut fastball iron anteater dipper groom estimate ricotta dispose prone reversal enduring tapeless monologue doily papyrus winnings deity undercut rescuer causing dynasty gem chewer retrieval sarcasm shiny stem enlarging neglector coerce uplifted frayed sphinx roping wobbling apply sessions deskwork juniper bronze bust scuttle slate dropbox spider activator starving resisting geologic enforced kinfolk hamburger january earful uptight jogger stamina afterlife angriness headphone sloppy busily undercoat glitter snowfall dramatize gauze possum choking easiest hedging carnation washout viewless parsley thespian large fidgety exert unhidden groom rectified zeppelin unshackle glitch apron concave petite research blunderer moonbeam automaker cane hamster pectin headgear pelvis reactor prancing disarm apache lullaby slush drainable celibacy oppressor shamrock dental climatic knapsack willing trial spotty diabolic immovable shove unsettled"
+          "text": "scared student thyself roulette hatchery taking shredding jump hypnosis cattail uncrown imminent detection kerosene thirsty showman zips sponsor pry crafter mating breeches drew glaucoma glare safeguard tarantula overstuff crimp parabola encore swimmer slang barterer blooper democrat compacter slashing culpable composer uncheck decipher latticed deport scant culture repeater large goldsmith discharge cane jellied fragility spinning theatrics pavilion panda lubricant reenact wilder enduring turban tricycle patchwork neon upstart effort ebony twisted preorder handclap skating blabber mocha unmixable oak recent paramedic animating glisten broker bagging unfitting tipper smoked headed reliably liftoff gruffly glorious wackiness doormat disallow numbness coveting kinfolk amigo unreached flanking pleading germless varnish lilly snowfield scruffy affecting ladder neutron uncurled rebuttal mobile contented semicolon scary legend ravage happening although slouchy pulse treat chewing princess threaten unrelated coma desecrate appetite"
         },
         {
           "mode": "ascii",
           "length": 8,
-          "text": "9akWn5[)"
+          "text": "UAXWoT-3"
         },
         {
           "mode": "ascii",
           "length": 256,
-          "text": "9akWn5[)Ks)/}BZ/^[{,EqTkFu!Qi)w3~29]pEJ=$aDSgJ)\"/QW444vEc17%<za+Xr3f_zo4ah']\\`Rr*e\\W;]5J4cm]Rfh~4D[=^U/[N^KMW)t|]yh)5P(sh0q^F&lI?|c>}2VYbddj[c)q|/[=[_bnA~%mb\\}$Nf6I(2P/0b%=A/lu3bM^Ln/7'd@J@GWhWqFmjS9Xs\"5s<E<9@6dL08>o\\s\\'&-R%Ck.*b^eKE/`-R{PsInTPHxkY}3uR=?S0"
+          "text": "UAXWoT-3wj.X|@vZIe0M`7s@q+`t()+6wMtD/Z&7_~}C7}ug`aAVvbB7:`eT:/R0nb-?p+OVw/2(iBSP{^)mxY};-&79jxml#\\m3[GVql$[pGw\\p9xqTcE:,U,J~\\esCfm.|=kg0&,<x*|Qt9!^h.ig~`t`UF/l4j'!ITLZ=oarQ8;[r_:C]=IO6#joRa,~?%.Y^#Pg!GvC[V2-IZ%u%)u#TA}dNM:eR7gb_rmP/-#!^^ASZ8z&&sKkn1CvjD:?d"
         },
         {
           "mode": "pin",
           "length": 3,
-          "text": "486"
+          "text": "265"
         },
         {
           "mode": "pin",
           "length": 512,
-          "text": "48682447024926688279732855209410041878142612638897780961013838944125428393500962419809572322383085604330345383400764001300463355339282616425165448335081246176109459795405011927769691113862201148831226901364386532353905477218999426494298577828615655228144763148995663546116014171767933183863056879448479561921216014729016477519114052280593804957181673540410051117769817842589303213149396588550641999297762284393198341374316115582708131390321296873139439176057473952790746712088543760879206132935470785342192187888"
+          "text": "26588213226957315552157742954389226610079279337524391860875881906054223282644078639577608825721549453192435500637087367167010512907092820296078370946543568828704972328563380705656355616179282836783910840699171965623401577229920787333214595360453157824512708569802496567283041764836561404803930427182027344782086756279855293245656142624501420117901996082847364533594164640024393114512748703543767836309354364096500586651697191025585723320469200556588704317994913412306346735042785253908591583769194393919857536030"
         },
         {
           "mode": "hex",
           "length": 1,
-          "text": "8"
+          "text": "4"
         },
         {
           "mode": "hex",
           "length": 3,
-          "text": "8ec"
+          "text": "4e7"
         },
         {
           "mode": "hex",
           "length": 511,
-          "text": "8ec8262d48276808ccf799ec3b8eb8b22e38529ee6d66542db16cf4d09bc3e10b496fee4131e520d06499ea5f7034e7e1ee524a9fef0f74968cdea40910aca2f355dc118c22d2e8dd81c68339c8762cd707edeb5c53b6e9031dc138f211d19a26207bea0f1a8cf6b9ec4d2c19c3d3963671edcd7f4aee940fab9dc6c61de7d24476e5c97065fde01f209f8298f353c9d7bde960945a451460ab9b49fed2d8f23edc1ad06df1d7f5a63c02011fce0d3bbcd859506a3ec335d951cde7382c361f27a939eebb9a984b1aa0b3530f350dc06c9bc3ff983c955af1c9f592e7e69535de70fe3e2d3b39a531d68bf4f1d1cd3ade67baeca563d60abbaccbb41f9f0983"
+          "text": "4e740c39c067b7df3794efe59962dfcfef6d260f0a9fa23bf37368f55c6ca134c73240d2e0dc06aa46dee531f52cce69d239e10f3bfccd3dacc134c338156f2dabd6fa76726c8c34c969e7a920b495c2a4630c918d40769d667012149992b29bb24203cf94dfbeca6cd3bb5949ce380d5db8da1da63ebf3f43eb3196061b759cdc0f7e58afc70ca69e307c0fc0bbec2d8b0d4ce68f3b8283f0c8a9544d2662031ec3ba9b213641cfcdec42eb8d40277598133024aaad30259537c1ac24428a593d72e5107eabc5fc9fc10d4707194f02f09cbe8d0a6d58db5730493eb3a9fceee14c0fb038850c3f7fd05dd8d9e1cc14c19ba821a9eefb3c8d7b1e1debbbd83"
         },
         {
           "mode": "hex",
           "length": 512,
-          "text": "8ec8262d48276808ccf799ec3b8eb8b22e38529ee6d66542db16cf4d09bc3e10b496fee4131e520d06499ea5f7034e7e1ee524a9fef0f74968cdea40910aca2f355dc118c22d2e8dd81c68339c8762cd707edeb5c53b6e9031dc138f211d19a26207bea0f1a8cf6b9ec4d2c19c3d3963671edcd7f4aee940fab9dc6c61de7d24476e5c97065fde01f209f8298f353c9d7bde960945a451460ab9b49fed2d8f23edc1ad06df1d7f5a63c02011fce0d3bbcd859506a3ec335d951cde7382c361f27a939eebb9a984b1aa0b3530f350dc06c9bc3ff983c955af1c9f592e7e69535de70fe3e2d3b39a531d68bf4f1d1cd3ade67baeca563d60abbaccbb41f9f0983e"
+          "text": "4e740c39c067b7df3794efe59962dfcfef6d260f0a9fa23bf37368f55c6ca134c73240d2e0dc06aa46dee531f52cce69d239e10f3bfccd3dacc134c338156f2dabd6fa76726c8c34c969e7a920b495c2a4630c918d40769d667012149992b29bb24203cf94dfbeca6cd3bb5949ce380d5db8da1da63ebf3f43eb3196061b759cdc0f7e58afc70ca69e307c0fc0bbec2d8b0d4ce68f3b8283f0c8a9544d2662031ec3ba9b213641cfcdec42eb8d40277598133024aaad30259537c1ac24428a593d72e5107eabc5fc9fc10d4707194f02f09cbe8d0a6d58db5730493eb3a9fceee14c0fb038850c3f7fd05dd8d9e1cc14c19ba821a9eefb3c8d7b1e1debbbd83b"
         }
       ]
     },
@@ -115,6 +119,7 @@
         4096,
         4096,
         4096,
+        256,
         4096,
         4096,
         4096,
@@ -123,84 +128,87 @@
       "poolByteCount": 364544,
       "poolSHA256": "92263d40239171e11ebadec4d85bbd8a49c961f84ed55fb268a4b904bf5fc9bf",
       "digest": "c6236e3822347cf2cf2efa0e4882c9bd1c703580d7d2d4ad2270a50bb58890721b3c279718b988ea4864c1446f1f5ed890e183f42725e23f2ea19412487da3fc9d6092e92cbc401814dcd5dbcbf8cc8fece253228e53a8ca75322af0033b76e864c757f92945b8dcbe922d0a5d33bbc831e3d8c82626907cfe920ccb76e074601330f0f2c1e333b319624b67124c61fd69ff3304c03503479577a5769a220bc48aeae9d5f5ee98e192dfe0eaa52d7b0900d7e40284077ab4bc356ba3e3051b49f7f761ea7f09be9cc6c46274451a9da2e78110762a458b8b7936f64d7fe3ef9b0435090aa1dcefc8aa77811fcefb9832041df6d38a5b3bcda9b805bf25d730f9",
-      "shuffledDigest": "71b3af3d5a40a9041271918ee1afa1a5d93b9e018252818dccfb3cd4ae4a36d66c52eb844259be9b92a64a2e7d3ad4f3ffa4f65771ae5f106f44bc4434f3a5878151fcc387916a9f48aaff66cfaaef330767c3d8cfdbaa757e00c83831ee77440732b8c6957448b7a5494a196da9da7d1e1e69454bdf18938295387ce1984f02f07efe0d63907c92e533c320dbb31e52c42b71176389ca359792e23b95d75a1e4cf3136a1088bb831f526721b3eb2a9d2c8608ac98e91e1555165bfb05dd433b038627d869249f93d0d436c7afa0fd048c6e9d280d473d3e0080a6beb9220225f51ae8905186eae96cd8cb13034f706c7087532394ee3cd4768f308843e7a4a3",
-      "master": "d4794029631e2aacdf8386b280290a752c21a1650bfc5275d1b95b581f9ccdf6293864309ba79dd3ff34fdf27c1c9f836a1e295358e02c88d2a6bb6865853e47645bd397fe0fa9774598a81a6e6c0423323dbc7c0635b94d23826ff4c0f84c24829877328c4a2b3f089bbd052ccf51cdcbe476012251ab4b7fb77f10702e9402d5349199da4e7fbaa841549c3ab53502b1b1cef36aa7994d0a500537a48121be89191c5e49f6184bf240507d324de16d39bc57283127ed0d6874dc57d42b587b660c880c903adcfb5d66e13b8ee6969439b4620c4429ae86dd8281f2c8b4b9c5f030a7e4c83809e1418abc8fc2a97b5c25fdcce77de00f8c0b2df76452d1ff23",
-      "output": "d26b8ae8093212d11d8d55380e3c35d005ac98c93b68f280abb4af0f637782b389695f0983334cac61283766abe1a6ec7663120eefc9ea9e17f770c54d87f16faee7b5a498400072e56780253f7ab7a2aaf4ca7419124fc8f22ff73c5f8412991f819ec48e224783743a3bef4217aabc0b326a3230c0e155caf0287099493fc7ade6f2854bdcab118f538a9ec19d69c17afce80bc73e9ed903983fd6cc0438bdbfd8fd30bb1c87504dcbbf8080321427bb2a84ff5c7204b53d845d04a3b153864e6565e03372ef97914b019675ebbf968665f006a4508d0df0190f8dfddac94f653e89d3a9e03b345874131e34fe3824c716c2a553e4f20ad74e2a191375a57850d67ebf7e5116268ab5139acfb4ad68b11c4bbabbf77064beb88bf22b38b9fec602b82dbb088d90ddd119c734e6ab0ebf8930757067a5a98cf99cf74a7dd4b99d27d1d9e7e336762ff4aff77f15a7dc4407d9a73f33ebb613e1c651fc59536825c15e279fbeab9bfc705e930f132e7d7c9b5c3533e203969fa2b3e661a43f713028a583b7a39e8dcb17fc7855303220122b6ccba3b94538fd37d05cd3df53e0dc44a4745fdc58791470a59cb63c1becfb8762ae9940aad8aaeab89c123ddc24cc406a7d094de5cb785a776e8f42fe05e89e685906c2ac36e1ecb29821d3b7bd0146658190d297ce38acc457dd1c73d6f8473940b5f5dc45c7d8509769678134d8f587b57901621840f86639e675772716e6c36dc15cc46508c2bf558dd0935a0656f52bc9edad127e6b3b39a444c5353b262a22898701f1c79e1d56f86050c01ec43f885abd60d9574e5469ca01b19a99fac2397ffa92fa50b393dc62bd8411098e5b5484b4f3934ee62b4a77f4209ba17a4da7535c3e6f7c2bada40a78afa2b494b0f7f195c4c07f6558c5ace2155eb2afc4a7fbd07944cdb88dd56e77bcfcba217a1c504dc72e7579afbcca462fb85550ad9b676e2052e7d052fcf480b45d4f72c8a40322d9e4d595af03a45f5260686103d756697543932f416ea4d3d6e74715320f4fb43a706b27b683852c32e710698ffc67efcf50e291ff95d61befdbe58711eb9adfa4d3ebafc37a642a34981a8f1115f533cfd110a376ee5f30e10f0fe0ad224670b2536df0f16fbf709508b7aeb28496d19ec66a49f888eef6675e943915a910a03d6893ac1a9f3e7330e3a0f18eaf7810ab661c9a3fb7a86e80142ef93d38784c4f39dfc48b950d5974d45811cd85fbfbb40c8662152380325d293f3b629d7b3bd9526fede17bbffcf1505b934bacf8b543c5e722fb79c5b428ebb272046fd9c99a705b6afcb390ababdeaaabe62cae5e8fde98ef2f7f1a68ebb97134ba62c1b79e23732f9c96f6a1ab81d8a996b368bb7f1a5395f8a4613f9ee0831c83c36260ba795065d33e6f575c2b7277c0691ae2e3973d82937c4e5d6ce5",
+      "preShuffleMask": "3c4f6275889baec1d4e7fa0d203346596c7f92a5b8cbdef104172a3d506376899cafc2d5e8fb0e2134475a6d8093a6b9ccdff205182b3e5164778a9db0c3d6e9fc0f2235485b6e8194a7bacde0f306192c3f5265788b9eb1c4d7eafd102336495c6f8295a8bbcee1f4071a2d405366798c9fb2c5d8ebfe1124374a5d708396a9bccfe2f5081b2e4154677a8da0b3c6d9ecff1225384b5e718497aabdd0e3f6091c2f4255687b8ea1b4c7daed001326394c5f728598abbed1e4f70a1d304356697c8fa2b5c8dbee0114273a4d60738699acbfd2e5f80b1e3144576a7d90a3b6c9dcef0215283b4e6174879aadc0d3e6f90c1f3245586b7e91a4b7caddf0031629",
+      "maskedDigest": "fa6c0c4daaafd2331bc9000368b18fe4700fa7256f190a5c26678f36e5ebe6fb8793e542f04286cb7c239b29ef8cf8615c3e71f13f0edc6e4ad61e8ff8be7515616fb0dc64e72e99807b6f162b0bca96c0dd0147f6d8367bb1e5c00d131840a138a8d56c81fe763d4a9537271d60ddb1bd7c6a0dfecd6e6ddaa546960663e2c9afff1207c9f81df24d0531eab2ffa72485002121f87e5d3611e00fcb4ac1fdcd96c5ab809d95164026183a07a53e5d304c8896871cacc46558c261bed3464d208b78c35fb7d2509dd2e3583925691b3b4b3ec293d24e95ba3d619c30ef405952d8da0b1f89e7a1a9def01bb20e287ecb0802c496d230455c0d0fcf62d5d426d0",
+      "shuffledDigest": "0adca10c0f36312fd0c6eb24aee91e16e8e404f14105232637e19418a5e4e549d6516299f09d04f59028f2c3391b702d2199d14d3792d8bfb29264d899edd5ff6b1cbc984c6f29e7ced799d285c98ea27f4039d2785cf3e37ab13e01f5a1b26a0c46c7da1404529696cc2b8d1f0b14d36d31a60e8a4c84b496374365f0a1a41c9d5135a2b3467d285298376e2def0bbad51f4a4f46615516fb9dbeb4ddc0c1465b8da16a315b279ea87a14fcbb6b10caab04d5d11c8f93566018853f18d15188a1cafe9cca5952be8c6b3b7c95e35593b2a3db5f152759e5dea0ed91fd101e0a8f379337e66a7ce1695a22ab6d2a6bf972a3135ec4443a4e33683d42cd9963ae",
+      "masterMask": "a5caef14395e83a8cdf2173c6186abd0f51a3f6489aed3f81d42678cb1d6fb20456a8fb4d9fe23486d92b7dc01264b7095badf04294e7398bde2072c51769bc0e50a2f54799ec3e80d32577ca1c6eb10355a7fa4c9ee13385d82a7ccf1163b6085aacff4193e6388add2f71c41668bb0d5fa1f44698eb3d8fd22476c91b6db00254a6f94b9de03284d7297bce1062b50759abfe4092e53789dc2e70c31567ba0c5ea0f34597ea3c8ed12375c81a6cbf0153a5f84a9cef3183d6287acd1f61b40658aafd4f91e43688db2d7fc21466b90b5daff24496e93b8dd02274c7196bbe0052a4f7499bee3082d52779cc1e60b30557a9fc4e90e33587da2c7ec11365b80",
+      "master": "af164e183668b2871d34fc18cf6fb5c61dfe3b95c8abf0de2aa3f39414321e69933bed2d296327bdfdba451f383d3b5db4230e491edcab270f7063f4c89b4e3f8e1693cc35f1ea0fc3e5ceae240f65b24a1a4676b1b2e0db273399cd04b7890a89ec082e0d3a311e3b1edc915e6d9f63b8cbb94ae3c2376c6b15040961177f1cb81b5a360a987e001feaa0d2cce920eaa085f5ab4f4f066e665f59b8ec96bae69e67ae5e68258456456823a03acddb3abe3e8a55b541604e5d7a0293c9274ac8c4405148334711d601d9ec80b4a53e030779247b5c49ca5d03a2cadd8c86a5ea8a1ddc437fd49fe944085537accc60c927d98c9a2d4a09164ecafaaedcaf382e",
+      "output": "d4b2833ac209b2a0fcdfbd701c82d7134faa5693b73b13a7f4189615ace6b8e123dab5daf5cf8e4246659e6570c0235d5821eddfecaa089c071b5fd3b6acd45cf4b960795be6d229e020a41e2f528cfc31d47c91c47f4a22223775e410b6c32025bb534152ff0d3e3c81d6514aa9b76b6ad4be7d191e6dbb56295343e5064ebf3c9e7acacaa82dd8b6b0a36952a628b1b98c4bbd144693c049e565ca9d2850e90b8ba12ddf0bc6460fc9392650605b74cc8267e79e6a0b9bbb5e0a88e021c8705e57a6d78f9268e6de2497cbf5a34cb5b0107794295d391ea1d6e8ee682d54584b65358931ecaef50c05406d4e0f5de8fa1c7ecbf10ce0feb803069cc49c511a544c803333b3a7ac420c70050fa323f5937cee6e563ef5133e8bbd8b4ba8c3cb15c0fd5e0e180d0aa4b58b56f3cc30b2412347a7871a0d5d8b23443913530a43254da499a8ff5b13170631970a21d7c28820cb4dc784b7acf45ede90a1fbc9478acd760d2f4baed4cff41e751c680d1058c010a569076a7e057e7e23e30e25a0149080247b691b1d97a392e98ee9d33488d4c4bf4db26cca94b89357c7bc2484d7b0a10878289327b5f780af5a46c66d1c50a21cc4e1f9e7300c17787761a7e1a4398d7630a02d8f050f1aa511519ffc0ef622c9d0b1a584a8ec3abc694783ff570d26a1f2767393fe0aeccc0cf71403c5382d407e9643a317fc3a9589599f6846d9f3d164913c337b23c004bcb8e4020815a9d170bc12bc70cbf8a4fe5f4030358f6a9ea9ce207b7e97c4c3260fc2d0e04a42683cae2e16843288c05647bc5ec83a61508cfecd39065eb60e8fba5bd3bc307daae75a5f700810c3c15e9c170d1636eb5883bac26e3e1f23f06c643144bbcebd85255801746c28d8864cc2979c312e9ba69cb4391d70fdfd0c633bb1564fbff6572fde044b574394e2eed520cc0cfb0b24ff260e7e04ed2bf5494054cc1ac0cd51e199336b34fedf8905c9eb3d555a1ab6405a6f0eee5bb5122db113b363a86dea1a9af55adaf66a3c8662b146e450f51dc6e32a8186f2d7654babff204eea945025106c0cd18e8593911ccd06c34b05963fe30a1690f03a26dd7ce7aeb9c50d34c2fd6850db9738a960f5d6407c4f23c482f57adff6ae0f2aa9fb4d6c65cf0a3312f5f2cbd0cd65beba88268e25ab25294db6508f657263b3751ad36e5aa31d22d8d8da13088508b025ebc7ebb8f6fe7f6b714eb4add00f7e23b8ea839e64a98d72c5c1c117591d135d5b75146d2af1337d0a359335c388ee647fe529627762789a03bdb317d7ff1369b0bcdf1a36bd2e31657d7aa25d8c8f8ad2b7948c950b02c34093fa3ace0fe0f48110a1a77a762cbaf417cc4935d868d9f65b10d0930549955da458507f2d1098898e4bfbdb6cb333f88c2c297946e6423256d3662f1c93bcf31b35b2656ad46e133105",
       "passwords": [
         {
           "mode": "bip39",
           "length": 12,
-          "text": "sponsor fox ring bar cancel hammer involve primary day impose aspect patch"
+          "text": "start neglect solid lottery open expire vibrant waste hybrid tomato remind chat"
         },
         {
           "mode": "bip39",
           "length": 15,
-          "text": "sponsor fox ring bar cancel hammer involve primary day impose aspect parade food erase century"
+          "text": "start neglect solid lottery open expire vibrant waste hybrid tomato remind charge wide clip exercise"
         },
         {
           "mode": "bip39",
           "length": 18,
-          "text": "sponsor fox ring bar cancel hammer involve primary day impose aspect parade food erase ceiling home verb adjust"
+          "text": "start neglect solid lottery open expire vibrant waste hybrid tomato remind charge wide clip excite trash beauty degree"
         },
         {
           "mode": "bip39",
           "length": 21,
-          "text": "sponsor fox ring bar cancel hammer involve primary day impose aspect parade food erase ceiling home verb aim unfold fun young"
+          "text": "start neglect solid lottery open expire vibrant waste hybrid tomato remind charge wide clip excite trash beauty distance alert club fantasy"
         },
         {
           "mode": "bip39",
           "length": 24,
-          "text": "sponsor fox ring bar cancel hammer involve primary day impose aspect parade food erase ceiling home verb aim unfold fun wage rookie approve have"
+          "text": "start neglect solid lottery open expire vibrant waste hybrid tomato remind charge wide clip excite trash beauty distance alert club food infant toe cinnamon"
         },
         {
           "mode": "eff",
           "length": 6,
-          "text": "unnamable panhandle etching preset voting squire"
+          "text": "absinthe false grimy tremble discourse unspoken"
         },
         {
           "mode": "eff",
           "length": 128,
-          "text": "unnamable panhandle etching preset voting squire latticed skirmish crushed antiques utensil wildly ranged similarly eggnog eternal mutt chess factual myself darkish strainer rebound manual unaudited petroleum twisted satisfy snowy runner outhouse unwoven shredding whinny agreeably alias outhouse deodorant bronzing attendant progress refill street produce vowed clumsy pouch arena devotion renewably frolic strict vowed cranial pretext gills marbles pointless herring repackage finally attitude cache saved willow marital protozoan salvage overprice gloss lucid automaker purging overeager dictator catwalk calculate saggy thriving external confirm juvenile overhear evasion deprecate rectified conjure gorged astride composer angler banknote groin sharpness passive frisk retreat trunks smudgy axis tribune excess hurried unclasp hatchery quaintly uncrown morality profound fit oak persecute upchuck unedited prone sessions swarm outrank harpist silenced viral broaden greedy purse jitters recluse county conduit"
+          "text": "absinthe false grimy tremble discourse unspoken bootlace primary swimwear anyway quintuple untaken retinal brigade cresting wispy repossess facecloth delicate rumbling contempt uncheck stunned speculate emphasis direction component alarm wreckage crank angling unified gorgeous hangnail overbook pusher purr cahoots laundry islamic chastise trend outback hurled distill seminar scotch important wriggly backslid kindle armhole moving echo striking pouncing subsonic semisweet obsessed perplexed yesterday asleep reiterate monsieur algebra graceful sandpaper float carat manicotti refrain thicken immorally freezing cozy recycled gracious evolution font nautical mummy triage quickness agenda scouring humbling deliverer grandpa cornhusk foyer gory plausible canopener mango scallion junkman explain zealous naming splendor unsheathe gauntlet tree fever refusal ideology slighted lucrative silk quail shudder habitable census padded brute crablike unselect harmful badly denial lesser registrar sleep depress rimmed mundane crabmeat reshape"
         },
         {
           "mode": "ascii",
           "length": 8,
-          "text": ".M*S3>Pv"
+          "text": "uF[*uc3="
         },
         {
           "mode": "ascii",
           "length": 256,
-          "text": ".M*S3>PvY/]V&o[\\+Cnwr0&:EvL,\"*FTmo$IX)ni9&3/a83nJ2qxg[a!5*CF`=zem7:3pP]\"G3\\@DaQChF7[\\c8m,S-SQvI3\\j`pHln2RtMa`,=,_a$[`%YQ~=JqnCCS5H~KG}5%x^G~%fttIo((T5ZTl\"Y8YI('gqP.:0Pp(_Ll\\Uy74?UYE7ht+oK:48h;qAAr7GMx4]wp+t=l}~3'{NLY|#{N~)PS:Un/LQ83*hlO_k@|`HW9PrB6je(j`Ty4"
+          "text": "uF[*uc3=E4pmwVz\\4j9Y6o{DxQcg(a(3D~yBm)_(<\"yo}|#<|JAg?PsOR?TBkCCX81yAF~tbs._]Drklz.-@:?0~wJtd'o]a=kNysf,siIt|Ol5gVj(`Iq,NdN,g0ZGq#|7E*a-,^~!+KB3!xiRU+EZfmxs1:WJ~Z?d+Nuyl(VLRq-&a0o0~=A-{$'__r;umCTTvjoc-3&0fDV?1w_4_NNlk6!/9.+gxNwQubDhjJ;.~NDeZ4t+dFng\\k|48'RZ+"
         },
         {
           "mode": "pin",
           "length": 3,
-          "text": "078"
+          "text": "281"
         },
         {
           "mode": "pin",
           "length": 512,
-          "text": "07829089915640385221942810559909755911627052156689849148372775114114240493873232042658902770528319862411689963081060825520023339302350173388375322192873234446916878507318800972224411234373481141491551075104106401305518191271949286902669245382058259750046161288194703478567720049236582457814195920141787235909674525799717487457717087773152958193473499015247596545231630929074338051338133058028383359658213340846508102562076584340604468106446597930090365284964245682313910194016626718548174150996015392655111844827"
+          "text": "28184980392805990673997440120455818572601812253837360867751222245611001424072092456744457862527735232094149376205509761379681082228562635260750590072391270031915318051780616403186157406430247653640261353616698137014284548513796452549853286312443666616468119726225535574806259299958531244430419634885517563395879307774381936910354623792324424111858375427407843682655766566574700486357913632312626178828477986256180079178500898028659182309775471880535565719464187528688511738128570642703765460733897994073905013524"
         },
         {
           "mode": "hex",
           "length": 1,
-          "text": "2"
+          "text": "4"
         },
         {
           "mode": "hex",
           "length": 3,
-          "text": "2ba"
+          "text": "423"
         },
         {
           "mode": "hex",
           "length": 511,
-          "text": "2ba89221dd58ec505c89b820b4ff372399f933cc1876b16c632ef9ae7705d71fe75480025705fa72a4a492f82f7cf429f1e4e2734abf27acb2a20015a08099f7d625bcb1f3ae1d91ac8b7ee938f6c48df8d0bc70dbf00247ba4fc245d4d43136e55032f71b165bf6650640dd09fdda9f5e9390b4843e4e847625342a7ea9355806efe166a53af4d81cbab704e8b2b89e628db8d0d19746bef9050759c9c7ad49d7197366f4f7f57c4797f3b63161c93851e7febbc0e3f3edcbc53236f23614f1085373edb7c850202bcb3958d70c3f30c444fc89405c6cbcb72e90a8aa8c2dc4c0ad9d5b8a7ef2e58e8962c61c28137d1651027e8c47dc36879055c57807971"
+          "text": "423a2920cfd0c273fa637b374865c6813a5a5fe265e5003d81dfca8c7bf36c4c4909b629004ef2cc14c14fa2275406305b312fdec161a97ba4ed9edb693356efceaaa8d8603926819cbd4630955ad809bb1dfb66f99600b4c277eabbbea80180e767f286e47b53c500749d9e168e8d48b5591ce5c50defd8aceb1c0e836c4c1a4c03337c2c05f3353cee6e53ebdbb83b50dee8da45b63c0213777addb34933a35d498fb37617a17280bd747c4ee01b97ad6dfbe4f4e5c8d0800597ae5ee33e504004b9bd7329e934844fd2ca48377c4470188837570fa66dc02c41970c78717149d600df5fa511fce62901548cac973f7d612633eaccc74358d0e6337ca599f"
         },
         {
           "mode": "hex",
           "length": 512,
-          "text": "2ba89221dd58ec505c89b820b4ff372399f933cc1876b16c632ef9ae7705d71fe75480025705fa72a4a492f82f7cf429f1e4e2734abf27acb2a20015a08099f7d625bcb1f3ae1d91ac8b7ee938f6c48df8d0bc70dbf00247ba4fc245d4d43136e55032f71b165bf6650640dd09fdda9f5e9390b4843e4e847625342a7ea9355806efe166a53af4d81cbab704e8b2b89e628db8d0d19746bef9050759c9c7ad49d7197366f4f7f57c4797f3b63161c93851e7febbc0e3f3edcbc53236f23614f1085373edb7c850202bcb3958d70c3f30c444fc89405c6cbcb72e90a8aa8c2dc4c0ad9d5b8a7ef2e58e8962c61c28137d1651027e8c47dc36879055c578079714"
+          "text": "423a2920cfd0c273fa637b374865c6813a5a5fe265e5003d81dfca8c7bf36c4c4909b629004ef2cc14c14fa2275406305b312fdec161a97ba4ed9edb693356efceaaa8d8603926819cbd4630955ad809bb1dfb66f99600b4c277eabbbea80180e767f286e47b53c500749d9e168e8d48b5591ce5c50defd8aceb1c0e836c4c1a4c03337c2c05f3353cee6e53ebdbb83b50dee8da45b63c0213777addb34933a35d498fb37617a17280bd747c4ee01b97ad6dfbe4f4e5c8d0800597ae5ee33e504004b9bd7329e934844fd2ca48377c4470188837570fa66dc02c41970c78717149d600df5fa511fce62901548cac973f7d612633eaccc74358d0e6337ca599f8"
         }
       ]
     },
@@ -233,6 +241,7 @@
         4096,
         4096,
         4096,
+        256,
         4096,
         4096,
         4096,
@@ -241,84 +250,87 @@
       "poolByteCount": 364544,
       "poolSHA256": "c1cadb9098daa1318e956e86875f60fa292ddba8ff3685c74755966e0ced019f",
       "digest": "c9155bd98ab3ce79010ae6798396d6c5c9db1886c7f0f1b9ba19127d93141d14deaef45529c9d0cce00a814ac27d6b0eb423f89ade626d546c534a060a71542184373395cfb28c647214b6a1b6971419e2d0bd6ea1837fec84b8cab94bbc9c55aaf9e3a6a49277914aba4060f9ea7fcd9726208965047fc488aa43088f3e90bfeab7b72567cef92c064da5507578d09ed7fee84ea00d3c9f1992c399c78d92a0692895029a5546067573d20908235423ccfd136e056a337c15f44f1cd2e3672eed2ad69b55190ffb0221c7b970deac52e6b9f492946f3c51e4c0a5dfea1914b1dce0e77270f79cd51dc5be885751876ae77c390132a2d2c725d11970e5ed5a00",
-      "shuffledDigest": "bf95b7b63a3024b8c65c197418f5bbaf41fcb473a77882e5987cf87413f8afab5f1beaa3d08b38a7e44e4a392ef370d4184260d8c56db3369324b49c6c79eaa6d69adc87c5e230b0bd21bcf904db069853ec0670831d3ffeac680a9a09c93b58713e7060750a21a18cdb793a74d4c5994d3a4e79b4ab0c1f6c690a2f7f370127788d244dcd2c41a50cb2a694e0ef0dc1bb49d7af27706a9e528c11484896039f94c04e73b7a217c20904167630595c6740460fe148e73190a0468ae6f21db1c73dc64c40a44017fd9d72316b71a5e5ef68379436a662466947ecbc9a95ee2e704f8a26d851092f4d7d228b4f38ddbc2793f0ca9b8c9e1df8af9ce67b09f0ae4d",
-      "master": "1a5f58a2036ea7100bae0e487973107fb4e68b172ed6511d853e9ff8a22e548b1a71651709751bef89dcfde52fd53ba48df8bfdcec23c0ae2ec6b3b03d0f71663390f3d3bc7cf358b013eb85a51ded8866b679d44af32cc6f1eaad56f8df0038f494bf946c34422921098e2635b24e2998c0513ddd25bfc7914b4d43ee81da275dc74bd974f2428d41c0312801e92691ced3684b2e5e39e6cf4ef64479c0783f512a4147eedcb40ae416212ab1ff9797557c5065e129c2889d240d4a23ebaa87584ce3945d5e549510c0e69750e38e7fdded6b12ef0cd5d19aee9bd6e47895904aa069acc8b7cc455070fcd3f93bb717c68a555f65902ea0d23e219718c6f5cd",
-      "output": "bb466e660f643310772a4e09a6e4c555717f2f828019b32fc109edbdae70689060409532d1856ff44a6c3da1946c0e8497a01e8981622cd8ad8c50e52280349b595185e938dc6cf40b688459f07b024ee9c661fc554df717626c1623c343c6d794f87235a58b5541b1edd9b2e3173b7339e7a74bfe7e5c9546ebdfdbe57f4a0d697690b07908e2467424e2d6c53f10f744d6c840ed3d7b4ed9cf5b7af4e5f8fa062f885f6350a6367a6737d57c0d764df855cb406eae003d08da8c88c609ccdacc9ef05104d441e83c439c702b41c92269f041895c9041b369dc6c3d6022870817676c0e3a7fb10d3dcb427fd605ce4d5b140129ad11f9a17d617e33db6c549c730091cbc971e5d505b3817c16375011a39cd656a5aa3809fecac53d694c559e136cc35dfa42ce15a73fadda977a3452c4558f48599c48b5ad31977d31d0d42797a26b2cbed7fcf9415c4b65628ef410404c572d56345cea22c7d3e87402262d71c136bbfae0f4e665233d5cf5aa323b7cd2f67065cb3e9fc829336060a549ea36535921687700a2930520a9cfd3113e5eb78107a6e5f411fbcf3ef61a7f695d77f020596c29a8ec0f0396a70f02e45e95e8a3932abbc06a06125c42b0ce4e409775b574922ccaff61dc8d2ca1aa2dd295561d3d0797c155f020ba8b3a72a8168669691b33f1c1881dec505cb6c4f31ab0e2f2a0c58dab3ed64841c002cf5f04232871ca199b9b4d64106a28c0da6ef9dcb1a6c7a13e4444a634e355ba0d30be1b63746b92061ab42bbcdc5d7a0fb7d235eb87015d4fe493bca7f05a32c2d08126d3528c9a892361c4a92d4a1ec2f1861857aaeb2586a4b45198318a52dea3c6797ed921be52ee4f25e5c51983a999879b8193d931f197f06ddcaa1b059677ecb86c6b44be43e38930f0f5c4b3d6a895581094d1a89ee4feaa8851e757c06100c4e3ccaab2d32c7a454ea1a89e42736d451b97b52e424db37f3bc76536029253073d5b50bc998ef7655ee9bfe5c3709fda55816408d28b2c6412018a0bdbb56cd54e8240c1d826059e00e9459acb90294bfb7b3d66f0b7c81ede2a4892e6106de3ba62a6f48ca0589bf5bf742566906c91ca202968477ad775f97bbfecde10e8973ab29ceeebaa7d753bd760496df77556ae5138253a33cf88381817be13183eaec4f166814467d17ac9839ca3325ee2e13423b0148965ea9cb2bc8e77bcaff33ca4335e867e7ca37bfd8cd96334857971967fe509b69848190b8810ded348396a8e162d061865922bc8f8fd9dd35cacef221ea18f38d9794182af66349f1c40602b4a6188d383faa7df42e5a0d478d912945f5372c4fb40a294c490f3f3639297f02e3beffd402a7927e7f9616d5a4f4a6d02800de9fb6a1a31ff2513f036ac98debe0848a8f38220e6e5e35af0ee24f50f00a3374e616a147b572e20fc130d",
+      "preShuffleMask": "3c4f6275889baec1d4e7fa0d203346596c7f92a5b8cbdef104172a3d506376899cafc2d5e8fb0e2134475a6d8093a6b9ccdff205182b3e5164778a9db0c3d6e9fc0f2235485b6e8194a7bacde0f306192c3f5265788b9eb1c4d7eafd102336495c6f8295a8bbcee1f4071a2d405366798c9fb2c5d8ebfe1124374a5d708396a9bccfe2f5081b2e4154677a8da0b3c6d9ecff1225384b5e718497aabdd0e3f6091c2f4255687b8ea1b4c7daed001326394c5f728598abbed1e4f70a1d304356697c8fa2b5c8dbee0114273a4d60738699acbfd2e5f80b1e3144576a7d90a3b6c9dcef0215283b4e6174879aadc0d3e6f90c1f3245586b7e91a4b7caddf0031629",
+      "maskedDigest": "f55a39ac022860b8d5ed1c74a3a5909ca5a48a237f3b2f48be0e3840c3776b9d42013680c132deedd44ddb2742eecdb778fc0a9fc64953050824c09bbab282c8783811a087e9e2e5e6b30c6c56641200ceefef0bd908e15d406f20445b9faa1cf69661330c29b970bebd5a4db9b919b41bb9924cbdef81d5ac9d0955ffbd0616567855d06fd5d76d522adfddd5cb16473b01fa6b984662ee9d056924176e64a97507d757f22ec8a7c1b408e40830721a80a261eb9dc18dadf1034501e2a0314791a5742e9dc2e1fa1606fdf410ad2acb4a0626776c642260a097cfa27abaa278000fe56758ccd2b46942242597826193eb630b446ac9ac568166d3ad15ee4c29",
+      "shuffledDigest": "5909607f2d8f8e8cf381a2030d4c37bf4791603d31804c720d1a99b6d70ad0535e993762e91cc4f4965591e0c1759951d7fb91c913882558c2ceca5e2295801ed0bf4d73d530369e085a45736882f9fea09a36a0a2d2de2bf34c05b11bb8f8260902442fa2649b3adfb5404ac5871193523c4cd29cac4d435c7dee85af0c70252621ea992c6c21ca3be230d6e256ac6fb5e1ce08e42bbdc4342ce36fd0d7b825a8868368e1cb8b4af5c4e6017a167666aac29c42dde86d5b97f74b144cc6a018295e17c7f2dc77c38e1248cc92ec4afa0115a6174f9a7253df53221018a77b1005e86b603f1e995a6f46aa69db52ab34581d225fc7692c22a4ea72cac3ba5b76",
+      "masterMask": "a5caef14395e83a8cdf2173c6186abd0f51a3f6489aed3f81d42678cb1d6fb20456a8fb4d9fe23486d92b7dc01264b7095badf04294e7398bde2072c51769bc0e50a2f54799ec3e80d32577ca1c6eb10355a7fa4c9ee13385d82a7ccf1163b6085aacff4193e6388add2f71c41668bb0d5fa1f44698eb3d8fd22476c91b6db00254a6f94b9de03284d7297bce1062b50759abfe4092e53789dc2e70c31567ba0c5ea0f34597ea3c8ed12375c81a6cbf0153a5f84a9cef3183d6287acd1f61b40658aafd4f91e43688db2d7fc21466b90b5daff24496e93b8dd02274c7196bbe0052a4f7499bee3082d52779cc1e60b30557a9fc4e90e33587da2c7ec11365b80",
+      "master": "fcc38f6b14d10d243e73b53f6cca9c6fb28b5f59b82e9f8a1058fe3a66dc2b731bf3b8d630e2e7bcfbc7263cc053d22142414ecd3ac656c07f2ccd7273e31bde35b56227acaef5760568120fc94412ee95c049046b3ccd13aecea27deaaec3468ca88bdbbb5af8b27267b75684e19a2387c65396f522fe9ba15fa9e93ebaab25036b850d95b222e27690a76a0350873fc07b71eced05eebca9ee0463e181c3856d6c8c5cb8b5288218d6d15dfbb0bd96bff8c3c674269e43aa95ccb89d30bb584cd4b8130bc234ab03a09f30b3aa216ab4cf593306f4e1eb0251055c6931c0f000c22414a6a07a524214ddf51ab4a0040d67bd9b2e671f7ad948b526d28c00f6",
+      "output": "d999e939c4d31143bbd1d8c22cd12c0e680c3a9bfeec6f628b6396f6f5ca1181405680fb641058afca33dc8842a7311f9caf570c3818938a7ce711fcbf3195509abcd842cb4c6be9503281e2d1ddc871af109e752b3c58a45b70f70d13739d273fd694ea276e365af10d9617422daae3acbb49fb99c53ec32914dc8be52224faf19560d8c0e221a93ad5618661aa17b06749bb8f12872c77abd1876b1b59f34c815d15556432f7b15770d82757b8095f48270057e4a1943c0d4c4bab1e2f289dca2dec7c1fe3ca488df65e48a79b672338594281a03f1200465162c7fbd96d012671232889bad72af8fc479c9eaad6907895d247bccb122fbe3ef9b247d3413c0035f515358ada9f397e1cada55ea61110cd8326bd9ad96bb65c81fd733ab7066392d8e0d844268c8c4af8bbef6b36aa874849ebb5fd18399f95b4059766c36b9d2c853b83cfc1849277c586b71e616f5e26597a0014e43c6b699465e3594f8beee78adfc1c04ab3dd6164b5875caf3d2990b2a5e240b2c8f5fe162f6ce30b2c16b2ba617047fde4eb0e2bd4b9adb96128549ece53a658b8dea54dc36f96e5e5c14e6a8343670ee353893cb9b401cb32463a185a58658940c2c5e1935650669b501cfbeab41600284104f940b17f064afc83e07ec81961398b69f6bb5f43416ecdfa5fce0aa6acba10fc56bf790baa34ddea92bd8843d8cac9fdda3d6b28c3965444c3eec4464828a15cf7c3ecc00f06d90ced63a6624bb3a40395962f90268d22a80f8127a378e30bea3e63d8a1f26f870ce852778be304cdcd8b30dc094d750d84dd446ae27130c6b0d0d08d92badd97f039ebbda7dcc4701890b9fb5e8e45016386ffb13e0c692ffaac6c5fc1e8fb0eb45b99ae8cf1d6104115916f1d9fa44ea43c399ef0e2c21406164208d724e162ad96f1076c6f074ad0f0383029f59cb8f55a8cbbd456681f7cf8aebcd12169c4aeb5485e5af62245d463017a6ed2bf735630ba47d6d6fb2dca01a5b8455fcd60d08a8289a4ae59ba7918163bc58843a148a4202dcd6676a948e9416f68a7fa8aaacec2f7ca7ef7645b471c0267bc2c151830b70dc15433a543f99ccfb04dcbc64e08ae0eb30fe9bc3e74c2016a0ac295948a1047f60fd10e94b827cb7ee980fd6f7b5a9b1fd81b42b01cd60d8a79a9ca4e0964ae4032077564ba3f8597c4a05da7db73f9ed14b9423f1292600f9504a78d50d104faf37996a9ef1df85f8e8f99e43fbeb432cf435078cb6bd836c74ecf74192261086bd6c080a2dcc7ab74e3f045f9825cc1faa9065aed952612fdddfe3a1a305d1d5b17b76eaba3cba307305cdf09dbf88bb883fc6a7d0e298bd2729e4fb3ec3938e093192e21a8f9c14148f356ed291b6777293e122fcd714b144d13f646cc840b16ee7419be062cbb575dc2f2912fb45b9e9c7a3591154c77f2de",
       "passwords": [
         {
           "mode": "bip39",
           "length": 12,
-          "text": "robust cricket office burst drip market syrup endorse answer damp course prison"
+          "text": "sunset soon example meadow country peace urban deposit season grief enrich buddy"
         },
         {
           "mode": "bip39",
           "length": 15,
-          "text": "robust cricket office burst drip market syrup endorse answer damp course priority blood oak armed"
+          "text": "sunset soon example meadow country peace urban deposit season grief enrich broom liar bubble horror"
         },
         {
           "mode": "bip39",
           "length": 18,
-          "text": "robust cricket office burst drip market syrup endorse answer damp course priority blood oak anxiety add rebel legend"
+          "text": "sunset soon example meadow country peace urban deposit season grief enrich broom liar bubble husband talk hunt bird"
         },
         {
           "mode": "bip39",
           "length": 21,
-          "text": "robust cricket office burst drip market syrup endorse answer damp course priority blood oak anxiety add rebel lawn draw swarm sword"
+          "text": "sunset soon example meadow country peace urban deposit season grief enrich broom liar bubble husband talk hunt begin suggest combine gun"
         },
         {
           "mode": "bip39",
           "length": 24,
-          "text": "robust cricket office burst drip market syrup endorse answer damp course priority blood oak anxiety add rebel lawn draw swarm sustain deal pelican abuse"
+          "text": "sunset soon example meadow country peace urban deposit season grief enrich broom liar bubble husband talk hunt begin suggest combine hungry topic ecology clump"
         },
         {
           "mode": "eff",
           "length": 6,
-          "text": "contrite prude mom repackage unlikable pacemaker"
+          "text": "consumer removed litigator oxidizing croak citadel"
         },
         {
           "mode": "eff",
           "length": 128,
-          "text": "contrite prude mom repackage unlikable pacemaker manly mardi scurvy override demystify unblock frosting strike septic ivy cornstalk uneatable unaware reputably joystick anthem tropics linguini wriggle acronym drum lilac ruse rectal circus scorer unsure hassle tiling peculiar goal gaining unhappy bobbed reversal deviant stallion dispersed scary icon onward uncross shudder joyride staff tameness copper liking vagrancy undercoat moneywise augmented flanked glacial outsmart improvise lemon simile wimp jot straggler latch manifesto overcook eardrum persecute starless baggy cosigner aging debtless maimed eastcoast lemon antihero subzero boxer twitch retainer quake affecting enjoying produce mummy serve sculpture uneasy confetti corridor willfully collision hurler preview magazine concrete audible constable lushness overpower contest jaybird skimpily overbill unmarked strut appliance culprit attentive spellbind zipping armed reviver cheese component destruct sniff snooper spotted protozoan overtime crystal duplicity"
+          "text": "consumer removed litigator oxidizing croak citadel lifting jubilant hut unpicked reformed pending visitor paramedic cattle doily entourage uninjured reapprove ducking cut pregnant conducive thinning sushi tall carport perm entrap unfrozen buffer cavalier retorted outlast purplish elbow undertow plausibly simile democracy hunting unhitched afternoon purposely coziness calculate unclog equinox snuggle unselfish untangled creation proclaim resample implosive bankroll basics friction ducky olive denatured upward cucumber freely captivity unshipped defiance deliverer slush handiness crafter portly lance reapply kindly unbutton dropper rink eradicate trapper catcher trustable excretion gnat aghast native treat improving mammal yahoo flatterer reaffirm sniff avenge recant release canary mulberry guzzler tackle cultural elaborate persecute expulsion dragonfly pencil dyslexia conclude nugget bountiful gallantly destiny bargraph visiting unless delivery platypus durably geology cofounder acuteness silliness dandy twenty untwist jargon large outlying"
         },
         {
           "mode": "ascii",
           "length": 8,
-          "text": "~g1)0'T1"
+          "text": "\\Z2d~MM/"
         },
         {
           "mode": "ascii",
           "length": 256,
-          "text": "~g1)0'T1:Ko*iv4BPEC:vP*q3+S#aXSH2k/^dW//GZc?LD%MpOqCCU^zrHY/,+Gz>#o$vn8%/7DdW5VhNvbtu8\\6ZjlA}XgBk.,9Ss<)g7E`1ea^>o|='PK\"&qiW=*X?.9nva1q!^)OK*ar%b]d_3LbC,bL}Sbv,/^#CJ)8*//[Bt.^cB&n|5\"Jp2d@$AT/u_6!T4&vD?7Xq2f_whmY*^,mva4/~c6j`pZ=UsvRiz_ixpRZ@RHZe.Mb}l(%Q1amx"
+          "text": "\\Z2d~MM/+-[^2%N&Y2DawC'1yrTKcjR@_rx-Y9VM?2RXq]cm.qSD4r1a8L]yg|3.46`H`WH1W{.Y8cNmo~j\\_J5NCEX#Bl[$I$m8s*j~R3JM:nJ.<zmD~6v'Stx3Hx{*\"iH!xdW].mln?PI`N?@iP!ij^*DYzcDc`3!gr%0\"G4DIL}Kh_amS;Xh3P_uhb]!V6VMbZA=ph!i21FG].y}D6[z'&UeGOOk~.WmJijx9ZbXw&Z).`MH\\FGU:Iz?$2!Gz"
         },
         {
           "mode": "pin",
           "length": 3,
-          "text": "700"
+          "text": "733"
         },
         {
           "mode": "pin",
           "length": 512,
-          "text": "70025016928968753770859739794244649093144811884210079846300948259133608414290328387577388255785884359557778739571756290539974358461860666473678404713877124986765906423534387853404018806894848014252076235145057245950816458338487731367456710113791576198465053139359942507364650692715658985366173381222653296213915982912740595251824646756224491262853347440151250094062132901166534439349027529717243976947726675390298186530752849237272668266684171664270141050969171350269848245571136960226366620711242522754503255570"
+          "text": "73376177796449444285618990652794680685210667916572647841719904866367300969103568730841273957934849040130365072733725100994619662639837470363373854919577936931500777269749529078180365107072564172216427535696903800189791835076528168044090183870298115003513889768354676518947722958369664688004879740523514799051257743917326974307148920080758179998183324917015251148564805278714286721854325357048636842575109938617347370501300840817447576025084020054947764146057795675750556062666111021469676218170504858602012756256"
         },
         {
           "mode": "hex",
           "length": 1,
-          "text": "b"
+          "text": "9"
         },
         {
           "mode": "hex",
           "length": 3,
-          "text": "b6e"
+          "text": "999"
         },
         {
           "mode": "hex",
           "length": 511,
-          "text": "b6e6f4307ae964551ff2093f19dde080005215f4acd14ce470e912c8dc05204b91598cc4b8490b2e961c5d772c63336748255b511d9237b3977beec56bfb5fad9600982644265f074680ddbe9fba458a6f8f3066a775cd6d85b0ee0d8ac869cace014418c3c0b1929019c0139ccd027877ceaf1ddb2f65edb419d191d1e3bc4c301b9155531c67013c665a89ea5d9c5e3c3da2e57fda7a4245f89c85d17d104772bce7c91cb52e400c7d64ca2738426d116ba04653dc5a2bc2605bef8930059a639187023509f31ee7176541bfe6af9d7009c98cf367f24e5833ab0a62c20ee075542caf1cdc1ad256dd771500aba286699b3118dc0c643a02205dbe68102ff"
+          "text": "99994313b182c1ce8cabecf2b3665a11060b408fa3c8271fcf7c883ac71cf150ac82bcb902121d81f0e5bc84b07d33d7f64a7e6a1d672da3cb9b95e394cb524a15080219a5161a7079bf27c7b17bb93c1d5542717087789f8707414cdcbbef8dadccf3a8d6e87b7389210f206127b9d161389a7a8c7cea608527cb2fee92731c05555aaf9ecd5e610d36da9b6c1d3a763280846cca8bfb6a789b5d89f545763bdc5b3f1427567e1fe69a044cb94539fbe7af10a3d1457cfd902520285e6fc3bc62a107d4beb49d9184ee3688e5d3f6551ea337e339c941b26a8a85902513606b0cba460814901f6ac30e8919b96bf31edafea6ca0c6f9ba4da2d838a9dadb83"
         },
         {
           "mode": "hex",
           "length": 512,
-          "text": "b6e6f4307ae964551ff2093f19dde080005215f4acd14ce470e912c8dc05204b91598cc4b8490b2e961c5d772c63336748255b511d9237b3977beec56bfb5fad9600982644265f074680ddbe9fba458a6f8f3066a775cd6d85b0ee0d8ac869cace014418c3c0b1929019c0139ccd027877ceaf1ddb2f65edb419d191d1e3bc4c301b9155531c67013c665a89ea5d9c5e3c3da2e57fda7a4245f89c85d17d104772bce7c91cb52e400c7d64ca2738426d116ba04653dc5a2bc2605bef8930059a639187023509f31ee7176541bfe6af9d7009c98cf367f24e5833ab0a62c20ee075542caf1cdc1ad256dd771500aba286699b3118dc0c643a02205dbe68102ff4"
+          "text": "99994313b182c1ce8cabecf2b3665a11060b408fa3c8271fcf7c883ac71cf150ac82bcb902121d81f0e5bc84b07d33d7f64a7e6a1d672da3cb9b95e394cb524a15080219a5161a7079bf27c7b17bb93c1d5542717087789f8707414cdcbbef8dadccf3a8d6e87b7389210f206127b9d161389a7a8c7cea608527cb2fee92731c05555aaf9ecd5e610d36da9b6c1d3a763280846cca8bfb6a789b5d89f545763bdc5b3f1427567e1fe69a044cb94539fbe7af10a3d1457cfd902520285e6fc3bc62a107d4beb49d9184ee3688e5d3f6551ea337e339c941b26a8a85902513606b0cba460814901f6ac30e8919b96bf31edafea6ca0c6f9ba4da2d838a9dadb836"
         }
       ]
     }

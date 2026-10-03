@@ -1,6 +1,6 @@
-# Technische Analyse von Password Generator 2.2.1
+# Technische Analyse von Password Generator 2.2.0
 
-Stand: 3. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.2.1, Build 6. Den vorigen Release beschreibt [die Analyse zu 2.2.0](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.2.0.md).
+Stand: 3. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.2.0, Build 5. Den vorigen Release beschreibt [die Analyse zu 2.1.0](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.1.0.md).
 
 ## Datenfluss
 
@@ -16,8 +16,7 @@ Alle Poolhashes und die folgende Ableitung erfolgen ausschließlich bei der Gene
 shuffle(records)
 P = serialize(records in shuffled order)
 D = Skein-1024-1024(P) || SHA3-512(P) || SHA512(P)  // 128 + 64 + 64 Byte
-A = D XOR fresh_macOS_random(256)                  // erster unabhängiger OS-Beitrag
-B = fisher_yates_shuffle_all_2048_bits(A)
+B = fisher_yates_shuffle_all_2048_bits(D)
 M = B XOR fresh_macOS_random(256)                  // 256-Byte-Masterkey
 S0 = Skein1024XOF(M[0..<128])
 S1 = SHAKE256(M[128..<160])
@@ -28,7 +27,7 @@ X = read(S0,n) XOR read(S1,n) XOR read(S2,n) XOR read(S3,n) XOR read(S4,n)
 output_bytes = X XOR fresh_macOS_random(n)
 ```
 
-Skein-1024-1024 liefert 128 Byte, SHA3-512 und SHA512 jeweils 64 Byte. SHA512 wird über CryptoKit berechnet. Die Reihenfolge der Verkettung ist fest. Zuerst werden die 256 Hashbytes mit einem frischen, gleich langen macOS-CSPRNG-Beitrag XOR-verknüpft. Danach permutiert Fisher-Yates sämtliche 2.048 einzelnen Bits dieses Ergebnisses, nicht nur die 256 Byte. Bitindex null bezeichnet das niederwertigste Bit von Byte null. Erst der zweite XOR mit weiteren frischen 256 macOS-CSPRNG-Bytes ergibt den Masterkey. Beide Masken werden separat angefordert und weder untereinander noch mit den Zufallsbytes für den Shuffle oder den späteren Ausgabe-XOR wiederverwendet.
+Skein-1024-1024 liefert 128 Byte, SHA3-512 und SHA512 jeweils 64 Byte. SHA512 wird über CryptoKit berechnet. Die Reihenfolge der Verkettung ist fest. Der anschließende Fisher-Yates-Durchlauf permutiert sämtliche 2.048 einzelnen Bits, nicht nur die 256 Byte. Bitindex null bezeichnet das niederwertigste Bit von Byte null. Die OS-Bytes für den Masterkey-XOR werden unabhängig von den Shuffle-Bytes angefordert.
 
 Skein-XOF folgt Skein v1.3, Abschnitt 4.12: Das Ausgabelängenfeld ist `N_o = 2^64 - 1`. Das erste Masterkey-Fragment wird als ungeschlüsselte Nachricht absorbiert. Die Ausgabe besteht aus UBI-Blöcken vom Typ 63 mit fortlaufenden Little-Endian-64-Bit-Ausgabezählern. Diese XOF-Konfiguration unterscheidet sich vom Poolhash mit fester 1.024-Bit-Ausgabe.
 
@@ -64,9 +63,9 @@ Mauspool und temporäre Kryptopuffer werden beim Verwerfen bestmöglich übersch
 
 ## Verifikation
 
-Am 3. Oktober 2026 bestanden jeweils 82 XCTest-Tests im Debug- und Release-Build: 63 Core-Tests und 19 App-Modelltests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`. Enthalten sind 18 Tests für Pool und Ableitung, darunter die zwei zusätzlichen Tests für Reihenfolge und Fehler beider 256-Byte-Masken, sieben gezielte AES-CTR-Tests mit fünf unabhängigen Vektoren, drei vollständige Ableitungsreferenzen, 45 unabhängig berechnete Passwortfälle sowie die bestehenden 49 Skein-1024-1024-, 81 SHA3-512-, 538 SHAKE256- und 22 Skein-XOF-Vektoren. Die aktualisierten Pipeline-Fixtures wurden offline unabhängig neu berechnet und byteidentisch reproduziert. Ihr SHA256-Wert lautet `50541a981bb2fca83307cbfb86aec2643533a2675efc21301630e0d3afdfee0b`.
+Am 3. Oktober 2026 bestanden jeweils 80 XCTest-Tests im Debug- und Release-Build: 61 Core-Tests und 19 App-Modelltests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`. Enthalten sind sieben gezielte AES-CTR-Tests mit fünf unabhängigen Vektoren, drei vollständige Ableitungsreferenzen, 45 unabhängig berechnete Passwortfälle sowie die bestehenden 49 Skein-1024-1024-, 81 SHA3-512-, 538 SHAKE256- und 22 Skein-XOF-Vektoren. Die Referenzgeneratoren für Pipeline und AES wurden offline erneut ausgeführt und erzeugten byteidentische JSON-Fixtures.
 
-Die vollständigen Referenzen werden mit der unveränderten offiziellen Skein-C-Referenz, Python `hashlib` für SHA3/SHA512/SHAKE sowie einer unabhängigen AES-Referenz berechnet. Der reproduzierbare Generator und die Zwischenwerte stehen unter `Tests/PasswordGeneratorCoreTests/Resources/`; die Herkunft dokumentiert `CRYPTO_VECTORS.md`. Sie prüfen Null-Shuffle-Kandidaten, variierte Kandidaten mit gezielten Rejections und einen mehrfach überschreibenden Ringpuffer mit zwischenzeitlichen Shuffles. Die erwarteten Werte werden nicht aus dem Swift-Produktionscode erzeugt. Fixture-Version 4 enthält zusätzlich die erste OS-Maske, den bereits maskierten Digest und die zweite OS-Maske als getrennte Zwischenwerte. Die Tests prüfen die Reihenfolge beider 256-Byte-Anforderungen relativ zu den Shuffle-Bytes. Sie prüfen außerdem für jede Maske sowohl eine zu kurze Rückgabe als auch einen geworfenen Fehler und stellen sicher, dass danach keine späteren Zufallsanforderungen erfolgen.
+Die vollständigen Referenzen werden mit der unveränderten offiziellen Skein-C-Referenz, Python `hashlib` für SHA3/SHA512/SHAKE sowie einer unabhängigen AES-Referenz berechnet. Der reproduzierbare Generator und die Zwischenwerte stehen unter `Tests/PasswordGeneratorCoreTests/Resources/`; die Herkunft dokumentiert `CRYPTO_VECTORS.md`. Sie prüfen Null-Shuffle-Kandidaten, variierte Kandidaten mit gezielten Rejections und einen mehrfach überschreibenden Ringpuffer mit zwischenzeitlichen Shuffles. Die erwarteten Werte werden nicht aus dem Swift-Produktionscode erzeugt.
 
 Die AES-Prüfungen enthalten den AES-256-CTR-Testvektor aus NIST SP 800-38A, getrennte und zusammenhängende Reads, Zählerüberträge, das Ende des 128-Bit-Zählerraums, Clear und Fehlerbehandlung. Die vollständige Ableitung wird über die Blockgrenzen von AES, Skein-XOF und SHAKE hinweg verglichen. Alle fünf Ausgabeformate sowie ihre gültigen und ungültigen Grenzlängen und Exportoptionen werden geprüft.
 
@@ -74,21 +73,21 @@ Das Release-ZIP erhält weiterhin separate SHA256-, SHA3-512- und Skein-1024-102
 
 ## Release-Nachweis
 
-Version 2.2.1, Build 6, wurde am 3. Oktober 2026 um 12:19 Uhr (Europe/Berlin) über Xcode Direct Distribution hochgeladen und von Apple zur Verteilung freigegeben. Die Submission-ID lautet `BDB0180E-BAB1-4DBD-9BB9-D78C0B0E4384`. Das exportierte Bundle trägt eine Developer-ID-Signatur für Team `2T6K9PGS55`, ein angeheftetes Notarisierungsticket und den CodeDirectory-Hash `6f80a07b8e7f01cd504744a4a1298aba02feb9a2`.
+Version 2.2.0, Build 5, wurde am 3. Oktober 2026 um 10:17 Uhr (Europe/Berlin) über Xcode Direct Distribution hochgeladen und von Apple zur Verteilung freigegeben. Die Submission-ID lautet `F9C89067-06A5-459E-A728-AE6C30B6B579`. Das exportierte Bundle trägt eine Developer-ID-Signatur für Team `2T6K9PGS55`, ein angeheftetes Notarisierungsticket und den CodeDirectory-Hash `0ce21ec26af00d19a82b5a82266e6ed838c1a7f2`.
 
-Zwischen dem signierten Release-Paket und dem Xcode-Export wurden sämtliche Ressourcen und Metadaten byteweise verglichen. Der ausführbare Code ist nach Entfernung ausschließlich der Signatur aus temporären Kopien ebenfalls byteidentisch; sein normalisierter SHA256-Wert lautet `dba7065ea94223a0afbd4bcb6239a17efd62ca929e3930c175703a737c8b463e`. Das finale ZIP wurde unmittelbar aus dem notarisierten Xcode-Export erstellt, ohne anschließenden Neubau oder erneute Signierung.
+Zwischen dem getesteten Paket und dem Xcode-Export wurden sämtliche Ressourcen und Metadaten byteweise verglichen. Der ausführbare Code ist nach Entfernung ausschließlich der Signatur aus temporären Kopien ebenfalls byteidentisch; sein normalisierter SHA256-Wert lautet `e8854c6fe5e2917ae0381956731173f31335b4e0b594e270acd84c1d80df0843`. Das finale ZIP wurde unmittelbar aus dem notarisierten Xcode-Export erstellt, ohne anschließenden Neubau oder erneute Signierung.
 
 Das endgültige Paket hat folgende Prüfsummen:
 
 ```text
-SHA256: e1475d9adb7f6687f58a20a194aded66517cca999a5d32a8029f2b2a340345cc
-SHA3-512: 5eb35bb5ef9f3ca71141a80717c82cbf33dd6e00c80a0a007584791bbaa47b00a25af52887a4cc39fa0b2e55da8ba64e1274d152e21c112f136c76a213d5f565
-Skein-1024-1024: 0eed655da6ce61434a2d7199a45ae7a0fa73aebbb56998eca0d9d351460f8643d74ca3ce81df7fdc3218d4094a65ef12b51712312448a47687d459db9cb1ae6f235b949dc9923b766f84f49521a080617568ccd34b3baebc0995cae2812d116c2b8be8e986a3579ec9053901fac3f45ebcad0e7df86c0bf431aa464d1af59949
+SHA256: ab222f7f1b044fee8eda66b43ce40a5ea04eef2941a05d018354c9a091e4bcd8
+SHA3-512: 5a284c608f4d5d047dc88b65b0eedfdba78c902f0559fceb602d073c85600df27bc167761366f5bb9c45f756acb504e9ef3bf01e45c9e2bd48a54a95382b8bfe
+Skein-1024-1024: d41bf9ac0f0beea08bdf2af28c984c031f60f485abb9c7f80c6e1d854a8477ddbf67f3eff7ca68f56290ea8f326ba22b9ae36ef5086446ddc0f5adac8abc183583c66a1402f0b74e268bbe00d9f2d2e98a6d3630d85e4ac5140b8dc390c04540e7958d1bcc099e2c4cf437ee298fbaaf9c6b09de7305e2c3c9dc29e76f954e51
 ```
 
-Die ZIP-Prüfung bestand für alle drei Hashverfahren einschließlich der unabhängigen Skein-C-Referenz. `codesign --verify --deep --strict`, `xcrun stapler validate` und `spctl --assess --type execute` bestanden für das entpackte Release sowie die installierte App. Gatekeeper meldete `accepted` und `source=Notarized Developer ID`. Die installierte Kopie unter `/Applications/Password Generator 2.2.1.app` stimmt byteweise mit dem Xcode-Export überein; die frühere Installation und zusätzliche aktive Build-Kopien wurden in den Papierkorb verschoben. Die geöffnete App zeigt Version 2.2.1 und einen gültigen Laufzeitschutz.
+Die ZIP-Prüfung bestand für alle drei Hashverfahren einschließlich der unabhängigen Skein-C-Referenz. `codesign --verify --deep --strict`, `xcrun stapler validate` und `spctl --assess --type execute` bestanden für das entpackte Release sowie die installierte App. Gatekeeper meldete `accepted` und `source=Notarized Developer ID`. Die installierte Kopie unter `/Applications/Password Generator 2.2.0.app` stimmt byteweise mit dem Xcode-Export überein; die frühere Installation und zusätzliche aktive Build-Kopien wurden in den Papierkorb verschoben.
 
-Der Release-Link dieser Version lautet [GitHub Release v2.2.1](https://github.com/michael-feinermann/password-generator/releases/tag/v2.2.1). Die hier dokumentierten Paketprüfungen beziehen sich auf die oben angegebenen finalen Bytes.
+Der Release-Link dieser Version lautet [GitHub Release v2.2.0](https://github.com/michael-feinermann/password-generator/releases/tag/v2.2.0). Die hier dokumentierten Paketprüfungen beziehen sich auf die oben angegebenen finalen Bytes.
 
 ## Quellen
 

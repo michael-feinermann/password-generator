@@ -119,13 +119,17 @@ public final class EntropyPool {
         sha3Digest = SHA3.hash512(serializedPool)
         sha512Digest = Array(SHA512.hash(data: Data(serializedPool)))
         master = skeinDigest + sha3Digest + sha512Digest
+        operatingSystemBytes = try checkedRandomBytes(count: 256, provider: randomProvider)
+        for index in master.indices { master[index] ^= operatingSystemBytes[index] }
+        wipePoolBytes(&operatingSystemBytes)
         try Self.shuffleDigestBits(&master, randomProvider: randomProvider)
+        // A separate fresh mask follows the permutation; never reuse the first mask.
         operatingSystemBytes = try checkedRandomBytes(count: 256, provider: randomProvider)
         for index in master.indices { master[index] ^= operatingSystemBytes[index] }
         return try PasswordByteStream(master: master, randomProvider: randomProvider)
     }
 
-    /// Permute all 2,048 individual digest bits before mixing in the OS mask.
+    /// Permute all 2,048 bits after the first OS mask and before the second.
     /// Bit zero is the least significant bit of byte zero. The permutation uses
     /// fresh, buffered OS randomness and unbiased descending Fisher-Yates swaps.
     static func shuffleDigestBits(

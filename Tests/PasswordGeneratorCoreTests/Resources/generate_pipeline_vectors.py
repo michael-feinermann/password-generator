@@ -78,6 +78,10 @@ class ReferenceRandom:
             words.append(value)
         return struct.pack("<1024I", *words)
 
+    def pre_shuffle_mask(self):
+        self.requests.append(256)
+        return bytes(0x3c if self.style == "zero" else (i * 19 + 0x3c) & 255 for i in range(256))
+
     def master_mask(self):
         self.requests.append(256)
         return bytes(0xa5 if self.style == "zero" else (i * 37 + 0xa5) & 255 for i in range(256))
@@ -164,10 +168,13 @@ def make_fixture(name, record_count, shuffle_after_records, style, skein, word_l
     pool = b"".join(records[index] for index in order)
     record_shuffle_requests = random.shuffle_buffer_index
     digest = skein("hash", pool, 128) + hashlib.sha3_512(pool).digest() + hashlib.sha512(pool).digest()
-    digest_bits = [(byte >> bit) & 1 for byte in digest for bit in range(8)]
+    pre_shuffle_mask = random.pre_shuffle_mask()
+    masked_digest = xor(digest, pre_shuffle_mask)
+    digest_bits = [(byte >> bit) & 1 for byte in masked_digest for bit in range(8)]
     permute(digest_bits, random)
     shuffled_digest = bytes(sum(digest_bits[index * 8 + bit] << bit for bit in range(8)) for index in range(256))
-    master = xor(shuffled_digest, random.master_mask())
+    master_mask = random.master_mask()
+    master = xor(shuffled_digest, master_mask)
     output_count = 1024
     material = xor(
         skein("xof", master[:128], output_count),
@@ -192,7 +199,10 @@ def make_fixture(name, record_count, shuffle_after_records, style, skein, word_l
         "poolByteCount": len(pool),
         "poolSHA256": hashlib.sha256(pool).hexdigest(),
         "digest": digest.hex(),
+        "preShuffleMask": pre_shuffle_mask.hex(),
+        "maskedDigest": masked_digest.hex(),
         "shuffledDigest": shuffled_digest.hex(),
+        "masterMask": master_mask.hex(),
         "master": master.hex(),
         "output": output.hex(),
         "passwords": [
@@ -252,7 +262,7 @@ def main():
             make_fixture("wrapped_pool_with_intermediate_shuffles", 8193, [2048, 4096, 6144], "patterned", skein, word_lists),
         ]
     args.output.write_text(json.dumps({
-        "version": 3,
+        "version": 4,
         "skeinXOFConfigurationOutputBits": str(2**64 - 1),
         "aesCTRInitialCounter": "00" * 16,
         "aesCTRIncrement": "128-bit big-endian, no wrap",

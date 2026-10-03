@@ -4,11 +4,11 @@
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator Icon">
 
-[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.2.0](docs/RELEASE_NOTES_2.2.0.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.2.1](docs/RELEASE_NOTES_2.2.1.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.2.0, Build 5. Signatur- und Notarisierungsstatus: mit Developer ID signiert, am 3. Oktober 2026 über Xcode notarisiert, Ticket angeheftet; Gatekeeper akzeptiert die finale App.
+Version 2.2.1, Build 6. Signatur- und Notarisierungsstatus: mit Developer ID signiert, am 3. Oktober 2026 über Xcode notarisiert, Ticket angeheftet; Gatekeeper akzeptiert die finale App.
 
-Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.2.0“.
+Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.2.1“.
 
 | Format | Länge | Alphabet | Angezeigte Entropie |
 |---|---|---|---|
@@ -32,12 +32,12 @@ BIP39-Wallets erwarten die Wörter üblicherweise mit Leerzeichen. Die interne B
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator 2.2.0.app"
+open "build/Password Generator 2.2.1.app"
 ```
 
 Das Release ist für Apple Silicon (`arm64`) ab macOS 14 vorgesehen. Das signierte Bundle ist die verwendbare Anwendung. `swift run PasswordGeneratorApp` dient nur der Entwicklung; der nicht entsprechend signierte Prozess erfüllt die Laufzeitbedingungen zur Generierung nicht.
 
-Das Paket-Skript erzeugt `build/Password Generator 2.2.0.app`, `build/Password.Generator-2.2.0.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
+Das Paket-Skript erzeugt `build/Password Generator 2.2.1.app`, `build/Password.Generator-2.2.1.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
 
 ## Mauspool und Generierung
 
@@ -45,8 +45,8 @@ Das Paket-Skript erzeugt `build/Password Generator 2.2.0.app`, `build/Password.G
 2. Der Pool hält die letzten 4.096 vollständigen Mausereignisse. Die Generierung benötigt mindestens 4.096 Bewegungen. Weitere Bewegungen ersetzen den jeweils ältesten Datensatz; der Speicherbedarf bleibt begrenzt. Ein Datensatz enthält laufende Nummer, monotone Zeit, Ereigniszeit, Position, Delta, Fenstergröße, Modifikatortasten und gedrückte Maustasten.
 3. Ab dem Appstart läuft im Abstand von sechs Sekunden ein Fisher-Yates-Shuffle in der linearen Durstenfeld-Variante. Er permutiert die Datensätze mit Zufallsbytes aus `SecRandomCopyBytes`. Rejection Sampling vermeidet Modulo-Verzerrungen. Der Startdurchlauf auf dem noch leeren Pool ist ein Leerlauf. Während macOS die App suspendiert oder der Rechner schläft, kann kein Prozess einen Echtzeit-Takt garantieren.
 4. Bei der Generierung erfolgt erneut ein Shuffle. Erst danach werden die Datensätze in der gemischten Reihenfolge serialisiert und `Skein-1024-1024(pool)`, `SHA3-512(pool)` und `SHA-512(pool)` berechnet. Beim Sammeln und bei den periodischen Shuffles werden diese Poolhashes nicht berechnet. Die separaten Integritätsprüfungen der eingebetteten Wortlisten finden beim Laden statt.
-5. Die Digests werden in der Reihenfolge Skein-1024-1024, SHA3-512, SHA-512 zusammengefügt: 128 + 64 + 64 = 256 Byte beziehungsweise 2.048 Bit. Fisher-Yates permutiert anschließend alle 2.048 einzelnen Bits mit kryptografischen macOS-Zufallsbytes. Dieser zusätzliche Schritt mischt Bitpositionen, nicht lediglich die Reihenfolge der 256 Byte.
-6. XOR des gemischten 256-Byte-Werts mit 256 frisch angeforderten macOS-Zufallsbytes ergibt den Masterkey. Die Zufallsbytes für diesen XOR-Schritt werden getrennt von den Zufallsbytes für die Shuffles angefordert.
+5. Die Digests werden in der Reihenfolge Skein-1024-1024, SHA3-512, SHA-512 zusammengefügt: 128 + 64 + 64 = 256 Byte beziehungsweise 2.048 Bit. Zuerst werden diese 256 Hashbytes mit 256 frisch angeforderten kryptografischen macOS-Zufallsbytes XOR-verknüpft.
+6. Fisher-Yates permutiert anschließend alle 2.048 einzelnen Bits dieses XOR-Ergebnisses mit weiteren kryptografischen macOS-Zufallsbytes. Dabei werden Bitpositionen gemischt, nicht lediglich die Reihenfolge der 256 Byte. Nach der Bitmischung ergibt ein zweites XOR mit separat angeforderten 256 frischen macOS-Zufallsbytes den Masterkey. Die beiden XOR-Masken und die Zufallsbytes für die Shuffles stammen aus getrennten Anforderungen; keine Maske wird wiederverwendet.
 7. Der Masterkey wird in dieser Reihenfolge in 128, 32, 32, 32 und 32 Byte aufgeteilt. Das erste Fragment initialisiert einen Skein-1024-XOF-Stream, die nächsten beiden jeweils einen eigenen SHAKE256-Stream. Die letzten beiden Fragmente bilden separate AES-256-Schlüssel für zwei AES-256-CTR-Streams. Jeder CTR-Stream beginnt bei null und führt einen eigenen 128-Bit-Zähler in Big-Endian-Reihenfolge fort; noch nicht verbrauchte Blockbytes bleiben über Leseaufrufe hinweg erhalten. Gleich lange Ausgaben aller fünf Streams werden byteweise XOR-verknüpft.
 8. Unmittelbar vor der Nutzung wird dieses Material nochmals mit gleich vielen frischen macOS-Zufallsbytes XOR-verknüpft. Bei Nachforderungen durch Rejection Sampling laufen die fünf Streams weiter und erhalten jeweils einen neuen OS-Beitrag. Bereits gelesene Stream-Präfixe werden nicht erneut verwendet.
 9. BIP39 codiert die nötigen Entropiebytes mit der SHA256-Prüfsumme. EFF, ASCII, PIN und Hex verwenden unverzerrte Auswahl aus ihrem Alphabet.
@@ -65,13 +65,13 @@ Die App speichert keine erzeugten Passwörter in Dateien oder Preferences. Bilds
 
 ## Integrität und Tests
 
-Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.2.0.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
+Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.2.1.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
 
 `Scripts/verify-release.sh` prüft SHA256 und SHA3-512 unabhängig mit Python. Skein-1024-1024 wird über `Scripts/skein-reference-checksum.sh` mit der offiziellen C-Referenzimplementierung unter `Tests/Reference/Skein` kontrolliert. Das Prüfskript entpackt außerdem das ZIP und prüft Code-Signatur sowie Sandbox.
 
 Diese zusätzlichen Integritätsprüfsummen ersetzen oder ändern Apples Developer-ID-Signaturverfahren nicht. Das Erstellen dieser externen Prüfsummendateien und des Integritätsmanifests verändert weder das App-Bundle noch das finale ZIP. Hashwerte allein beweisen keine Herkunft.
 
-Testergebnisse für Version 2.2.0: Jeweils 80 Tests in Debug und Release bestanden, ohne Compilerwarnungen. Der [Verifikationsabschnitt der technischen Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation) dokumentiert den Prüfumfang und die Release-Nachweise. Testergebnisse und Apple-Freigaben früherer Releases belegen nicht den Prüfstatus dieser Version.
+Testergebnisse für Version 2.2.1: Jeweils 82 Tests in Debug und Release bestanden, ohne Compilerwarnungen. Der [Verifikationsabschnitt der technischen Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation) dokumentiert den Prüfumfang und die Release-Nachweise. Testergebnisse und Apple-Freigaben früherer Releases belegen nicht den Prüfstatus dieser Version.
 
 ## Logo und Icon
 

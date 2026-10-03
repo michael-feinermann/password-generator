@@ -59,6 +59,50 @@ final class EntropyPoolTests: XCTestCase {
         }
     }
 
+    func testFreshMaskCallsSurroundBitShuffleBeforeOutputMask() throws {
+        let source = PipelineRandomSource(style: "zero")
+        let pool = try EntropyPool(randomProvider: source.bytes(count:))
+        for index in 0..<4_096 { pool.absorb(record(index)) }
+        XCTAssertTrue(source.requests.isEmpty)
+        let stream = try pool.makeStream()
+        defer { stream.clear() }
+        XCTAssertEqual(source.requests, [4_096, 4_096, 4_096, 4_096, 256, 4_096, 4_096, 256])
+        XCTAssertEqual(try stream.bytes(count: 17).count, 17)
+        XCTAssertEqual(source.requests, [4_096, 4_096, 4_096, 4_096, 256, 4_096, 4_096, 256, 17])
+    }
+
+    func testFailureOfEitherFreshMaskStopsBeforeLaterRandomRequests() throws {
+        enum RandomFailure: Error { case unavailable }
+        for failedMask in [1, 2] {
+            for malformedReturn in [false, true] {
+                var requests: [Int] = []
+                var maskReadCount = 0
+                let pool = try EntropyPool { count in
+                    requests.append(count)
+                    if count == 256 {
+                        maskReadCount += 1
+                        if maskReadCount == failedMask {
+                            if malformedReturn { return [UInt8](repeating: 0, count: count - 1) }
+                            throw RandomFailure.unavailable
+                        }
+                    }
+                    return [UInt8](repeating: 0, count: count)
+                }
+                for index in 0..<4_096 { pool.absorb(record(index)) }
+                XCTAssertThrowsError(try pool.makeStream()) {
+                    if malformedReturn {
+                        XCTAssertEqual($0 as? EntropyPoolError, .incorrectRandomByteCount(expected: 256, actual: 255))
+                    } else {
+                        XCTAssertNotNil($0 as? RandomFailure)
+                    }
+                }
+                let beforeFirstMask = [4_096, 4_096, 4_096, 4_096, 256]
+                XCTAssertEqual(requests, beforeFirstMask + (failedMask == 1 ? [] : [4_096, 4_096, 256]))
+                XCTAssertEqual(maskReadCount, failedMask)
+            }
+        }
+    }
+
     func testShuffleRejectsBiasedTailAndIncludesCurrentPosition() throws {
         var requests = 0
         let pool = try EntropyPool { count in
@@ -118,11 +162,17 @@ final class EntropyPoolTests: XCTestCase {
         for fixture in try pipelineFixtures() {
             let source = PipelineRandomSource(style: fixture.randomStyle)
             source.shuffleBufferIndex = fixture.recordShuffleRandomRequests
-            var digest = try hexBytes(fixture.digest)
+            let preShuffleMask = source.bytes(count: 256)
+            XCTAssertEqual(preShuffleMask, try hexBytes(fixture.preShuffleMask), fixture.name)
+            var digest = zip(try hexBytes(fixture.digest), preShuffleMask).map(^)
+            XCTAssertEqual(digest, try hexBytes(fixture.maskedDigest), fixture.name)
             let originalPopcount = digest.reduce(0) { $0 + $1.nonzeroBitCount }
             try EntropyPool.shuffleDigestBits(&digest, randomProvider: source.bytes(count:))
             XCTAssertEqual(digest, try hexBytes(fixture.shuffledDigest), fixture.name)
             XCTAssertEqual(digest.reduce(0) { $0 + $1.nonzeroBitCount }, originalPopcount, fixture.name)
+            let masterMask = source.bytes(count: 256)
+            XCTAssertEqual(masterMask, try hexBytes(fixture.masterMask), fixture.name)
+            XCTAssertEqual(zip(digest, masterMask).map(^), try hexBytes(fixture.master), fixture.name)
         }
     }
 
@@ -187,9 +237,9 @@ final class EntropyPoolTests: XCTestCase {
     }
 
     func testPoolAbortsWhenEitherDigestShuffleBufferFails() throws {
-        // Zero candidates consume four record-shuffle buffers, then two digest
-        // buffers. Failure must stop before the master or output mask is read.
-        for failedRequest in [5, 6] {
+        // Four record-shuffle buffers, first mask, then two bitshuffle buffers.
+        // Failure must stop before the second mask or output mask is read.
+        for failedRequest in [6, 7] {
             var requests: [Int] = []
             let pool = try EntropyPool { count in
                 requests.append(count)
@@ -199,7 +249,8 @@ final class EntropyPoolTests: XCTestCase {
             XCTAssertThrowsError(try pool.makeStream()) {
                 XCTAssertEqual($0 as? EntropyPoolError, .incorrectRandomByteCount(expected: 4_096, actual: 4_095))
             }
-            XCTAssertEqual(requests, [Int](repeating: 4_096, count: failedRequest))
+            XCTAssertEqual(requests, [4_096, 4_096, 4_096, 4_096, 256]
+                           + [Int](repeating: 4_096, count: failedRequest - 5))
         }
     }
 
@@ -275,7 +326,7 @@ final class EntropyPoolTests: XCTestCase {
     private func pipelineFixtures() throws -> [PipelineFixture] {
         let url = try XCTUnwrap(Bundle.module.url(forResource: "pipeline_expected", withExtension: "json"))
         let fixtures = try JSONDecoder().decode(PipelineFixtures.self, from: Data(contentsOf: url))
-        XCTAssertEqual(fixtures.version, 3)
+        XCTAssertEqual(fixtures.version, 4)
         XCTAssertEqual(fixtures.cases.count, 3)
         return fixtures.cases
     }
@@ -330,7 +381,10 @@ private struct PipelineFixture: Decodable {
     let recordShuffleRandomRequests: Int
     let randomRequestByteCounts: [Int]
     let digest: String
+    let preShuffleMask: String
+    let maskedDigest: String
     let shuffledDigest: String
+    let masterMask: String
     let master: String
     let output: String
     let passwords: [PipelinePasswordFixture]
@@ -347,16 +401,19 @@ private final class PipelineRandomSource {
     var shuffleBufferIndex = 0
     private(set) var outputOffset = 0
     private(set) var requests: [Int] = []
-    private var masterRead = false
+    private var maskReadCount = 0
 
     init(style: String) { self.style = style }
 
     func bytes(count: Int) -> [UInt8] {
         requests.append(count)
-        if !masterRead {
+        if maskReadCount < 2 {
             if count == 4_096 { return shuffleBuffer() }
             precondition(count == 256)
-            masterRead = true
+            defer { maskReadCount += 1 }
+            if maskReadCount == 0 {
+                return (0..<count).map { style == "zero" ? 0x3c : UInt8(truncatingIfNeeded: $0 * 19 + 0x3c) }
+            }
             return (0..<count).map { style == "zero" ? 0xa5 : UInt8(truncatingIfNeeded: $0 * 37 + 0xa5) }
         }
         return advanceOutput(count: count)
