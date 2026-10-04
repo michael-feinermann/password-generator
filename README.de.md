@@ -4,13 +4,15 @@
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator Icon">
 
-[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.3.1](docs/RELEASE_NOTES_2.3.1.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.3.3](docs/RELEASE_NOTES_2.3.3.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.3.1, Build 8. Mit Developer ID signiert, am 4. Oktober 2026 über Xcode notarisiert, Ticket angeheftet; Gatekeeper akzeptiert die finale App.
+Version 2.3.3, Build 10. Mit Developer ID signiert und am 4. Oktober 2026 über Xcode notarisiert. Das Notarisierungsticket ist angeheftet; Gatekeeper akzeptiert die ausgelieferte App.
 
 Releasepolitik: Auf GitHub bleibt nur die aktuelle Version als Release mit Downloadassets und Release-Tag erhalten. Die Quellhistorie und historische Release Notes bleiben zum Nachlesen verfügbar. Der Downloadlink oben verweist stets auf das aktuelle Release.
 
-Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.3.1“.
+Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.3.3“.
+
+Die normale Fenstergröße von 1.060 × 840 Punkten ist die Mindestgröße. Inhalt und Typografie wachsen mit größeren Fenstern und im Vollbild. Apptexte verwenden mindestens Schriftgröße 14; Potenzen erscheinen gut lesbar in der Schreibweise `10^106` und `2^(n/2)`.
 
 | Format | Länge | Alphabet | Angezeigte Entropie |
 |---|---|---|---|
@@ -24,7 +26,7 @@ Die Entropieanzeige beschreibt die Größe des gleichverteilt abgetasteten Ausga
 
 ## Standardlängen und Farbstufen
 
-Version 2.3.1 startet die Formate mit diesen Längen:
+Version 2.3.3 startet die Formate mit diesen Längen:
 
 | Format | Standard | Nominelle Bits |
 |---|---|---|
@@ -45,13 +47,33 @@ Die Konfiguration und das generierte Ergebnis zeigen den nominellen Bitwert mit 
 | 256 bis unter 1.024 | Hellgrün | praktisch nicht angreifbar |
 | Ab 1.024 | Dunkelgrün | thermodynamisch nicht angreifbar |
 
-Dies sind die vereinfachten Bezeichnungen der Oberfläche. Ein Info-Button neben jeder Bezeichnung öffnet diese Erklärung; sie ist auch per Tastaturfokus und als Tooltip erreichbar:
+Der Info-Button neben jeder Stufe erläutert ihren Aussagebereich und die Angriffsmodelle; die Informationen sind auch per Tastatur erreichbar. Die Bezeichnungen beziehen sich auf das Erraten gleichverteilt zufälliger Passwörter mit diesen Einschränkungen:
 
-> Die Einordnung bezieht sich auf das Erraten des Passworts durch Brute-Force bei gleichverteilter Zufallsauswahl. Sie beschreibt den nominellen Auswahlraum. Die Bezeichnungen sind vereinfachte Stufen, keine Garantie: Sie bewerten keine reale Quantenhardware und sind kein thermodynamischer Nachweis. Andere Angriffswege werden nicht erfasst.
+- Rot bezeichnet den niedrigsten Bereich. Nicht jedes Passwort unter 128 nominellen Bits ist mit verfügbarer Hardware praktisch knackbar.
+- Gelb bezeichnet die geringere Suchreserve im idealisierten Grover-Modell. Damit wird nicht jedes Verfahren, das solche Passwörter verwendet, als durch Quantencomputer gebrochen eingestuft.
+- Hellgrün steht für einen sehr großen modellierten Suchaufwand. Angriffe auf Zufallsquelle, Schlüsselableitung, Verschlüsselung, Implementierung oder Endgerät sind dadurch nicht ausgeschlossen.
+- Dunkelgrün überschreitet sowohl den bedingten Energievergleich als auch den unten angenommenen Zeithorizont. Eine uneingeschränkte thermodynamische Unmöglichkeit ist damit nicht bewiesen.
 
-Der angezeigte Wert misst weder die Zufallsquelle noch garantiert er die Gesamtsicherheit. Eine sechsstellige PIN besitzt einen kleinen Suchraum für Offline-Angriffe; ihre Eignung hängt auch vom Einsatzzweck und durchgesetzten Versuchslimits ab.
+Der Bitwert misst den nominellen Auswahlraum, nicht die tatsächlich von den Zufallsquellen gelieferte Entropie. Eine sechsstellige PIN besitzt einen kleinen Suchraum für Offline-Angriffe; ihre Eignung hängt auch vom Einsatzzweck und durchgesetzten Versuchslimits ab. Diese Bezeichnungen sind keine NIST-Sicherheitskategorien. [NISTs Hinweise zu Quantencomputern](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs) berücksichtigen praktische Kosten und erlauben weiterhin AES-128, AES-192 und AES-256.
 
-Grovers idealisierter quadratischer Suchvorteil belegt keine praktischen Angriffszeiten. NIST berücksichtigt Hardwarekosten und Grenzen der Parallelisierung und erlaubt weiterhin AES-128, AES-192 und AES-256. Die Oberflächenbezeichnungen ersetzen diese Analyse nicht. [NIST: Post-Quantum Cryptography FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs)
+## Modelle für Angriffszeit und physikalische Vergleiche
+
+Für `n` nominelle Bits und ein gültiges Ziel unter `N = 2^n` gleich wahrscheinlichen Kandidaten schätzt die App:
+
+| Modell | Angenommene Rate | Angezeigte Zeit in Sekunden |
+|---|---|---|
+| Klassische vollständige Suche | 10¹⁸ vollständige Kandidatenprüfungen pro Sekunde | `2^n / 10^18` |
+| Idealisierter Petahertz-Quantencomputer mit Grover-Suche | 10¹⁵ vollständige Grover-Iterationen pro Sekunde | `(π/4) × 2^(n/2) / 10^15` |
+
+Der klassische Wert erfasst den gesamten Suchraum, nicht die mittlere Fundzeit. Der Grover-Wert ist eine kontinuierliche Näherung für nahezu sicheren Erfolg bei einem Ziel. Beide Raten sind Annahmen und keine Benchmarks. Exascale-FLOPS zählen Gleitkommaoperationen, keine Passwortprüfungen; die optoelektronische 1-PHz-Forschung belegt ebenfalls weder eine universelle Prozessorgrenze noch ein realisierbares Quantenorakel. [DOE: Supercomputing](https://www.energy.gov/topics/supercomputing), [Zalka: Grover's quantum searching algorithm is optimal](https://arxiv.org/abs/quant-ph/9711070), [Ossiander et al.: The speed limit of optoelectronics](https://pmc.ncbi.nlm.nih.gov/articles/PMC8956609/).
+
+Der Energievergleich nimmt ein irreversibel gelöschtes Informationsbit pro Prüfung beziehungsweise Grover-Iteration bei 2,7 K an. Dies kostet mindestens `k_B × T × ln(2) ≈ 2,58388 × 10^-23 J`. Das Budget von `3 × 10^71 J` ist eine aufgerundete kosmologische Vergleichsgröße einschließlich Dunkler Energie, keine verfügbare Arbeitsenergie. Reversible Berechnung erfordert diese Löschung nicht nach jedem Schritt. Insbesondere ist der angesetzte Aufwand pro Grover-Iteration eine zusätzliche Annahme zum Landauer-Prinzip. [Landauer (1961)](https://www.dna.caltech.edu/courses/cs191/paperscs191/landauer1961.pdf), [Bennett (1973)](https://www.cs.princeton.edu/courses/archive/fall04/cos576/papers/bennett73.html).
+
+Ein getrennter Zeitvergleich erlaubt `10^106` Jahre mit jeweils 31.557.600 Sekunden. Dies ist ein ausdrücklich angenommener kosmischer Zeithorizont, kein gesicherter Zeitpunkt maximaler Entropie des Universums und keine universelle Frist für Berechnungen. Hawking-Verdampfung motiviert die astronomische Größenordnung; die langfristige kosmologische Entwicklung bleibt bedingt. [Hawking (1975)](https://doi.org/10.1007/BF02345020), [Adams und Laughlin (1997), Abschnitte IV.G und VI.D](https://sites.astro.caltech.edu/ay1/RevModPhys.69.337.pdf).
+
+Bei 1.024 nominellen Bits beträgt die modellierte Grover-Zeit etwa `3,34 × 10^131` Jahre beziehungsweise das `3,34 × 10^25`-Fache dieses Horizonts. Dieser Zeitvergleich benötigt keine Landauer-Kosten pro Iteration, hängt aber weiterhin von der angenommenen Rate, dem Horizont und dem Suchproblem ab. Auch ein überschrittenes Budget schließt einen frühen Glückstreffer nicht aus.
+
+Threefish-1024 akzeptiert einen 1.024-Bit-Schlüssel. Ein nomineller Passwortauswahlraum von 1.024 Bit beweist allein weder ebenso hohe Quellenentropie noch entsprechend starkes Schlüsselmaterial; geeignete Ableitung und sichere Implementierung bleiben erforderlich. Die Erweiterung eines Passworts zu mehreren Schlüsseln erzeugt keine zusätzliche unabhängige Entropie, und Kaskadenstärken lassen sich nicht einfach addieren. Eine Garantie für jede Verschlüsselung oder Kaskade folgt daraus nicht. [Skein-/Threefish-Spezifikation v1.3, Abschnitte 3.3 und 6.3](https://www.schneier.com/wp-content/uploads/2015/01/skein.pdf). [Vollständige Annahmen, Schwellen und Quellen](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#attack-cost-models).
 
 ## Exportformat
 
@@ -65,12 +87,12 @@ BIP39-Wallets erwarten die Wörter üblicherweise mit Leerzeichen. Die interne B
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator 2.3.1.app"
+open "build/Password Generator 2.3.3.app"
 ```
 
 Das Release ist für Apple Silicon (`arm64`) ab macOS 14 vorgesehen. Das signierte Bundle ist die verwendbare Anwendung. `swift run PasswordGeneratorApp` dient nur der Entwicklung; der nicht entsprechend signierte Prozess erfüllt die Laufzeitbedingungen zur Generierung nicht.
 
-Das Paket-Skript erzeugt `build/Password Generator 2.3.1.app`, `build/Password.Generator-2.3.1.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
+Das Paket-Skript erzeugt `build/Password Generator 2.3.3.app`, `build/Password.Generator-2.3.3.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
 
 ## Mauspool und Generierung
 
@@ -98,13 +120,13 @@ Die App speichert keine erzeugten Passwörter in Dateien oder Preferences. Bilds
 
 ## Integrität und Tests
 
-Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.3.1.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
+Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.3.3.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
 
 `Scripts/verify-release.sh` prüft SHA256 und SHA3-512 unabhängig mit Python. Skein-1024-1024 wird über `Scripts/skein-reference-checksum.sh` mit der offiziellen C-Referenzimplementierung unter `Tests/Reference/Skein` kontrolliert. Das Prüfskript entpackt außerdem das ZIP und prüft Code-Signatur sowie Sandbox.
 
 Diese zusätzlichen Integritätsprüfsummen ersetzen oder ändern Apples Developer-ID-Signaturverfahren nicht. Das Erstellen dieser externen Prüfsummendateien und des Integritätsmanifests verändert weder das App-Bundle noch das finale ZIP. Hashwerte allein beweisen keine Herkunft.
 
-Testergebnisse für Version 2.3.1, Build 8: Jeweils 87 Tests in Debug und Release bestanden, ohne Compilerwarnungen: pro Build 67 Core-Tests und 20 App-Modelltests. [Verifikation und Release-Nachweise](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
+Testergebnisse für Version 2.3.3, Build 10: Jeweils 103 Tests in Debug und Release bestanden, ohne Compilerwarnungen: pro Build 74 Core-Tests und 29 App-Tests. [Verifikation und Release-Nachweise](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 
 ## Logo und Icon
 

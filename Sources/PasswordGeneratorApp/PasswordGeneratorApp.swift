@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 enum AppIdentity {
-    static let displayName = "Password Generator \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.3.1")"
+    static let displayName = "Password Generator \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.3.3")"
 }
 
 @main
@@ -25,10 +25,17 @@ struct PasswordGeneratorApplication: App {
                     appDelegate.onConceal = model.secureContextDidChange
                     appDelegate.onTerminate = model.prepareForTermination
                 }
-                .frame(minWidth: 900, minHeight: 700)
+                .frame(
+                    minWidth: AppDisplayMetrics.minimumWindowSize.width,
+                    minHeight: AppDisplayMetrics.minimumWindowSize.height
+                )
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 1_060, height: 840)
+        .windowResizability(.contentMinSize)
+        .defaultSize(
+            width: AppDisplayMetrics.minimumWindowSize.width,
+            height: AppDisplayMetrics.minimumWindowSize.height
+        )
         .commands {
             CommandGroup(replacing: .newItem) { }
             CommandMenu(AppIdentity.displayName) {
@@ -40,6 +47,7 @@ struct PasswordGeneratorApplication: App {
                 ) {
                     model.concealMnemonic()
                 }
+                .font(.system(size: 14))
                 .keyboardShortcut("h", modifiers: [.command, .shift])
                 .disabled(model.phase != .generated || !model.isMnemonicVisible)
             }

@@ -4,13 +4,15 @@ English | [Deutsch](README.de.md)
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator icon">
 
-[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.3.1](docs/RELEASE_NOTES_2.3.1.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.3.3](docs/RELEASE_NOTES_2.3.3.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.3.1, build 8. Developer ID signed, notarized through Xcode on 4 October 2026, with a stapled ticket; Gatekeeper accepted the final app.
+Version 2.3.3, build 10. Developer ID signed and notarized through Xcode on October 4, 2026. The notarization ticket is stapled, and Gatekeeper accepts the distributed app.
 
 Release policy: GitHub keeps only the current version as a release with download assets and a release tag. The source history and historical release notes remain available for reference. The download link above always points to the current release.
 
-A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.3.1”.
+A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.3.3”.
+
+The regular window size of 1,060 × 840 points is the minimum. The content and typography grow with larger windows and full-screen mode. App text uses at least 14-point type; powers use readable caret notation such as `10^106` and `2^(n/2)`.
 
 | Format | Length | Alphabet | Displayed entropy |
 |---|---|---|---|
@@ -24,7 +26,7 @@ The entropy display describes the size of the uniformly sampled output space. It
 
 ## Defaults and color levels
 
-Version 2.3.1 starts each format with these lengths:
+Version 2.3.3 starts each format with these lengths:
 
 | Format | Default | Nominal bits |
 |---|---|---|
@@ -45,13 +47,33 @@ The configuration and generated result show the nominal bit value together with 
 | 256 to below 1,024 | Light green | practically unattackable |
 | 1,024 or more | Dark green | thermodynamically unattackable |
 
-These are the interface's simplified labels. An info button next to each label opens this explanation; it is also available through keyboard focus and as a tooltip:
+The info button beside each level explains its scope and the attack models; the information is also accessible by keyboard. The labels describe uniformly random password guessing, with these qualifications:
 
-> The classification refers to guessing the password by brute force with uniformly random selection. It describes the nominal selection space. The labels are simplified levels, not a guarantee: they do not assess real quantum hardware and are not thermodynamic proof. Other attack paths are not covered.
+- Red identifies the lowest range. It does not mean that every password below 128 nominal bits can be cracked with available equipment.
+- Yellow identifies reduced resistance in the idealized Grover model. It does not classify every algorithm using these passwords as broken by quantum computers.
+- Light green denotes a very large modeled search effort. It does not exclude attacks on the random source, key derivation, encryption, implementation, or endpoint.
+- Dark green exceeds both the conditional energy comparison and the assumed time horizon described below. It does not establish unconditional thermodynamic impossibility.
 
-The displayed value does not measure the random source or guarantee overall security. A six-digit PIN has a small offline guessing space; its suitability also depends on the use case and enforced attempt limits.
+The displayed bits measure the nominal selection space, not the actual entropy supplied by the random sources. A six-digit PIN has a small offline guessing space; its suitability also depends on the use case and enforced attempt limits. These labels are not NIST security categories. [NIST's quantum-computing guidance](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs) considers practical costs and continues to permit AES-128, AES-192, and AES-256.
 
-Grover's idealized square-root search advantage does not establish practical attack times. NIST considers hardware and parallelization constraints and continues to allow AES-128, AES-192, and AES-256. The interface labels are not a replacement for that analysis. [NIST: Post-Quantum Cryptography FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs)
+## Attack-time and physical comparison models
+
+For `n` nominal bits and one valid target among `N = 2^n` equally likely candidates, the app estimates:
+
+| Model | Assumed rate | Displayed time in seconds |
+|---|---|---|
+| Classical exhaustive search | 10¹⁸ complete candidate checks per second | `2^n / 10^18` |
+| Idealized Petahertz quantum computer using Grover search | 10¹⁵ complete Grover iterations per second | `(π/4) × 2^(n/2) / 10^15` |
+
+The classical value covers the entire space, rather than the average discovery time. The Grover value is a continuous approximation for near-certain success with one target. Both rates are assumptions, not benchmarks. Exascale FLOPS count floating-point operations, not password checks; likewise, the optoelectronic 1-PHz research does not establish a universal processor limit or a realizable quantum oracle. [DOE: Supercomputing](https://www.energy.gov/topics/supercomputing), [Zalka: Grover's quantum searching algorithm is optimal](https://arxiv.org/abs/quant-ph/9711070), [Ossiander et al.: The speed limit of optoelectronics](https://pmc.ncbi.nlm.nih.gov/articles/PMC8956609/).
+
+The energy comparison assumes one irreversibly erased information bit per check or Grover iteration at 2.7 K, costing at least `k_B × T × ln(2) ≈ 2.58388 × 10^-23 J`. Its budget is `3 × 10^71 J`, an upward-rounded cosmological comparison scale including dark energy, not available work energy. Reversible computation does not require this erasure after every step. In particular, the assumed cost per Grover iteration is additional to Landauer's principle. [Landauer (1961)](https://www.dna.caltech.edu/courses/cs191/paperscs191/landauer1961.pdf), [Bennett (1973)](https://www.cs.princeton.edu/courses/archive/fall04/cos576/papers/bennett73.html).
+
+A separate time comparison allows `10^106` years, each of 31,557,600 seconds. This is an explicitly assumed cosmic time horizon, not an established date of maximum universal entropy or a universal deadline for computation. Hawking evaporation motivates the astronomical scale; the long-term cosmological outcome remains conditional. [Hawking (1975)](https://doi.org/10.1007/BF02345020), [Adams and Laughlin (1997), sections IV.G and VI.D](https://sites.astro.caltech.edu/ay1/RevModPhys.69.337.pdf).
+
+At 1,024 nominal bits, the modeled Grover time is about `3.34 × 10^131` years, or `3.34 × 10^25` times that horizon. This time comparison does not depend on assigning a Landauer cost to every iteration, but it still depends on the assumed rate, horizon, and search problem. Exceeding either budget does not make an early lucky guess impossible.
+
+Threefish-1024 accepts a 1,024-bit key. A 1,024-bit nominal password space alone does not prove equally strong source entropy or key material; a suitable derivation and secure implementation are still required. Expanding a password into several keys does not add independent entropy, and cascade strengths cannot simply be added. No guarantee for every cipher or cascade follows. [Skein/Threefish specification v1.3, sections 3.3 and 6.3](https://www.schneier.com/wp-content/uploads/2015/01/skein.pdf). [Full assumptions, thresholds, and sources](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#attack-cost-models).
 
 ## Export format
 
@@ -65,12 +87,12 @@ BIP39 wallets usually expect words separated by spaces. The internal BIP39 check
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator 2.3.1.app"
+open "build/Password Generator 2.3.3.app"
 ```
 
 The release targets Apple Silicon (`arm64`) running macOS 14 or later. Use the signed app bundle to run the application. `swift run PasswordGeneratorApp` is intended only for development; a process without the required signature does not satisfy the runtime conditions for generation.
 
-The packaging script creates `build/Password Generator 2.3.1.app`, `build/Password.Generator-2.3.1.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
+The packaging script creates `build/Password Generator 2.3.3.app`, `build/Password.Generator-2.3.3.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
 
 ## Mouse pool and generation
 
@@ -98,13 +120,13 @@ The app does not save generated passwords to files or preferences. A local app c
 
 ## Integrity and tests
 
-Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.3.1.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
+Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.3.3.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
 
 `Scripts/verify-release.sh` independently checks SHA256 and SHA3-512 using Python. It checks Skein-1024-1024 through `Scripts/skein-reference-checksum.sh`, which uses the official C reference implementation in `Tests/Reference/Skein`. The verifier also extracts the ZIP and checks the code signature and sandbox.
 
 These additional integrity checksums do not replace or change Apple's Developer ID signing process. Creating these external checksum files and the integrity manifest does not modify the app bundle or the final ZIP. Hash values alone do not prove provenance.
 
-Test results for version 2.3.1, build 8: 87 tests passed in each of the Debug and Release builds, with no compiler warnings: 67 Core tests and 20 app model tests per build. [Verification scope and release evidence (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
+Test results for version 2.3.3, build 10: 103 tests passed in each of the Debug and Release builds, with no compiler warnings: 74 Core tests and 29 app tests per build. [Verification scope and release evidence (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 
 ## Logo and icon
 
