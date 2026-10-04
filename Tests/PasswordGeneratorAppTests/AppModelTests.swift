@@ -5,6 +5,25 @@ import PasswordGeneratorCore
 
 @MainActor
 final class AppModelTests: XCTestCase {
+    func testInitialAndModeSwitchLengthsUseSharedDefaults() {
+        let model = secureModel()
+        defer { model.prepareForTermination() }
+        XCTAssertEqual(model.selectedMode, .bip39)
+        XCTAssertEqual(model.selectedLength, 24)
+        for mode in GeneratorMode.allCases {
+            model.selectedMode = mode
+            XCTAssertEqual(model.selectedLength, mode.defaultLength)
+            if mode == .pin {
+                XCTAssertEqual(model.selectedLength, 6)
+            } else {
+                XCTAssertGreaterThanOrEqual(model.configuration?.entropyBits ?? 0, 256)
+            }
+            model.selectedLength = mode.lengthRange.lowerBound
+        }
+        model.selectedMode = .bip39
+        XCTAssertEqual(model.selectedLength, 24)
+    }
+
     func testLanguageSwitchKeepsMouseSessionAndLocalizesMessages() {
         let model = AppModel()
         defer { model.prepareForTermination() }

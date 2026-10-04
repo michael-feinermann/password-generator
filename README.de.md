@@ -4,11 +4,11 @@
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator Icon">
 
-[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.2.1](docs/RELEASE_NOTES_2.2.1.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.3.0](docs/RELEASE_NOTES_2.3.0.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.2.1, Build 6. Signatur- und Notarisierungsstatus: mit Developer ID signiert, am 3. Oktober 2026 über Xcode notarisiert, Ticket angeheftet; Gatekeeper akzeptiert die finale App.
+Version 2.3.0, Build 7. Mit Developer ID signiert, am 4. Oktober 2026 über Xcode notarisiert, Ticket angeheftet; Gatekeeper akzeptiert die finale App.
 
-Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.2.1“.
+Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.3.0“.
 
 | Format | Länge | Alphabet | Angezeigte Entropie |
 |---|---|---|---|
@@ -19,6 +19,33 @@ Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwört
 | Hex | 1 bis 512 Hexzeichen | `0` bis `9`, `a` bis `f` oder `A` bis `F` | Zeichen × 4 Bit |
 
 Die Entropieanzeige beschreibt die Größe des gleichverteilt abgetasteten Ausgaberaums. Sie misst weder die Entropie der Mausbewegungen noch garantiert sie eine entsprechende Angriffssicherheit des Gesamtsystems. BIP39-Prüfsummen zählen nicht als zusätzliche Entropie. Wiederholte Wörter und Zeichen sind zulässig; zusätzliche Zusammensetzungsregeln würden den Ausgaberaum verändern.
+
+## Standardlängen und Farbstufen
+
+Version 2.3.0 startet die Formate mit diesen Längen:
+
+| Format | Standard | Nominelle Bits |
+|---|---|---|
+| BIP39 | 24 Wörter | 256 |
+| EFF | 20 Wörter | 20 × log₂(7.776) ≈ 258,50 |
+| ASCII | 40 Zeichen | 40 × log₂(94) ≈ 262,18 |
+| PIN | 6 Ziffern | 6 × log₂(10) ≈ 19,93 |
+| Hex | 64 Zeichen | 64 × 4 = 256 |
+
+Für BIP39, EFF, ASCII und Hex sind dies die kürzesten unterstützten Längen mit mindestens 256 nominellen Bits. Die sechsstellige PIN ist eine bewusste Ausnahme. Die vollständigen wählbaren Längenbereiche bleiben verfügbar.
+
+Die Konfiguration und das generierte Ergebnis zeigen den nominellen Bitwert mit Farbe und Textbezeichnung. Der ungerundete Wert bestimmt die Stufe; genau 128, 256 oder 1.024 Bit gehören bereits zur jeweils höheren Stufe.
+
+| Nominelle Bits | Farbe | Bezeichnung |
+|---|---|---|
+| Unter 128 | Rot | Geringe Brute-Force-Reserve |
+| 128 bis unter 256 | Gelb | Begrenzte Quantenreserve |
+| 256 bis unter 1.024 | Hellgrün | Sehr hoher Brute-Force-Aufwand |
+| Ab 1.024 | Dunkelgrün | Extremer Brute-Force-Aufwand |
+
+Die Bezeichnungen beziehen sich auf den nominellen Auswahlraum bei ideal gleichverteilter Auswahl. Sie messen weder die Zufallsquelle noch garantieren sie die Gesamtsicherheit. Eine sechsstellige PIN besitzt einen kleinen Suchraum für Offline-Angriffe; ihre Eignung hängt auch vom Einsatzzweck und durchgesetzten Versuchslimits ab.
+
+Die gelbe Stufe bezieht sich auf das idealisierte Grover-Suchmodell: Das Durchsuchen von N Möglichkeiten benötigt Quantenabfragen in der Größenordnung √N. Daraus folgt nicht, dass jeder Wert unter 256 Bit praktisch durch Quantencomputer angreifbar wäre. NIST berücksichtigt die Kosten von Quantenhardware und die Grenzen der Parallelisierung von Grovers Algorithmus und erlaubt weiterhin AES-128, AES-192 und AES-256. Auch die höchste Stufe behauptet keine thermodynamische Unmöglichkeit eines Angriffs. [NIST: Post-Quantum Cryptography FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs)
 
 ## Exportformat
 
@@ -32,12 +59,12 @@ BIP39-Wallets erwarten die Wörter üblicherweise mit Leerzeichen. Die interne B
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator 2.2.1.app"
+open "build/Password Generator 2.3.0.app"
 ```
 
 Das Release ist für Apple Silicon (`arm64`) ab macOS 14 vorgesehen. Das signierte Bundle ist die verwendbare Anwendung. `swift run PasswordGeneratorApp` dient nur der Entwicklung; der nicht entsprechend signierte Prozess erfüllt die Laufzeitbedingungen zur Generierung nicht.
 
-Das Paket-Skript erzeugt `build/Password Generator 2.2.1.app`, `build/Password.Generator-2.2.1.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
+Das Paket-Skript erzeugt `build/Password Generator 2.3.0.app`, `build/Password.Generator-2.3.0.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
 
 ## Mauspool und Generierung
 
@@ -65,13 +92,13 @@ Die App speichert keine erzeugten Passwörter in Dateien oder Preferences. Bilds
 
 ## Integrität und Tests
 
-Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.2.1.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
+Beide Wortlisten werden vor Verwendung gegen fest eingebaute SHA256- und SHA3-512-Werte geprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.3.0.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
 
 `Scripts/verify-release.sh` prüft SHA256 und SHA3-512 unabhängig mit Python. Skein-1024-1024 wird über `Scripts/skein-reference-checksum.sh` mit der offiziellen C-Referenzimplementierung unter `Tests/Reference/Skein` kontrolliert. Das Prüfskript entpackt außerdem das ZIP und prüft Code-Signatur sowie Sandbox.
 
 Diese zusätzlichen Integritätsprüfsummen ersetzen oder ändern Apples Developer-ID-Signaturverfahren nicht. Das Erstellen dieser externen Prüfsummendateien und des Integritätsmanifests verändert weder das App-Bundle noch das finale ZIP. Hashwerte allein beweisen keine Herkunft.
 
-Testergebnisse für Version 2.2.1: Jeweils 82 Tests in Debug und Release bestanden, ohne Compilerwarnungen. Der [Verifikationsabschnitt der technischen Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation) dokumentiert den Prüfumfang und die Release-Nachweise. Testergebnisse und Apple-Freigaben früherer Releases belegen nicht den Prüfstatus dieser Version.
+Testergebnisse für Version 2.3.0, Build 7: Jeweils 87 Tests in Debug und Release bestanden, ohne Compilerwarnungen: pro Build 67 Core-Tests und 20 App-Tests. Der [Verifikationsabschnitt der technischen Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation) dokumentiert die Release-Prüfungen. Testergebnisse und Apple-Freigaben früherer Releases belegen nicht den Prüfstatus dieser Version.
 
 ## Logo und Icon
 

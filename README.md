@@ -4,11 +4,11 @@ English | [Deutsch](README.de.md)
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator icon">
 
-[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.2.1](docs/RELEASE_NOTES_2.2.1.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.3.0](docs/RELEASE_NOTES_2.3.0.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.2.1, build 6. Signing and notarization status: Developer ID signed, notarized through Xcode on 3 October 2026, with a stapled ticket; Gatekeeper accepted the final app.
+Version 2.3.0, build 7. Developer ID signed, notarized through Xcode on 4 October 2026, with a stapled ticket; Gatekeeper accepted the final app.
 
-A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.2.1”.
+A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.3.0”.
 
 | Format | Length | Alphabet | Displayed entropy |
 |---|---|---|---|
@@ -19,6 +19,33 @@ A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PI
 | Hex | 1 to 512 hexadecimal characters | `0` through `9`, `a` through `f` or `A` through `F` | Characters × 4 bits |
 
 The entropy display describes the size of the uniformly sampled output space. It neither measures the entropy of mouse movements nor guarantees a corresponding level of resistance to attacks on the overall system. BIP39 checksum bits do not count as additional entropy. Repeated words and characters are allowed; additional composition rules would change the output space.
+
+## Defaults and color levels
+
+Version 2.3.0 starts each format with these lengths:
+
+| Format | Default | Nominal bits |
+|---|---|---|
+| BIP39 | 24 words | 256 |
+| EFF | 20 words | 20 × log₂(7,776) ≈ 258.50 |
+| ASCII | 40 characters | 40 × log₂(94) ≈ 262.18 |
+| PIN | 6 digits | 6 × log₂(10) ≈ 19.93 |
+| Hex | 64 characters | 64 × 4 = 256 |
+
+For BIP39, EFF, ASCII, and Hex, these are the shortest supported lengths reaching at least 256 nominal bits. PIN is deliberately a six-digit exception. The full selectable length ranges remain available.
+
+The configuration and generated result show the nominal bit value together with a color and a text label. The unrounded value determines the level; exactly 128, 256, or 1,024 bits enters the next level.
+
+| Nominal bits | Color | Label |
+|---|---|---|
+| Below 128 | Red | Limited brute-force reserve |
+| 128 to below 256 | Yellow | Limited quantum reserve |
+| 256 to below 1,024 | Light green | Very high brute-force cost |
+| 1,024 or more | Dark green | Extreme brute-force cost |
+
+These labels refer to the nominal selection space under ideally uniform sampling. They do not measure the random source or guarantee overall security. A six-digit PIN has a small offline guessing space; its suitability also depends on the use case and enforced attempt limits.
+
+The yellow level refers to the idealized Grover search model: searching N possibilities requires on the order of √N quantum queries. It does not claim that every value below 256 bits is practically vulnerable to quantum computers. NIST notes the cost of quantum hardware and the limits on parallelizing Grover's algorithm, and continues to allow AES-128, AES-192, and AES-256. The highest level likewise makes no thermodynamic impossibility claim. [NIST: Post-Quantum Cryptography FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs)
 
 ## Export format
 
@@ -32,12 +59,12 @@ BIP39 wallets usually expect words separated by spaces. The internal BIP39 check
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator 2.2.1.app"
+open "build/Password Generator 2.3.0.app"
 ```
 
 The release targets Apple Silicon (`arm64`) running macOS 14 or later. Use the signed app bundle to run the application. `swift run PasswordGeneratorApp` is intended only for development; a process without the required signature does not satisfy the runtime conditions for generation.
 
-The packaging script creates `build/Password Generator 2.2.1.app`, `build/Password.Generator-2.2.1.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
+The packaging script creates `build/Password Generator 2.3.0.app`, `build/Password.Generator-2.3.0.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
 
 ## Mouse pool and generation
 
@@ -65,13 +92,13 @@ The app does not save generated passwords to files or preferences. A local app c
 
 ## Integrity and tests
 
-Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.2.1.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
+Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.3.0.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
 
 `Scripts/verify-release.sh` independently checks SHA256 and SHA3-512 using Python. It checks Skein-1024-1024 through `Scripts/skein-reference-checksum.sh`, which uses the official C reference implementation in `Tests/Reference/Skein`. The verifier also extracts the ZIP and checks the code signature and sandbox.
 
 These additional integrity checksums do not replace or change Apple's Developer ID signing process. Creating these external checksum files and the integrity manifest does not modify the app bundle or the final ZIP. Hash values alone do not prove provenance.
 
-Test results for version 2.2.1: 82 tests passed in each of the Debug and Release builds, with no compiler warnings. The [verification section of the technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation) records the scope of the checks and the release evidence. Test results and Apple approval for earlier releases do not establish the verification status of this version.
+Test results for version 2.3.0, build 7: 87 tests passed in each of the Debug and Release builds, with no compiler warnings: 67 Core tests and 20 app tests per build. The [verification section of the technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation) documents release checks. Test results and Apple approval for earlier releases do not establish the verification status of this version.
 
 ## Logo and icon
 

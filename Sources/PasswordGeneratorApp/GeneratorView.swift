@@ -7,7 +7,7 @@ struct GeneratorView: View {
     @State private var showIntegrityDetails = false
     @State private var showDiscardConfirmation = false
     @State private var showRevealConfirmation = false
-    @State private var lengthText = "12"
+    @State private var lengthText = ""
 
     var body: some View {
         ZStack {
@@ -34,6 +34,7 @@ struct GeneratorView: View {
                 .accessibilityHidden(true)
         )
         .preferredColorScheme(.dark)
+        .onAppear { lengthText = String(model.selectedLength) }
         .onChange(of: lengthText) { _, value in
             model.selectedLength = Int(value) ?? 0
         }
@@ -179,24 +180,20 @@ struct GeneratorView: View {
                     }
                     .disabled(model.phase == .generated)
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 9) {
-                    Image(systemName: "key.fill").foregroundStyle(AppPalette.teal)
-                    if let bits = model.selectedEntropyBits {
-                        Text(tr("Entropie: \(formatBits(bits)) Bit", "Entropy: \(formatBits(bits)) bits"))
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                        Text(model.selectedMode == .bip39
-                             ? tr("ohne Prüfsummenbits", "excluding checksum bits")
-                             : tr("bei gleichverteilter Auswahl", "with uniform selection"))
-                            .font(.system(size: 11, design: .rounded))
-                            .foregroundStyle(AppPalette.secondaryText)
-                    } else {
-                        Text(tr(
-                            "Gib eine gültige Länge zwischen \(model.lengthRange.lowerBound) und \(model.lengthRange.upperBound) ein.",
-                            "Enter a valid length between \(model.lengthRange.lowerBound) and \(model.lengthRange.upperBound)."
-                        ))
-                        .foregroundStyle(AppPalette.amber)
-                    }
-                    Spacer()
+                NominalSecurityIndicator(
+                    entropyBits: model.selectedEntropyBits,
+                    level: model.configuration?.nominalSecurityLevel,
+                    language: model.language,
+                    excludesChecksum: model.selectedMode == .bip39,
+                    showsLegend: true
+                )
+                if model.selectedEntropyBits == nil {
+                    Text(tr(
+                        "Gib eine gültige Länge zwischen \(model.lengthRange.lowerBound) und \(model.lengthRange.upperBound) ein.",
+                        "Enter a valid length between \(model.lengthRange.lowerBound) and \(model.lengthRange.upperBound)."
+                    ))
+                    .font(.system(size: 11, design: .rounded))
+                    .foregroundStyle(AppPalette.secondaryText)
                 }
                 exportOptions
             }
@@ -335,9 +332,16 @@ struct GeneratorView: View {
         SectionCard(
             step: "03",
             title: tr("Dein Passwort", "Your password"),
-            subtitle: "\(modeTitle(model.generatedPassword?.mode ?? model.selectedMode)) · \(formatBits(model.generatedPassword?.entropyBits ?? 0)) Bit"
+            subtitle: modeTitle(model.generatedPassword?.mode ?? model.selectedMode)
         ) {
             VStack(alignment: .leading, spacing: 16) {
+                NominalSecurityIndicator(
+                    entropyBits: model.generatedPassword?.entropyBits,
+                    level: model.generatedPassword?.nominalSecurityLevel,
+                    language: model.language,
+                    excludesChecksum: model.generatedPassword?.mode == .bip39,
+                    showsLegend: false
+                )
                 HStack {
                     Label(
                         model.isGeneratedMnemonicValid
@@ -484,14 +488,207 @@ struct GeneratorView: View {
         }
     }
 
-    private func formatBits(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(1)).locale(model.language.locale))
-    }
-
     private func tr(_ german: String, _ english: String) -> String {
         model.language.text(german, english)
     }
 }
+
+private struct NominalSecurityIndicator: View {
+    let entropyBits: Double?
+    let level: NominalSecurityLevel?
+    let language: AppLanguage
+    let excludesChecksum: Bool
+    let showsLegend: Bool
+
+    private var activeLevel: NominalSecurityLevel? {
+        guard let entropyBits, entropyBits.isFinite, entropyBits >= 0 else { return nil }
+        return level
+    }
+
+    private var appearance: NominalLevelAppearance { NominalLevelAppearance(level: activeLevel) }
+
+    private var formattedBits: String {
+        guard activeLevel != nil, let entropyBits else { return "…" }
+        return entropyBits.formatted(.number.precision(.fractionLength(1)).locale(language.locale))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 18) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(tr("Nominelle Entropie", "Nominal entropy"))
+                        .font(.system(size: 10.5, weight: .semibold, design: .rounded))
+                        .foregroundStyle(AppPalette.secondaryText)
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(formattedBits)
+                            .font(.system(size: 27, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(.white)
+                        Text(tr("Bit", "bits"))
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(AppPalette.secondaryText)
+                        if excludesChecksum, activeLevel != nil {
+                            Text(tr("ohne Prüfsumme", "excluding checksum"))
+                                .font(.system(size: 10, design: .rounded))
+                                .foregroundStyle(AppPalette.secondaryText)
+                        }
+                    }
+                }
+                Spacer(minLength: 0)
+                Label(title(for: activeLevel), systemImage: appearance.symbol)
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(appearance.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(appearance.chip, in: RoundedRectangle(cornerRadius: 11))
+                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(appearance.accent.opacity(0.72), lineWidth: 1))
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(tr("Einordnung des Auswahlraums", "Selection-space rating"))
+            .accessibilityValue(activeLevel == nil
+                ? title(for: nil)
+                : "\(formattedBits) \(tr("Bit", "bits")), \(title(for: activeLevel))\(excludesChecksum ? tr(", ohne Prüfsummenbits", ", excluding checksum bits") : "")")
+
+            Text(explanation)
+                .font(.system(size: 11, design: .rounded))
+                .foregroundStyle(AppPalette.secondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if showsLegend { legend }
+
+            Text(tr(
+                "Nomineller Auswahlraum bei gleichverteilter Auswahl. Keine Messung der Zufallsquelle und keine Garantie für die Gesamtsicherheit.",
+                "Nominal selection space with uniform sampling. No measurement of the random source and no guarantee of overall security."
+            ))
+            .font(.system(size: 10.5, design: .rounded))
+            .foregroundStyle(AppPalette.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .background(appearance.accent.opacity(0.045), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(appearance.accent.opacity(0.28), lineWidth: 1))
+    }
+
+    private var legend: some View {
+        HStack(alignment: .top, spacing: 10) {
+            ForEach(NominalSecurityLevel.allCases, id: \.rawValue) { candidate in
+                let style = NominalLevelAppearance(level: candidate)
+                let isSelected = activeLevel == candidate
+                VStack(alignment: .leading, spacing: 7) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(style.accent.opacity(isSelected ? 1 : 0.44))
+                        .frame(height: 5)
+                    HStack(alignment: .top, spacing: 5) {
+                        Image(systemName: style.symbol)
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(style.text)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(range(for: candidate))
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white.opacity(isSelected ? 1 : 0.76))
+                            Text(shortTitle(for: candidate))
+                                .font(.system(size: 9.5, design: .rounded))
+                                .foregroundStyle(AppPalette.secondaryText)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(range(for: candidate)), \(title(for: candidate))")
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+            }
+        }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(tr("Vier Stufen des nominellen Auswahlraums", "Four levels of nominal selection space"))
+    }
+
+    private var explanation: String {
+        switch activeLevel {
+        case .below128:
+            tr("Ein kleinerer Suchraum bietet weniger Reserve gegen vollständiges Durchprobieren. Einsatz und Ratebegrenzungen spielen ebenfalls eine Rolle.", "A smaller search space provides less reserve against exhaustive guessing. The use case and rate limits also matter.")
+        case .atLeast128:
+            tr("Im idealen Grover-Suchmodell benötigen N Möglichkeiten ungefähr √N Abfragen. Reale Quantenhardware wird hier nicht bewertet.", "In the ideal Grover search model, N possibilities require roughly √N queries. Real quantum hardware is not assessed here.")
+        case .atLeast256:
+            tr("Bei ideal gleichverteilter Auswahl ist vollständiges Durchprobieren sehr aufwendig. Andere Angriffswege bleiben möglich.", "With ideally uniform selection, exhaustive guessing has a very high cost. Other attack paths remain possible.")
+        case .atLeast1024:
+            tr("Ein extrem großer nomineller Suchraum. Diese Stufe ist kein thermodynamischer Nachweis und keine Garantie gegen Angriffe.", "An extremely large nominal search space. This level is not thermodynamic proof or a guarantee against attacks.")
+        case nil:
+            tr("Die aktuelle Eingabe hat noch keine gültige Länge.", "The current input does not yet have a valid length.")
+        }
+    }
+
+    private func title(for level: NominalSecurityLevel?) -> String {
+        switch level {
+        case .below128: tr("Geringe Brute-Force-Reserve", "Limited brute-force reserve")
+        case .atLeast128: tr("Begrenzte Quantenreserve", "Limited quantum reserve")
+        case .atLeast256: tr("Sehr hoher Brute-Force-Aufwand", "Very high brute-force cost")
+        case .atLeast1024: tr("Extremer Brute-Force-Aufwand", "Extreme brute-force cost")
+        case nil: tr("Noch keine Einordnung", "Not rated yet")
+        }
+    }
+
+    private func shortTitle(for level: NominalSecurityLevel) -> String {
+        switch level {
+        case .below128: tr("Geringe Reserve", "Limited reserve")
+        case .atLeast128: tr("Quantenreserve", "Quantum reserve")
+        case .atLeast256: tr("Sehr hoher Aufwand", "Very high cost")
+        case .atLeast1024: tr("Extremer Aufwand", "Extreme cost")
+        }
+    }
+
+    private func range(for level: NominalSecurityLevel) -> String {
+        switch level {
+        case .below128: tr("< 128 Bit", "< 128 bits")
+        case .atLeast128: tr("128 bis < 256 Bit", "128 to < 256 bits")
+        case .atLeast256: tr("256 bis < 1.024 Bit", "256 to < 1,024 bits")
+        case .atLeast1024: tr("≥ 1.024 Bit", "≥ 1,024 bits")
+        }
+    }
+
+    private func tr(_ german: String, _ english: String) -> String {
+        language.text(german, english)
+    }
+}
+
+private struct NominalLevelAppearance {
+    let accent: Color
+    let text: Color
+    let chip: Color
+    let symbol: String
+
+    init(level: NominalSecurityLevel?) {
+        switch level {
+        case .below128:
+            accent = Color(red: 0.95, green: 0.34, blue: 0.41)
+            text = Color(red: 1.0, green: 0.73, blue: 0.77)
+            chip = Color(red: 0.25, green: 0.09, blue: 0.12)
+            symbol = "exclamationmark.triangle.fill"
+        case .atLeast128:
+            accent = Color(red: 0.97, green: 0.76, blue: 0.28)
+            text = Color(red: 1.0, green: 0.88, blue: 0.58)
+            chip = Color(red: 0.25, green: 0.20, blue: 0.08)
+            symbol = "circle.lefthalf.filled"
+        case .atLeast256:
+            accent = Color(red: 0.71, green: 0.93, blue: 0.46)
+            text = Color(red: 0.84, green: 1.0, blue: 0.67)
+            chip = Color(red: 0.17, green: 0.24, blue: 0.09)
+            symbol = "chart.bar.fill"
+        case .atLeast1024:
+            accent = Color(red: 0.18, green: 0.62, blue: 0.39)
+            text = Color(red: 0.85, green: 1.0, blue: 0.91)
+            chip = Color(red: 0.07, green: 0.28, blue: 0.18)
+            symbol = "square.stack.3d.up.fill"
+        case nil:
+            accent = Color(red: 0.48, green: 0.56, blue: 0.66)
+            text = Color(red: 0.78, green: 0.82, blue: 0.88)
+            chip = AppPalette.panelStrong
+            symbol = "questionmark.circle"
+        }
+    }
+}
+
 private struct SectionCard<Content: View>: View {
     let step: String
     let title: String

@@ -14,11 +14,11 @@ final class AppModel: ObservableObject {
     @Published var selectedMode: GeneratorMode = .bip39 {
         didSet {
             if selectedMode != oldValue {
-                selectedLength = Self.defaultLength(for: selectedMode)
+                selectedLength = selectedMode.defaultLength
             }
         }
     }
-    @Published var selectedLength = 12
+    @Published var selectedLength = GeneratorMode.bip39.defaultLength
     @Published var bip39Separator = " "
     @Published var effSeparator = "-"
     @Published var uppercaseHex = false
@@ -320,13 +320,4 @@ final class AppModel: ObservableObject {
         mnemonicConcealTask?.cancel()
     }
 
-    private static func defaultLength(for mode: GeneratorMode) -> Int {
-        switch mode {
-        case .bip39: 12
-        case .eff: 6
-        case .ascii: 20
-        case .pin: 6
-        case .hex: 64
-        }
-    }
 }

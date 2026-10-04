@@ -1,6 +1,6 @@
-# Technische Analyse von Password Generator 2.3.0
+# Technische Analyse von Password Generator 2.2.1
 
-Stand: 4. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.3.0, Build 7. Den vorigen Release beschreibt [die Analyse zu 2.2.1](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.2.1.md).
+Stand: 3. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.2.1, Build 6. Den vorigen Release beschreibt [die Analyse zu 2.2.0](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.2.0.md).
 
 ## Datenfluss
 
@@ -16,7 +16,7 @@ Alle Poolhashes und die folgende Ableitung erfolgen ausschließlich bei der Gene
 shuffle(records)
 P = serialize(records in shuffled order)
 D = Skein-1024-1024(P) || SHA3-512(P) || SHA512(P)  // 128 + 64 + 64 Byte
-A = D XOR fresh_macOS_random(256)                  // erster separat angeforderter OS-Beitrag
+A = D XOR fresh_macOS_random(256)                  // erster unabhängiger OS-Beitrag
 B = fisher_yates_shuffle_all_2048_bits(A)
 M = B XOR fresh_macOS_random(256)                  // 256-Byte-Masterkey
 S0 = Skein1024XOF(M[0..<128])
@@ -52,14 +52,6 @@ Die Anzeige beschreibt die Größe des gleichverteilt abgetasteten Auswahlraums.
 
 Die Hashlänge von 2.048 Bit beweist keine entsprechende unabhängige Eingabeentropie. Alle drei Poolhashes verarbeiten dieselben Ereignisse. Die Bitpermutation erhält die Anzahl der gesetzten Bits. Die Sicherheitsstärken der fünf XOR-verknüpften Streams dürfen nicht addiert werden. Die individuelle Konstruktion ist weder ein standardisiertes DRBG-Verfahren noch extern kryptografisch auditiert. Ihre Sicherheit stützt sich weiterhin auf die Unvorhersagbarkeit der frischen Systemzufallsbytes. Die beiden ergänzten AES-CTR-Streams sind keine Aussage über den internen Aufbau von Apples CSPRNG.
 
-## Vorschläge und farbliche Einordnung
-
-Beim Start und bei jedem Formatwechsel schlägt die App die kleinste unterstützte Länge mit mindestens 256 nominellen Bit vor: 24 BIP39-Wörter (256 Bit), 20 EFF-Wörter (rund 258,50 Bit), 40 ASCII-Zeichen (rund 262,18 Bit) und 64 Hexzeichen (256 Bit). Die gewünschte Ausnahme ist eine PIN mit sechs Ziffern (rund 19,93 Bit). Andere erlaubte Längen bleiben frei wählbar.
-
-Die Einstufung verwendet den ungerundeten Wert, während die Oberfläche eine Dezimalstelle zeigt. Unter 128 Bit erscheint die Anzeige rot, von 128 bis unter 256 Bit gelb, von 256 bis unter 1.024 Bit hellgrün und ab 1.024 Bit dunkelgrün. Text, Symbol und eine vierteilige Legende ergänzen die Farbe. Ungültige Eingaben erhalten eine neutrale Anzeige. Konfiguration und erzeugtes Ergebnis verwenden dieselbe Einordnung.
-
-Die deutschen Stufentexte lauten „Geringe Brute-Force-Reserve“, „Begrenzte Quantenreserve“, „Sehr hoher Brute-Force-Aufwand“ und „Extremer Brute-Force-Aufwand“. Die Erläuterungen beziehen sich auf ideal gleichverteilte Auswahl beziehungsweise das idealisierte Grover-Suchmodell. Sie bewerten keine konkrete Quantenhardware. Keine Stufe behauptet absolute Angriffssicherheit oder eine thermodynamische Unmöglichkeit. Ein Hinweis erklärt unmittelbar bei der Anzeige, dass der nominelle Auswahlraum weder gemessene Quellenentropie noch eine Garantie der Gesamtsicherheit ist. Diese Grenzen sind keine NIST-Sicherheitsklassifizierung; auch ein kleinerer Suchraum ist nicht automatisch praktisch knackbar. [NIST: Post-Quantum Cryptography FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs).
-
 ## Export und Laufzeitschutz
 
 BIP39 verwendet standardmäßig ein Leerzeichen, EFF einen Bindestrich. Beide Trennzeichen bleiben unabhängig und frei wählbar, einschließlich leerer oder mehrstelliger Texte. Hex lässt sich mit kleinen oder großen Buchstaben exportieren. Eine Formatänderung erhält die ursprünglichen Komponenten und zieht keine neuen Zufallswerte.
@@ -72,9 +64,7 @@ Mauspool und temporäre Kryptopuffer werden beim Verwerfen bestmöglich übersch
 
 ## Verifikation
 
-Am 4. Oktober 2026 bestanden jeweils 87 XCTest-Tests im Debug- und Release-Build: 67 Core-Tests und 20 App-Modelltests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`. Enthalten sind weiterhin 18 Tests für Pool und Ableitung, sieben gezielte AES-CTR-Tests mit fünf unabhängigen Vektoren, drei vollständige Ableitungsreferenzen, 45 unabhängig berechnete Passwortfälle sowie 49 Skein-1024-1024-, 81 SHA3-512-, 538 SHAKE256- und 22 Skein-XOF-Vektoren. Die unveränderten Pipeline-Fixtures haben den SHA256-Wert `50541a981bb2fca83307cbfb86aec2643533a2675efc21301630e0d3afdfee0b`.
-
-Die zusätzlichen Tests prüfen die minimalen Vorschlagslängen einschließlich der PIN-Ausnahme, den initialen Appzustand und jeden Formatwechsel, die ungerundeten Schwellen direkt darunter, darauf und darüber sowie die Einordnung ungültiger Zahlen. Reale Hex-Konfigurationen an allen vier Grenzen prüfen die Verbindung zwischen Format und Stufe. Die vorhandenen Tests für Kryptografie, vollständige Ableitung, Passworterzeugung und Fehlerverhalten bleiben enthalten.
+Am 3. Oktober 2026 bestanden jeweils 82 XCTest-Tests im Debug- und Release-Build: 63 Core-Tests und 19 App-Modelltests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`. Enthalten sind 18 Tests für Pool und Ableitung, darunter die zwei zusätzlichen Tests für Reihenfolge und Fehler beider 256-Byte-Masken, sieben gezielte AES-CTR-Tests mit fünf unabhängigen Vektoren, drei vollständige Ableitungsreferenzen, 45 unabhängig berechnete Passwortfälle sowie die bestehenden 49 Skein-1024-1024-, 81 SHA3-512-, 538 SHAKE256- und 22 Skein-XOF-Vektoren. Die aktualisierten Pipeline-Fixtures wurden offline unabhängig neu berechnet und byteidentisch reproduziert. Ihr SHA256-Wert lautet `50541a981bb2fca83307cbfb86aec2643533a2675efc21301630e0d3afdfee0b`.
 
 Die vollständigen Referenzen werden mit der unveränderten offiziellen Skein-C-Referenz, Python `hashlib` für SHA3/SHA512/SHAKE sowie einer unabhängigen AES-Referenz berechnet. Der reproduzierbare Generator und die Zwischenwerte stehen unter `Tests/PasswordGeneratorCoreTests/Resources/`; die Herkunft dokumentiert `CRYPTO_VECTORS.md`. Sie prüfen Null-Shuffle-Kandidaten, variierte Kandidaten mit gezielten Rejections und einen mehrfach überschreibenden Ringpuffer mit zwischenzeitlichen Shuffles. Die erwarteten Werte werden nicht aus dem Swift-Produktionscode erzeugt. Fixture-Version 4 enthält zusätzlich die erste OS-Maske, den bereits maskierten Digest und die zweite OS-Maske als getrennte Zwischenwerte. Die Tests prüfen die Reihenfolge beider 256-Byte-Anforderungen relativ zu den Shuffle-Bytes. Sie prüfen außerdem für jede Maske sowohl eine zu kurze Rückgabe als auch einen geworfenen Fehler und stellen sicher, dass danach keine späteren Zufallsanforderungen erfolgen.
 
@@ -84,23 +74,21 @@ Das Release-ZIP erhält weiterhin separate SHA256-, SHA3-512- und Skein-1024-102
 
 ## Release-Nachweis
 
-Version 2.3.0, Build 7, wurde am 4. Oktober 2026 mit Developer ID signiert und über Xcodes Direct Distribution notarisiert. Die Submission-ID lautet `96D6B7EE-8F9A-4D29-9FD1-9D1BDAA27C90`. Xcode meldete „Ready to distribute“. Der finale CodeDirectory-Hash ist `2a2e569cb13dc0bb838996457177edf6da2527b9`, das Developer-ID-Team `2T6K9PGS55`. Nach Entfernen ausschließlich der Signatur auf temporären Kopien stimmte der ausführbare Mach-O-Code aus dem Paket-Build und dem Xcode-Export byteweise überein; der normalisierte SHA256-Wert lautet `3993c768fb553a516354a5d976046c3b1fba0c58dffdd147c026c42a8d20dde6`. Alle Ressourcen waren ebenfalls identisch. Das finale ZIP wurde unmittelbar aus dem notarisierten Xcode-Export erstellt, ohne anschließenden Neubau oder erneute Signierung.
+Version 2.2.1, Build 6, wurde am 3. Oktober 2026 um 12:19 Uhr (Europe/Berlin) über Xcode Direct Distribution hochgeladen und von Apple zur Verteilung freigegeben. Die Submission-ID lautet `BDB0180E-BAB1-4DBD-9BB9-D78C0B0E4384`. Das exportierte Bundle trägt eine Developer-ID-Signatur für Team `2T6K9PGS55`, ein angeheftetes Notarisierungsticket und den CodeDirectory-Hash `6f80a07b8e7f01cd504744a4a1298aba02feb9a2`.
+
+Zwischen dem signierten Release-Paket und dem Xcode-Export wurden sämtliche Ressourcen und Metadaten byteweise verglichen. Der ausführbare Code ist nach Entfernung ausschließlich der Signatur aus temporären Kopien ebenfalls byteidentisch; sein normalisierter SHA256-Wert lautet `dba7065ea94223a0afbd4bcb6239a17efd62ca929e3930c175703a737c8b463e`. Das finale ZIP wurde unmittelbar aus dem notarisierten Xcode-Export erstellt, ohne anschließenden Neubau oder erneute Signierung.
 
 Das endgültige Paket hat folgende Prüfsummen:
 
 ```text
-SHA256: cb9679295c535233becef11ab1a46b5afee982a6c203ad78d02f9d99d7b5916a
-SHA3-512: dc7ac58e0f5b3b3af760163f20383936a832ba02f9c1a0835244e17ac62d31c81b742d7cbfd8ba88169997752942b94e13ae764e870b021b3c4bf63aec2dcba8
-Skein-1024-1024: b3b0cacb970e9186e0e5a32850977104a0e19bac8a22dd49a0e3d045d7239b7c819e3cd877c88d71df8226db32e5c6f4f1600aa3def35d7a1837189dccb8f5d1962b7966c19e8e45917932429a37e1f7ac8292ad0a93763c0bf851d0761160b0af30e15ba19977fe3797993c79a0abd8c878ff6cfda3d1ae3ec2bfbe793c87a6
+SHA256: e1475d9adb7f6687f58a20a194aded66517cca999a5d32a8029f2b2a340345cc
+SHA3-512: 5eb35bb5ef9f3ca71141a80717c82cbf33dd6e00c80a0a007584791bbaa47b00a25af52887a4cc39fa0b2e55da8ba64e1274d152e21c112f136c76a213d5f565
+Skein-1024-1024: 0eed655da6ce61434a2d7199a45ae7a0fa73aebbb56998eca0d9d351460f8643d74ca3ce81df7fdc3218d4094a65ef12b51712312448a47687d459db9cb1ae6f235b949dc9923b766f84f49521a080617568ccd34b3baebc0995cae2812d116c2b8be8e986a3579ec9053901fac3f45ebcad0e7df86c0bf431aa464d1af59949
 ```
 
-Die ZIP-Prüfung bestand für alle drei Hashverfahren einschließlich der unabhängigen Skein-C-Referenz. `codesign --verify --deep --strict`, `xcrun stapler validate` und `spctl --assess --type execute` bestanden für das entpackte Release sowie die installierte App. Gatekeeper meldete `accepted` und `source=Notarized Developer ID`. Version, Build, Bundle-Kennung, Developer-ID-Team und Hardened Runtime wurden zusätzlich mit den Metadaten abgeglichen.
+Die ZIP-Prüfung bestand für alle drei Hashverfahren einschließlich der unabhängigen Skein-C-Referenz. `codesign --verify --deep --strict`, `xcrun stapler validate` und `spctl --assess --type execute` bestanden für das entpackte Release sowie die installierte App. Gatekeeper meldete `accepted` und `source=Notarized Developer ID`. Die installierte Kopie unter `/Applications/Password Generator 2.2.1.app` stimmt byteweise mit dem Xcode-Export überein; die frühere Installation und zusätzliche aktive Build-Kopien wurden in den Papierkorb verschoben. Die geöffnete App zeigt Version 2.2.1 und einen gültigen Laufzeitschutz.
 
-Die installierte Kopie unter `/Applications/Password Generator 2.3.0.app` stimmt anhand aller Dateihashes mit dem Xcode-Export überein. Version 2.2.1 wurde aus `/Applications` in den Papierkorb verschoben und bei LaunchServices abgemeldet; die aktuelle App wurde registriert. In `/Applications` und `~/Applications` bleibt ausschließlich die aktuelle Installation mit dieser Bundle-Kennung. Historische Xcode-Archive bleiben als Release-Nachweise erhalten.
-
-Die App wurde geöffnet und zeigte Version 2.3.0, 24 BIP39-Wörter und gültigen Laufzeitschutz. Im Paket-Build wurden außerdem alle fünf Vorschlagslängen, die Einordnung bei 128 und 1.024 Bit, die neutrale leere Eingabe und deutsche sowie englische Texte über die native Bedienoberfläche geprüft. Die automatisierte Screenshot-Ausgabe war aufgrund des bestehenden Fensterschutzes leer; eine visuelle Pixelprüfung der Oberfläche war damit nicht möglich. Das neue Resultatfeld nutzt dieselbe Anzeige wie die Konfiguration und die geprüfte Einstufung des gespeicherten Ergebnisses. Für die Passworterzeugung gelten die oben dokumentierten vollständigen Core- und App-Modelltests.
-
-Der Release-Link dieser Version lautet [GitHub Release v2.3.0](https://github.com/michael-feinermann/password-generator/releases/tag/v2.3.0). Die dokumentierten Paketprüfungen beziehen sich auf die oben angegebenen finalen Bytes.
+Der Release-Link dieser Version lautet [GitHub Release v2.2.1](https://github.com/michael-feinermann/password-generator/releases/tag/v2.2.1). Die hier dokumentierten Paketprüfungen beziehen sich auf die oben angegebenen finalen Bytes.
 
 ## Quellen
 

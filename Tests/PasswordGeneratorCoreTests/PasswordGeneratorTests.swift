@@ -23,6 +23,41 @@ final class PasswordGeneratorTests: XCTestCase {
         }
     }
 
+    func testDefaultsReach256NominalBitsAtShortestSupportedLengthExceptSixDigitPIN() throws {
+        let expectedDefaults: [(GeneratorMode, Int, Double)] = [
+            (.bip39, 24, 256),
+            (.eff, 20, 258.4962500721156),
+            (.ascii, 40, 262.1835540671055),
+            (.pin, 6, 19.931568569324174),
+            (.hex, 64, 256),
+        ]
+        for (mode, length, nominalBits) in expectedDefaults {
+            XCTAssertEqual(mode.defaultLength, length, mode.rawValue)
+            let configuration = GeneratorConfiguration(mode: mode, length: mode.defaultLength)
+            XCTAssertNoThrow(try configuration.validate())
+            XCTAssertEqual(configuration.entropyBits, nominalBits, accuracy: 1e-10)
+            let password = try generator.generate(
+                configuration: configuration,
+                randomProvider: { [UInt8](repeating: 0, count: $0) }
+            )
+            XCTAssertEqual(password.components.count, length)
+            XCTAssertEqual(password.entropyBits, nominalBits, accuracy: 1e-10)
+            XCTAssertEqual(password.nominalSecurityLevel, configuration.nominalSecurityLevel)
+
+            if mode == .pin {
+                XCTAssertEqual(password.text, "000000")
+                XCTAssertEqual(configuration.nominalSecurityLevel, .below128)
+            } else {
+                XCTAssertGreaterThanOrEqual(configuration.entropyBits, 256)
+                XCTAssertEqual(configuration.nominalSecurityLevel, .atLeast256)
+                let previousLength = try XCTUnwrap(mode.supportedLengths.last { $0 < length })
+                let previous = GeneratorConfiguration(mode: mode, length: previousLength)
+                XCTAssertNoThrow(try previous.validate())
+                XCTAssertLessThan(previous.entropyBits, 256, mode.rawValue)
+            }
+        }
+    }
+
     func testAllAllowedBIP39LengthsAndEntropy() throws {
         for (words, bits) in [(12, 128), (15, 160), (18, 192), (21, 224), (24, 256)] {
             let configuration = GeneratorConfiguration(mode: .bip39, length: words)

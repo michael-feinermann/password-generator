@@ -29,9 +29,9 @@ public enum GeneratorMode: String, CaseIterable, Identifiable, Sendable {
     public var defaultLength: Int {
         switch self {
         case .bip39: 24
-        case .eff: 10
-        case .ascii: 20
-        case .pin: 12
+        case .eff: 20
+        case .ascii: 40
+        case .pin: 6
         case .hex: 64
         }
     }
@@ -74,6 +74,10 @@ public struct GeneratorConfiguration: Equatable, Sendable {
         }
         return Double(length) * log2(Double(mode.alphabetSize!))
     }
+
+    public var nominalSecurityLevel: NominalSecurityLevel {
+        NominalSecurityLevel(nominalBits: entropyBits)
+    }
 }
 
 public enum PasswordGeneratorError: LocalizedError, Equatable {
@@ -99,6 +103,10 @@ public struct GeneratedPassword: Equatable, Sendable {
     public let text: String
     public let entropyBits: Double
     public let mode: GeneratorMode
+
+    public var nominalSecurityLevel: NominalSecurityLevel {
+        NominalSecurityLevel(nominalBits: entropyBits)
+    }
 
     /// Formats an existing result without generating new randomness or changing it.
     /// The default separator is a space for BIP-39 and a hyphen for EFF.
