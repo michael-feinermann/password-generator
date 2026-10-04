@@ -1,6 +1,6 @@
-# Technische Analyse von Password Generator 2.3.4
+# Technische Analyse von Password Generator 2.3.3
 
-Stand: 4. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.3.4, Build 11. Den vorigen Release beschreibt [die Analyse zu 2.3.3](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.3.3.md).
+Stand: 4. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.3.3, Build 10. Den vorigen Release beschreibt [die Analyse zu 2.3.1](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.3.1.md).
 
 ## Datenfluss
 
@@ -130,17 +130,6 @@ Threefish-1024 besitzt einen 1024-Bit-Schlüsseleingang. Weder diese Länge noch
 
 ## Export und Laufzeitschutz
 
-Version 2.3.4 ergänzt bei beiden Wortlisten unmittelbar nach SHA256 und SHA3-512 einen Skein-1024-1024-Wert. Alle drei Verfahren hashen denselben unveränderten Snapshot der jeweiligen Originaldatei, einschließlich Zeilenumbrüchen und bei EFF der Würfelkennungen. Auch der neue 128-Byte-Digest wird vor dem Parsen gegen den eingebetteten Sollwert geprüft; eine Abweichung verhindert das Laden der Wortliste. Die Passwortableitung und ihre kryptografischen Funktionen bleiben unverändert.
-
-Die Werte wurden mit `Scripts/skein-reference-checksum.sh` aus der offiziellen Skein-C-Referenz unabhängig berechnet und stimmen mit dem Swift-Checksum-Programm überein:
-
-```text
-BIP39 Skein-1024-1024 (english.txt, 13116 Byte):
-8f63cf649dc0938e25c164849d164cfef2f80ea256e290c27eda407bfb0bdffa1e9027d55eb2f193a799e5a61fa56334b4847ac7871c52079e84cf7f0eecad198ae6eb9b63cfb29ba8a9ecfb63a95ed7f30c0708e80ab25ceb95f0370a863800987fb98875ee0c9e0f6b1be1af7b31cbd9525410cd72e2ec380eae37f902fed4
-EFF Skein-1024-1024 (eff_large_wordlist.txt, 108800 Byte):
-29b0538e7e97f05e95827f8fad0377f90ac17ad2f940c67a9dffbab936f84ced030f719b165ada5c6ef3552a3284e607ec81eadba433530a308235cc4696aa014785464589e43d85175c1befa890306b8c774e42cf64936bd9d65048e6326180028b08ca45dbb5680927df40f09b4f30a20d036315fcfc06734098d4645385cb
-```
-
 BIP39 verwendet standardmäßig ein Leerzeichen, EFF einen Bindestrich. Beide Trennzeichen bleiben unabhängig und frei wählbar, einschließlich leerer oder mehrstelliger Texte. Hex lässt sich mit kleinen oder großen Buchstaben exportieren. Eine Formatänderung erhält die ursprünglichen Komponenten und zieht keine neuen Zufallswerte.
 
 BIP39 ohne Trenner ist nicht immer eindeutig rekonstruierbar: `leg alarm` und `legal arm`, jeweils gefolgt von neunmal `abandon` und `accuse`, ergeben zwei verschiedene prüfsummengültige 12-Wort-Mnemonics mit demselben zusammengefügten Text. Die Entropieanzeige gilt deshalb für die ursprüngliche Auswahl. Für den üblichen BIP39-Import sind Leerzeichen zu verwenden.
@@ -167,31 +156,33 @@ Das Release-ZIP erhält weiterhin separate SHA256-, SHA3-512- und Skein-1024-102
 
 ## Release-Nachweis
 
-Version 2.3.4, Build 11, wurde am 4. Oktober 2026 mit Developer ID signiert und über Xcodes Direct Distribution notarisiert. Der finale ZIP-Export wurde ohne erneuten Build oder erneute Signierung aus der freigegebenen Xcode-Fassung erstellt. Ressourcen und ausführbarer Code nach Entfernung der jeweiligen Signatur stimmen mit dem getesteten Paket überein.
+Version 2.3.3, Build 10, wurde am 4. Oktober 2026 über Xcodes Direct Distribution notarisiert. Das Release-Paket stammt unmittelbar aus dem von Xcode exportierten App-Bundle. Nach diesem Export wurde die App weder neu gebaut noch erneut signiert. Sämtliche Ressourcen und der um seine Signatur bereinigte Mach-O-Code stimmen mit dem getesteten Build überein.
 
 | Nachweis | Ergebnis |
 |---|---|
-| Xcode-Notarisierung | freigegeben; Submission-ID `B0AD5131-4749-45C6-81FC-99D973767D87` |
-| CDHash des notarisierten Exports | `36ec2de1cdc17aaa4f6e76d7375f55da67b54e43` |
-| SHA256 des um die Signatur bereinigten ausführbaren Codes | `b7be4126dfdeab541830b805496c6ef04e1d9288897a67d665e770bb1aa9156b` |
+| App-Bundle | `Password Generator 2.3.3.app`, Version `2.3.3`, Build `10`, arm64, macOS 14 oder neuer |
+| Signierung | Developer ID Application: Michael Feinermann, Team `2T6K9PGS55`, Hardened Runtime und minimale App Sandbox |
+| Xcode-Notarisierung | freigegeben; Submission-ID `83FE4A37-E6EC-4341-8136-291BABAB5552` |
+| CDHash des notarisierten Exports | `da5bfa1f803c1d57ec96e143500a069f778fc3b2` |
+| SHA256 des um die Signatur bereinigten ausführbaren Codes | `964d47471363fbafbb2fb8ee4867ba481fcf53ecabb5ce0fb1b28a0613a643cd` |
 | Code-Signatur | `codesign --verify --deep --strict` bestanden |
 | Ticket | `xcrun stapler validate` bestanden |
 | Gatekeeper | `spctl --assess --type execute` akzeptiert, Quelle `Notarized Developer ID` |
-| Installation | `/Applications/Password Generator 2.3.4.app`; alle Dateien einschließlich Signatur byteidentisch zum Xcode-Export |
+| Installation | `/Applications/Password Generator 2.3.3.app`; alle Dateien einschließlich Signatur byteidentisch zum Xcode-Export |
 
 `Scripts/verify-release.sh` prüfte das finale ZIP erfolgreich einschließlich ZIP-Struktur, aller drei Sidecars, Integritätsmanifest, unabhängiger Python-Implementierungen für SHA256/SHA3-512, offizieller Skein-C-Referenz, entpackter Code-Signatur, Sandbox, Ticket und Gatekeeper.
 
 ```text
-Password.Generator-2.3.4.zip
+Password.Generator-2.3.3.zip
 SHA256:
-f086b4464f107356a4e02b3a9083fa67f6677c68287dba7beff70d81c2f1c500
+f03847d0c731a032941833c2cc8bf59bfbf7e15d06833334a1690538b3e0bdbb
 SHA3-512:
-597f5a932bb9b72f742d730bf95b89a1c4a30cdb1beee7b0f419a32e081ec69fccc534dfc45cf99b915d65bd138b7fcb695259a43b7164b64323a75c5748c953
+0f4086ace34700bc607f5696bec3556cf5f0a2186bc244ce93b3abd5eadcba4f3215c6bc3afaea3c058dd4a85e546054bbe1fb805a940eee4668d12af486300a
 Skein-1024-1024:
-9eff28342f84727f5017db7b2073ef2600383be52108c280a84f77fcc428416020e83f8fcb79d29ce884a3e9bc7da96ca5518a38dbd3e10ec9025f8b71f7111b7a1737d89bd9b36fca75d4f4371607eb3a8968752d5414247c4d22cb93d1a8c127083920b1fabc7ea21cafee24880532add3b639c21cedacedb4fe8366bd4260
+968ebaf0084f27dafdfdd07320d793e37b3e25ee8764760889ec59dd3141df8f831db2775146220cfccca7771a97ed1ce16b3ffac997d4b76bd48e3316fb8238cce775e2320349286cc2a499bd82d0bae84c5237f0c2d2ab4ecc4b996f50656f80a3c8386856d23c9a5fc926e430e9843b28a5e52e55711e19a87b187c325731
 ```
 
-Die installierte und notarisierte Fassung wurde geöffnet. Die vorherige Installation von 2.3.3 sowie ihre App-Kopien unter `build` wurden aus LaunchServices abgemeldet und in wiederherstellbare Papierkorbordner verschoben. Aktuell ist ausschließlich Version 2.3.4 installiert. Xcode-Archive und Quellhistorie bleiben als Nachweise erhalten. Das aktuelle öffentliche Paket ist unter [Release v2.3.4](https://github.com/michael-feinermann/password-generator/releases/tag/v2.3.4) verfügbar.
+Die installierte und notarisierte Fassung wurde nach Beenden des Testprozesses geöffnet. Die vorherigen Installationen von 2.3.1 und 2.3.2 sowie ihre App-Kopien unter `build` wurden aus LaunchServices abgemeldet und in wiederherstellbare Papierkorbordner verschoben. Aktuell ist ausschließlich Version 2.3.3 installiert. Xcode-Archive und Quellhistorie bleiben als Nachweise erhalten. Das aktuelle öffentliche Paket ist unter [Release v2.3.3](https://github.com/michael-feinermann/password-generator/releases/tag/v2.3.3) verfügbar.
 
 ## Quellen
 

@@ -86,8 +86,8 @@ struct LocalizedMessage: Equatable, Sendable {
                 )
             case .wordListIntegrityFailure:
                 return LocalizedMessage(
-                    german: "Die BIP‑39-Wortliste hat den doppelten Integritätstest nicht bestanden.",
-                    english: "The BIP‑39 word list failed the dual integrity check."
+                    german: "Die BIP‑39-Wortliste hat den dreifachen Integritätstest nicht bestanden.",
+                    english: "The BIP‑39 word list failed the triple integrity check."
                 )
             case .invalidWordList:
                 return LocalizedMessage(
@@ -147,7 +147,7 @@ struct LocalizedMessage: Equatable, Sendable {
             case .resourceMissing:
                 return LocalizedMessage(german: "Die offizielle EFF-Wortliste wurde nicht gefunden.", english: "The official EFF word list could not be found.")
             case .wordListIntegrityFailure:
-                return LocalizedMessage(german: "Die EFF-Wortliste hat den doppelten Integritätstest nicht bestanden.", english: "The EFF word list failed the dual integrity check.")
+                return LocalizedMessage(german: "Die EFF-Wortliste hat den dreifachen Integritätstest nicht bestanden.", english: "The EFF word list failed the triple integrity check.")
             case .invalidWordList:
                 return LocalizedMessage(german: "Die EFF-Wortliste ist ungültig.", english: "The EFF word list is invalid.")
             }

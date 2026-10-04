@@ -11,7 +11,7 @@ public enum EFFError: LocalizedError, Equatable {
         case .resourceMissing:
             "Die offizielle EFF-Wortliste wurde nicht gefunden."
         case .wordListIntegrityFailure:
-            "Die EFF-Wortliste hat den doppelten Integritätstest nicht bestanden."
+            "Die EFF-Wortliste hat den dreifachen Integritätstest nicht bestanden."
         case .invalidWordList:
             "Die EFF-Wortliste ist ungültig."
         }
@@ -24,7 +24,8 @@ public struct EFF: Sendable {
     public static let wordCount = 7_776
     public static let expectedIntegrity = WordListIntegrity(
         sha256: "addd35536511597a02fa0a9ff1e5284677b8883b83e986e43f15a3db996b903e",
-        sha3_512: "4573a7810c569805ab110b0ce5004d4697079afe2d74ba70daa9dd49bd0a60103c5bce9725db036bd1ebaf5813815a54f821e7d752b5ee6eb57bed4a7e58aa23"
+        sha3_512: "4573a7810c569805ab110b0ce5004d4697079afe2d74ba70daa9dd49bd0a60103c5bce9725db036bd1ebaf5813815a54f821e7d752b5ee6eb57bed4a7e58aa23",
+        skein1024_1024: "29b0538e7e97f05e95827f8fad0377f90ac17ad2f940c67a9dffbab936f84ced030f719b165ada5c6ef3552a3284e607ec81eadba433530a308235cc4696aa014785464589e43d85175c1befa890306b8c774e42cf64936bd9d65048e6326180028b08ca45dbb5680927df40f09b4f30a20d036315fcfc06734098d4645385cb"
     )
 
     public let words: [String]
@@ -41,7 +42,8 @@ public struct EFF: Sendable {
         // Hash and parse the same immutable snapshot, including original dice labels.
         let integrity = WordListIntegrity(
             sha256: SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined(),
-            sha3_512: SHA3.hash512(data).map { String(format: "%02x", $0) }.joined()
+            sha3_512: SHA3.hash512(data).map { String(format: "%02x", $0) }.joined(),
+            skein1024_1024: Skein.hash1024(Array(data)).map { String(format: "%02x", $0) }.joined()
         )
         guard integrity == Self.expectedIntegrity else {
             throw EFFError.wordListIntegrityFailure

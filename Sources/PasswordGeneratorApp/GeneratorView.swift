@@ -460,10 +460,12 @@ struct GeneratorView: View {
                 if let integrity = model.wordListIntegrity {
                     HashRow(name: "BIP39 SHA-256", value: integrity.sha256)
                     HashRow(name: "BIP39 SHA3-512", value: integrity.sha3_512)
+                    HashRow(name: "BIP39 Skein-1024-1024", value: integrity.skein1024_1024)
                 }
                 if let integrity = model.effWordListIntegrity {
                     HashRow(name: "EFF SHA-256", value: integrity.sha256)
                     HashRow(name: "EFF SHA3-512", value: integrity.sha3_512)
+                    HashRow(name: "EFF Skein-1024-1024", value: integrity.skein1024_1024)
                 }
             }
         }

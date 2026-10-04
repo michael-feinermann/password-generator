@@ -4,13 +4,13 @@ English | [Deutsch](README.de.md)
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator icon">
 
-[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.3.3](docs/RELEASE_NOTES_2.3.3.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.3.4](docs/RELEASE_NOTES_2.3.4.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.3.3, build 10. Developer ID signed and notarized through Xcode on October 4, 2026. The notarization ticket is stapled, and Gatekeeper accepts the distributed app.
+Version 2.3.4, build 11. Signed with Developer ID and notarized through Xcode on October 4, 2026. The final package passes signature, stapled-ticket, and Gatekeeper verification.
 
 Release policy: GitHub keeps only the current version as a release with download assets and a release tag. The source history and historical release notes remain available for reference. The download link above always points to the current release.
 
-A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.3.3”.
+A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.3.4”.
 
 The regular window size of 1,060 × 840 points is the minimum. The content and typography grow with larger windows and full-screen mode. App text uses at least 14-point type; powers use readable caret notation such as `10^106` and `2^(n/2)`.
 
@@ -26,7 +26,7 @@ The entropy display describes the size of the uniformly sampled output space. It
 
 ## Defaults and color levels
 
-Version 2.3.3 starts each format with these lengths:
+Version 2.3.4 starts each format with these lengths:
 
 | Format | Default | Nominal bits |
 |---|---|---|
@@ -87,12 +87,12 @@ BIP39 wallets usually expect words separated by spaces. The internal BIP39 check
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator 2.3.3.app"
+open "build/Password Generator 2.3.4.app"
 ```
 
 The release targets Apple Silicon (`arm64`) running macOS 14 or later. Use the signed app bundle to run the application. `swift run PasswordGeneratorApp` is intended only for development; a process without the required signature does not satisfy the runtime conditions for generation.
 
-The packaging script creates `build/Password Generator 2.3.3.app`, `build/Password.Generator-2.3.3.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
+The packaging script creates `build/Password Generator 2.3.4.app`, `build/Password.Generator-2.3.4.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
 
 ## Mouse pool and generation
 
@@ -120,13 +120,13 @@ The app does not save generated passwords to files or preferences. A local app c
 
 ## Integrity and tests
 
-Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.3.3.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
+Both the BIP39 and EFF wordlists are checked against embedded SHA256, SHA3-512, and Skein-1024-1024 values before use. The app displays all three digests for each list, with Skein-1024-1024 after SHA256 and SHA3-512. The expected Skein wordlist values are independently cross-checked using the official C reference implementation in `Tests/Reference/Skein` through `Scripts/skein-reference-checksum.sh`. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.3.4.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
 
 `Scripts/verify-release.sh` independently checks SHA256 and SHA3-512 using Python. It checks Skein-1024-1024 through `Scripts/skein-reference-checksum.sh`, which uses the official C reference implementation in `Tests/Reference/Skein`. The verifier also extracts the ZIP and checks the code signature and sandbox.
 
 These additional integrity checksums do not replace or change Apple's Developer ID signing process. Creating these external checksum files and the integrity manifest does not modify the app bundle or the final ZIP. Hash values alone do not prove provenance.
 
-Test results for version 2.3.3, build 10: 103 tests passed in each of the Debug and Release builds, with no compiler warnings: 74 Core tests and 29 app tests per build. [Verification scope and release evidence (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
+Test results for version 2.3.4, build 11: 103 tests passed in each of the Debug and Release builds, with no compiler warnings: 74 Core tests and 29 app tests per build. [Verification scope and release evidence (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 
 ## Logo and icon
 

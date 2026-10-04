@@ -38,7 +38,7 @@ public enum BIP39Error: LocalizedError, Equatable {
         case .resourceMissing:
             "Die offizielle BIP-39-Wortliste wurde nicht gefunden."
         case .wordListIntegrityFailure:
-            "Die BIP-39-Wortliste hat den doppelten Integritätstest nicht bestanden."
+            "Die BIP-39-Wortliste hat den dreifachen Integritätstest nicht bestanden."
         case .invalidWordList:
             "Die BIP-39-Wortliste ist ungültig."
         case let .invalidEntropyLength(length):
@@ -56,10 +56,12 @@ public enum BIP39Error: LocalizedError, Equatable {
 public struct WordListIntegrity: Equatable, Sendable {
     public let sha256: String
     public let sha3_512: String
+    public let skein1024_1024: String
 
     public static let expected = WordListIntegrity(
         sha256: "2f5eed53a4727b4bf8880d8f3f199efc90e58503646d9ff8eff3a2ed3b24dbda",
-        sha3_512: "862e1642f46f0e81d81fa48ad5a806a12a5578130ddf13c4c302aec44a03c710bc6574e965f9084b1918b4ce0a95dac282499e2cdcd8cf50e48f3851e2f32d32"
+        sha3_512: "862e1642f46f0e81d81fa48ad5a806a12a5578130ddf13c4c302aec44a03c710bc6574e965f9084b1918b4ce0a95dac282499e2cdcd8cf50e48f3851e2f32d32",
+        skein1024_1024: "8f63cf649dc0938e25c164849d164cfef2f80ea256e290c27eda407bfb0bdffa1e9027d55eb2f193a799e5a61fa56334b4847ac7871c52079e84cf7f0eecad198ae6eb9b63cfb29ba8a9ecfb63a95ed7f30c0708e80ab25ceb95f0370a863800987fb98875ee0c9e0f6b1be1af7b31cbd9525410cd72e2ec380eae37f902fed4"
     )
 }
 
@@ -80,7 +82,8 @@ public struct BIP39: Sendable {
     public init(verifiedWordListData data: Data) throws {
         let integrity = WordListIntegrity(
             sha256: Self.hex(Data(SHA256.hash(data: data))),
-            sha3_512: Self.hex(SHA3.hash512(data))
+            sha3_512: Self.hex(SHA3.hash512(data)),
+            skein1024_1024: Self.hex(Data(Skein.hash1024(Array(data))))
         )
         guard integrity == .expected else {
             throw BIP39Error.wordListIntegrityFailure
