@@ -1,6 +1,6 @@
-# Technische Analyse von Password Generator 2.3.5
+# Technische Analyse von Password Generator 2.3.4
 
-Stand: 4. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.3.5, Build 12. Den vorigen Release beschreibt [die Analyse zu 2.3.4](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.3.4.md).
+Stand: 4. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.3.4, Build 11. Den vorigen Release beschreibt [die Analyse zu 2.3.3](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.3.3.md).
 
 ## Datenfluss
 
@@ -78,7 +78,7 @@ The energy comparison fixes a reservoir temperature `T = 2.7 K`, [Boltzmann cons
 
 The chosen budget `E = 3 × 10^71 J` is an upward-rounded cosmological comparison, not extractable work. In a spatially flat critical-density model, `ρ_c = 3H_0²/(8πG)` and `E_comparison = (4π/3)R³ρ_c c²`. Using `H_0 ≈ 67.4 km/s/Mpc` and `R ≈ 46.5 billion light-years` gives approximately `2.735 × 10^71 J`, including dark energy in the total density. This construction neither asserts accessible global energy nor a conserved universal work supply. [Planck 2018, VI](https://arxiv.org/abs/1807.06209), [NASA/Geithner, slide 5](https://nepp.nasa.gov/docs/etw/2022/13-JUN-MON/1055-Geithner-v3-20220009134.pdf).
 
-Independently of the energy comparison, the time model grants `H = 10^106` years, with `31,557,600` seconds per year, hence `H_s = 3.15576 × 10^113 s`. The app explicitly assumes that the universe reaches maximum entropy, or heat death, by this comparison horizon. No usable energy gradients would then remain to provide free energy for sustained computer operation and the disposal of generated heat. Under this scenario, available free energy and usable computing time limit every physically operated computer, including quantum computers. Irreversible information erasure requires heat release and an entropy increase outside the memory; ideal reversible steps have no fixed entropy cost per step. This is a conditional physical explanation of the chosen resource model, not a proof of a universal deadline. Black-hole evaporation scenarios motivate the scale; Adams and Laughlin leave cosmological heat death dependent on the future cosmology, and An et al. mention approximately `10^106` years for exceptionally massive black holes, not a proven date of maximum universal entropy. [Bennett (1973)](https://www.cs.princeton.edu/courses/archive/fall04/cos576/papers/bennett73.html), [An et al. (2020), section 3.2](https://doi.org/10.1093/mnras/staa1343). [Hawking (1975)](https://doi.org/10.1007/BF02345020), [Adams and Laughlin (1997), IV.G and VI.D](https://sites.astro.caltech.edu/ay1/RevModPhys.69.337.pdf).
+Independently of the energy comparison, the time model grants `H = 10^106` years, with `31,557,600` seconds per year, hence `H_s = 3.15576 × 10^113 s`. This is an assumed comparison horizon. Hawking's evaporation model and its mass-dependent extrapolation motivate very long time scales; Adams and Laughlin do not establish maximum universal entropy at exactly `10^106` years. Their section VI.D leaves cosmological heat death dependent on the future cosmology. The application does not predict the lifetime of the universe. [Hawking (1975)](https://doi.org/10.1007/BF02345020), [Adams and Laughlin (1997), IV.G and VI.D](https://sites.astro.caltech.edu/ay1/RevModPhys.69.337.pdf).
 
 The thresholds below follow algebraically from these assumptions. Equality uses the whole budget; the displayed exceedance applies only above the threshold.
 
@@ -109,7 +109,7 @@ Der Energievergleich setzt eine Reservoirtemperatur `T = 2,7 K`, die [Boltzmann-
 
 Das gewählte Budget `E = 3 × 10^71 J` ist ein aufgerundeter kosmologischer Vergleich, keine gewinnbare Arbeit. Im räumlich flachen Modell mit kritischer Dichte gelten `ρ_c = 3H_0²/(8πG)` und `E_Vergleich = (4π/3)R³ρ_c c²`. Mit `H_0 ≈ 67,4 km/s/Mpc` und `R ≈ 46,5 Milliarden Lichtjahren` ergeben sich etwa `2,735 × 10^71 J`, einschließlich Dunkler Energie in der Gesamtdichte. Daraus folgen weder global zugängliche Energie noch ein erhaltener universeller Arbeitsvorrat. [Planck 2018, VI](https://arxiv.org/abs/1807.06209), [NASA/Geithner, Folie 5](https://nepp.nasa.gov/docs/etw/2022/13-JUN-MON/1055-Geithner-v3-20220009134.pdf).
 
-Unabhängig vom Energievergleich erlaubt das Zeitmodell `H = 10^106` Jahre zu jeweils `31.557.600` Sekunden, also `H_s = 3,15576 × 10^113 s`. Die App nimmt ausdrücklich an, dass das Universum spätestens an diesem Vergleichshorizont seine maximale Entropie erreicht hat, also den Wärmetod. Dann fehlen nutzbare Energieunterschiede und damit freie Energie für dauerhaften Computerbetrieb und die Abfuhr entstehender Wärme. Unter diesem Szenario begrenzen verfügbare freie Energie und nutzbare Rechenzeit jeden physisch betriebenen Computer, auch Quantencomputer. Irreversible Informationslöschung erfordert Wärmeabgabe und eine Entropiezunahme außerhalb des Speichers; ideal reversible Schritte haben keine festen Entropiekosten pro Schritt. Dies erklärt das gewählte Ressourcenmodell unter seinen Annahmen und beweist keine universelle Frist. Szenarien zur Verdampfung Schwarzer Löcher motivieren die Größenordnung; Adams und Laughlin lassen den kosmologischen Wärmetod von der zukünftigen Kosmologie abhängen. An et al. nennen ungefähr `10^106` Jahre für besonders massereiche Schwarze Löcher, keinen bewiesenen Zeitpunkt maximaler Entropie des Universums. [Bennett (1973)](https://www.cs.princeton.edu/courses/archive/fall04/cos576/papers/bennett73.html), [An et al. (2020), Abschnitt 3.2](https://doi.org/10.1093/mnras/staa1343). [Hawking (1975)](https://doi.org/10.1007/BF02345020), [Adams und Laughlin (1997), IV.G und VI.D](https://sites.astro.caltech.edu/ay1/RevModPhys.69.337.pdf).
+Unabhängig vom Energievergleich erlaubt das Zeitmodell `H = 10^106` Jahre zu jeweils `31.557.600` Sekunden, also `H_s = 3,15576 × 10^113 s`. Das ist ein angenommener Vergleichshorizont. Hawkings Verdampfungsmodell und seine massenabhängige Extrapolation motivieren sehr lange Zeitskalen; Adams und Laughlin beweisen keine maximale Entropie des Universums bei genau `10^106` Jahren. Ihr Abschnitt VI.D lässt den kosmologischen Wärmetod von der zukünftigen Kosmologie abhängen. Die Anwendung prognostiziert keine Lebensdauer des Universums. [Hawking (1975)](https://doi.org/10.1007/BF02345020), [Adams und Laughlin (1997), IV.G und VI.D](https://sites.astro.caltech.edu/ay1/RevModPhys.69.337.pdf).
 
 Die folgenden Schwellen ergeben sich algebraisch aus diesen Annahmen. Bei Gleichheit wird das Budget vollständig ausgeschöpft; eine Überschreitung wird erst oberhalb der Schwelle angezeigt.
 
@@ -151,9 +151,7 @@ Mauspool und temporäre Kryptopuffer werden beim Verwerfen bestmöglich übersch
 
 ## Verifikation
 
-Version 2.3.5 erweitert ausschließlich den deutschen und englischen Erklärungstext sowie Quellenlinks. Alle 103 XCTest-Tests im Release-Build bestanden am 4. Oktober 2026 ohne Fehler oder Compilerwarnungen: 74 Core-Tests und 29 App-Tests. Verwendet wurde `swift test -c release -Xswiftc -warnings-as-errors`. Rechenraten, Schwellen, Kryptografie, Passwortformate und Layout bleiben unverändert.
-
-Für die vorherige Version 2.3.4 bestanden am 4. Oktober 2026 jeweils 103 XCTest-Tests im Debug- und Release-Build: 74 Core-Tests und 29 App-Tests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`. Die weiterhin vorhandenen Tests umfassen die vollständige kryptografische Ableitung, die Passwortformate, Fehlerverhalten und exakte Schwellen. Der SHA256-Wert der unveränderten Pipeline-Fixtures lautet `50541a981bb2fca83307cbfb86aec2643533a2675efc21301630e0d3afdfee0b`.
+Am 4. Oktober 2026 bestanden jeweils 103 XCTest-Tests im Debug- und Release-Build: 74 Core-Tests und 29 App-Tests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`. Die weiterhin vorhandenen Tests umfassen die vollständige kryptografische Ableitung, die Passwortformate, Fehlerverhalten und exakte Schwellen. Der SHA256-Wert der unveränderten Pipeline-Fixtures lautet `50541a981bb2fca83307cbfb86aec2643533a2675efc21301630e0d3afdfee0b`.
 
 Die zusätzlichen Tests prüfen die minimalen Vorschlagslängen einschließlich der PIN-Ausnahme, den initialen Appzustand und jeden Formatwechsel, die ungerundeten Schwellen direkt darunter, darauf und darüber sowie die Einordnung ungültiger Zahlen. Reale Hex-Konfigurationen an allen vier Grenzen prüfen die Verbindung zwischen Format und Stufe. Die vorhandenen Tests für Kryptografie, vollständige Ableitung, Passworterzeugung und Fehlerverhalten bleiben enthalten.
 
@@ -169,33 +167,31 @@ Das Release-ZIP erhält weiterhin separate SHA256-, SHA3-512- und Skein-1024-102
 
 ## Release-Nachweis
 
-Version 2.3.5, Build 12, wurde am 4. Oktober 2026 mit Developer ID signiert und über Xcodes Direct Distribution notarisiert. Der finale ZIP-Export wurde ohne erneuten Build oder erneute Signierung aus der freigegebenen Xcode-Fassung erstellt. Ressourcen und ausführbarer Code nach Entfernung der jeweiligen Signatur stimmen mit dem getesteten Paket überein.
+Version 2.3.4, Build 11, wurde am 4. Oktober 2026 mit Developer ID signiert und über Xcodes Direct Distribution notarisiert. Der finale ZIP-Export wurde ohne erneuten Build oder erneute Signierung aus der freigegebenen Xcode-Fassung erstellt. Ressourcen und ausführbarer Code nach Entfernung der jeweiligen Signatur stimmen mit dem getesteten Paket überein.
 
 | Nachweis | Ergebnis |
 |---|---|
-| Xcode-Notarisierung | freigegeben; Submission-ID `4C2287FC-04D2-48D2-B737-A64720BEDBA9` |
-| CDHash des notarisierten Exports | `6cf16db5ec26a0bc29493e4c6dd66b18f2493969` |
-| SHA256 des um die Signatur bereinigten ausführbaren Codes | `69a8f5d5c153da676d0744ea3bfd3b1cdc562d6969320ca2ecb5d23ddc52ab2d` |
+| Xcode-Notarisierung | freigegeben; Submission-ID `B0AD5131-4749-45C6-81FC-99D973767D87` |
+| CDHash des notarisierten Exports | `36ec2de1cdc17aaa4f6e76d7375f55da67b54e43` |
+| SHA256 des um die Signatur bereinigten ausführbaren Codes | `b7be4126dfdeab541830b805496c6ef04e1d9288897a67d665e770bb1aa9156b` |
 | Code-Signatur | `codesign --verify --deep --strict` bestanden |
 | Ticket | `xcrun stapler validate` bestanden |
 | Gatekeeper | `spctl --assess --type execute` akzeptiert, Quelle `Notarized Developer ID` |
-| Installation | `/Applications/Password Generator 2.3.5.app`; alle Dateien einschließlich Signatur byteidentisch zum Xcode-Export |
+| Installation | `/Applications/Password Generator 2.3.4.app`; alle Dateien einschließlich Signatur byteidentisch zum Xcode-Export |
 
 `Scripts/verify-release.sh` prüfte das finale ZIP erfolgreich einschließlich ZIP-Struktur, aller drei Sidecars, Integritätsmanifest, unabhängiger Python-Implementierungen für SHA256/SHA3-512, offizieller Skein-C-Referenz, entpackter Code-Signatur, Sandbox, Ticket und Gatekeeper.
 
 ```text
-Password.Generator-2.3.5.zip
+Password.Generator-2.3.4.zip
 SHA256:
-69b7fb49e5bf79b84e31ec1b7caefa5471396ef1fa0fcaf43db923345e9a42e8
+f086b4464f107356a4e02b3a9083fa67f6677c68287dba7beff70d81c2f1c500
 SHA3-512:
-2a018698fbc03f17506756f08a651da9d9e00404378fe86393934b83f7cf8f8b4be8d06828d74e47881e81fe0669a4a084acf7c8bdacf2440d639bb96e235cf8
+597f5a932bb9b72f742d730bf95b89a1c4a30cdb1beee7b0f419a32e081ec69fccc534dfc45cf99b915d65bd138b7fcb695259a43b7164b64323a75c5748c953
 Skein-1024-1024:
-f24e395693d2f042c5483907fe3d51f7ef09543fe21701867fee662d7797d0e2563b7519587243f24053a156376e4081fa730fd3596ca64b9518d1b8001bfb8b781effb52cc3ac4a5e5a2c7dd9529c01a8a3effec1d4ebb0183577510c6bff89da2b06d414386ed150d9243cf505596b060dfe0f0d9381963d8e4ec87616e751
+9eff28342f84727f5017db7b2073ef2600383be52108c280a84f77fcc428416020e83f8fcb79d29ce884a3e9bc7da96ca5518a38dbd3e10ec9025f8b71f7111b7a1737d89bd9b36fca75d4f4371607eb3a8968752d5414247c4d22cb93d1a8c127083920b1fabc7ea21cafee24880532add3b639c21cedacedb4fe8366bd4260
 ```
 
-Die installierte und notarisierte Fassung wurde geöffnet. Das deutsche und englische Infofenster sowie der neue Quellenlink wurden per Accessibility geprüft; der Infoinhalt ist scrollbar. Die Accessibility-Ausgabe kürzt längere Textwerte, weshalb zusätzlich beide neuen Erklärungstexte im installierten signierten Programm geprüft wurden. Dies ist keine pixelbasierte Designkontrolle. Die bisherigen Mindestschriftgrößen und das Layout sind unverändert.
-
-Die vorherige Installation von 2.3.4 sowie ihre App-Kopien unter `build` wurden aus LaunchServices abgemeldet und in wiederherstellbare Papierkorbordner verschoben. Aktuell ist ausschließlich Version 2.3.5 installiert. Xcode-Archive und Quellhistorie bleiben als Nachweise erhalten. Das aktuelle öffentliche Paket ist unter [Release v2.3.5](https://github.com/michael-feinermann/password-generator/releases/tag/v2.3.5) verfügbar.
+Die installierte und notarisierte Fassung wurde geöffnet. Die vorherige Installation von 2.3.3 sowie ihre App-Kopien unter `build` wurden aus LaunchServices abgemeldet und in wiederherstellbare Papierkorbordner verschoben. Aktuell ist ausschließlich Version 2.3.4 installiert. Xcode-Archive und Quellhistorie bleiben als Nachweise erhalten. Das aktuelle öffentliche Paket ist unter [Release v2.3.4](https://github.com/michael-feinermann/password-generator/releases/tag/v2.3.4) verfügbar.
 
 ## Quellen
 

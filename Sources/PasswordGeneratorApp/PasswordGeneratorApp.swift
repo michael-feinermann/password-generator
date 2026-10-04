@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 enum AppIdentity {
-    static let displayName = "Password Generator \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.3.4")"
+    static let displayName = "Password Generator \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.3.5")"
 }
 
 @main
