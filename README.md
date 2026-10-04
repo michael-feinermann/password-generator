@@ -4,11 +4,13 @@ English | [Deutsch](README.de.md)
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator icon">
 
-[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.3.0](docs/RELEASE_NOTES_2.3.0.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[Download the app](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release notes 2.3.1](docs/RELEASE_NOTES_2.3.1.md) · [Technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.3.0, build 7. Developer ID signed, notarized through Xcode on 4 October 2026, with a stapled ticket; Gatekeeper accepted the final app.
+Version 2.3.1, build 8. Developer ID signed, notarized through Xcode on 4 October 2026, with a stapled ticket; Gatekeeper accepted the final app.
 
-A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.3.0”.
+Release policy: GitHub keeps only the current version as a release with download assets and a release tag. The source history and historical release notes remain available for reference. The download link above always points to the current release.
+
+A native, local macOS app for seed phrases, EFF passphrases, ASCII passwords, PINs, and hexadecimal values. The interface is available in English and German, and the app has no network access. Its visible name is “Password Generator 2.3.1”.
 
 | Format | Length | Alphabet | Displayed entropy |
 |---|---|---|---|
@@ -22,7 +24,7 @@ The entropy display describes the size of the uniformly sampled output space. It
 
 ## Defaults and color levels
 
-Version 2.3.0 starts each format with these lengths:
+Version 2.3.1 starts each format with these lengths:
 
 | Format | Default | Nominal bits |
 |---|---|---|
@@ -34,18 +36,22 @@ Version 2.3.0 starts each format with these lengths:
 
 For BIP39, EFF, ASCII, and Hex, these are the shortest supported lengths reaching at least 256 nominal bits. PIN is deliberately a six-digit exception. The full selectable length ranges remain available.
 
-The configuration and generated result show the nominal bit value together with a color and a text label. The unrounded value determines the level; exactly 128, 256, or 1,024 bits enters the next level.
+The configuration and generated result show the nominal bit value together with a color and a text label. The unrounded value determines the level; each next level starts at exactly 128, 256, or 1,024 bits.
 
 | Nominal bits | Color | Label |
 |---|---|---|
-| Below 128 | Red | Limited brute-force reserve |
-| 128 to below 256 | Yellow | Limited quantum reserve |
-| 256 to below 1,024 | Light green | Very high brute-force cost |
-| 1,024 or more | Dark green | Extreme brute-force cost |
+| Below 128 | Red | crackable |
+| 128 to below 256 | Yellow | not quantum-safe |
+| 256 to below 1,024 | Light green | practically unattackable |
+| 1,024 or more | Dark green | thermodynamically unattackable |
 
-These labels refer to the nominal selection space under ideally uniform sampling. They do not measure the random source or guarantee overall security. A six-digit PIN has a small offline guessing space; its suitability also depends on the use case and enforced attempt limits.
+These are the interface's simplified labels. An info button next to each label opens this explanation; it is also available through keyboard focus and as a tooltip:
 
-The yellow level refers to the idealized Grover search model: searching N possibilities requires on the order of √N quantum queries. It does not claim that every value below 256 bits is practically vulnerable to quantum computers. NIST notes the cost of quantum hardware and the limits on parallelizing Grover's algorithm, and continues to allow AES-128, AES-192, and AES-256. The highest level likewise makes no thermodynamic impossibility claim. [NIST: Post-Quantum Cryptography FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs)
+> The classification refers to guessing the password by brute force with uniformly random selection. It describes the nominal selection space. The labels are simplified levels, not a guarantee: they do not assess real quantum hardware and are not thermodynamic proof. Other attack paths are not covered.
+
+The displayed value does not measure the random source or guarantee overall security. A six-digit PIN has a small offline guessing space; its suitability also depends on the use case and enforced attempt limits.
+
+Grover's idealized square-root search advantage does not establish practical attack times. NIST considers hardware and parallelization constraints and continues to allow AES-128, AES-192, and AES-256. The interface labels are not a replacement for that analysis. [NIST: Post-Quantum Cryptography FAQ](https://csrc.nist.gov/Projects/post-quantum-cryptography/faqs)
 
 ## Export format
 
@@ -59,12 +65,12 @@ BIP39 wallets usually expect words separated by spaces. The internal BIP39 check
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
 zsh Scripts/verify-release.sh
-open "build/Password Generator 2.3.0.app"
+open "build/Password Generator 2.3.1.app"
 ```
 
 The release targets Apple Silicon (`arm64`) running macOS 14 or later. Use the signed app bundle to run the application. `swift run PasswordGeneratorApp` is intended only for development; a process without the required signature does not satisfy the runtime conditions for generation.
 
-The packaging script creates `build/Password Generator 2.3.0.app`, `build/Password.Generator-2.3.0.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
+The packaging script creates `build/Password Generator 2.3.1.app`, `build/Password.Generator-2.3.1.zip`, three checksum files, and an integrity manifest. Without an explicit `SIGN_IDENTITY`, the local build uses an ad hoc signature. A Developer ID certificate in the keychain can be selected by its fingerprint. `NOTARY_PROFILE` enables optional notarization using an existing keychain profile, followed by stapling and ZIP recreation. Credentials and private keys are not stored in the project. The actual signing and notarization status is documented in each release and its integrity manifest. The project directory remains `Seed-Phrase`; the app, Swift package, modules, bundle identifier, and release files now use Password Generator or PasswordGenerator.
 
 ## Mouse pool and generation
 
@@ -92,13 +98,13 @@ The app does not save generated passwords to files or preferences. A local app c
 
 ## Integrity and tests
 
-Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.3.0.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
+Both wordlists are checked against embedded SHA256 and SHA3-512 values before use. The complete final release ZIP is hashed with SHA256, SHA3-512, and Skein-1024-1024. Each algorithm has its own checksum file. The additional Skein file is named `Password.Generator-2.3.1.zip.skein-1024-1024`, and the integrity manifest records its value in the `skein-1024-1024` field.
 
 `Scripts/verify-release.sh` independently checks SHA256 and SHA3-512 using Python. It checks Skein-1024-1024 through `Scripts/skein-reference-checksum.sh`, which uses the official C reference implementation in `Tests/Reference/Skein`. The verifier also extracts the ZIP and checks the code signature and sandbox.
 
 These additional integrity checksums do not replace or change Apple's Developer ID signing process. Creating these external checksum files and the integrity manifest does not modify the app bundle or the final ZIP. Hash values alone do not prove provenance.
 
-Test results for version 2.3.0, build 7: 87 tests passed in each of the Debug and Release builds, with no compiler warnings: 67 Core tests and 20 app tests per build. The [verification section of the technical analysis (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation) documents release checks. Test results and Apple approval for earlier releases do not establish the verification status of this version.
+Test results for version 2.3.1, build 8: 87 tests passed in each of the Debug and Release builds, with no compiler warnings: 67 Core tests and 20 app model tests per build. [Verification scope and release evidence (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 
 ## Logo and icon
 

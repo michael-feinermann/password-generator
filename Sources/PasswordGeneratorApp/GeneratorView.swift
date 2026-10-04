@@ -534,21 +534,26 @@ private struct NominalSecurityIndicator: View {
                         }
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(tr("Nominelle Entropie", "Nominal entropy"))
+                .accessibilityValue(activeLevel == nil
+                    ? title(for: nil)
+                    : "\(formattedBits) \(tr("Bit", "bits"))\(excludesChecksum ? tr(", ohne Prüfsummenbits", ", excluding checksum bits") : "")")
                 Spacer(minLength: 0)
-                Label(title(for: activeLevel), systemImage: appearance.symbol)
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(appearance.text)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(appearance.chip, in: RoundedRectangle(cornerRadius: 11))
-                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(appearance.accent.opacity(0.72), lineWidth: 1))
+                HStack(spacing: 8) {
+                    Label(title(for: activeLevel), systemImage: appearance.symbol)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(appearance.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                    NominalSecurityInfoButton(title: title(for: activeLevel), language: language)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(appearance.chip, in: RoundedRectangle(cornerRadius: 11))
+                .overlay(RoundedRectangle(cornerRadius: 11).stroke(appearance.accent.opacity(0.72), lineWidth: 1))
             }
-            .accessibilityElement(children: .ignore)
+            .accessibilityElement(children: .contain)
             .accessibilityLabel(tr("Einordnung des Auswahlraums", "Selection-space rating"))
-            .accessibilityValue(activeLevel == nil
-                ? title(for: nil)
-                : "\(formattedBits) \(tr("Bit", "bits")), \(title(for: activeLevel))\(excludesChecksum ? tr(", ohne Prüfsummenbits", ", excluding checksum bits") : "")")
 
             Text(explanation)
                 .font(.system(size: 11, design: .rounded))
@@ -579,22 +584,28 @@ private struct NominalSecurityIndicator: View {
                     RoundedRectangle(cornerRadius: 3)
                         .fill(style.accent.opacity(isSelected ? 1 : 0.44))
                         .frame(height: 5)
+                        .accessibilityHidden(true)
                     HStack(alignment: .top, spacing: 5) {
                         Image(systemName: style.symbol)
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(style.text)
+                            .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(range(for: candidate))
                                 .font(.system(size: 10, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white.opacity(isSelected ? 1 : 0.76))
-                            Text(shortTitle(for: candidate))
-                                .font(.system(size: 9.5, design: .rounded))
-                                .foregroundStyle(AppPalette.secondaryText)
+                            HStack(alignment: .top, spacing: 3) {
+                                Text(title(for: candidate))
+                                    .font(.system(size: 9.5, design: .rounded))
+                                    .foregroundStyle(AppPalette.secondaryText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                NominalSecurityInfoButton(title: title(for: candidate), language: language)
+                            }
                         }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement(children: .ignore)
+                .accessibilityElement(children: .contain)
                 .accessibilityLabel("\(range(for: candidate)), \(title(for: candidate))")
                 .accessibilityAddTraits(isSelected ? .isSelected : [])
             }
@@ -621,20 +632,11 @@ private struct NominalSecurityIndicator: View {
 
     private func title(for level: NominalSecurityLevel?) -> String {
         switch level {
-        case .below128: tr("Geringe Brute-Force-Reserve", "Limited brute-force reserve")
-        case .atLeast128: tr("Begrenzte Quantenreserve", "Limited quantum reserve")
-        case .atLeast256: tr("Sehr hoher Brute-Force-Aufwand", "Very high brute-force cost")
-        case .atLeast1024: tr("Extremer Brute-Force-Aufwand", "Extreme brute-force cost")
+        case .below128: tr("knackbar", "crackable")
+        case .atLeast128: tr("nicht quantensicher", "not quantum-safe")
+        case .atLeast256: tr("praktisch nicht angreifbar", "practically unattackable")
+        case .atLeast1024: tr("thermodynamisch nicht angreifbar", "thermodynamically unattackable")
         case nil: tr("Noch keine Einordnung", "Not rated yet")
-        }
-    }
-
-    private func shortTitle(for level: NominalSecurityLevel) -> String {
-        switch level {
-        case .below128: tr("Geringe Reserve", "Limited reserve")
-        case .atLeast128: tr("Quantenreserve", "Quantum reserve")
-        case .atLeast256: tr("Sehr hoher Aufwand", "Very high cost")
-        case .atLeast1024: tr("Extremer Aufwand", "Extreme cost")
         }
     }
 
@@ -649,6 +651,55 @@ private struct NominalSecurityIndicator: View {
 
     private func tr(_ german: String, _ english: String) -> String {
         language.text(german, english)
+    }
+}
+
+private struct NominalSecurityInfoButton: View {
+    let title: String
+    let language: AppLanguage
+    @State private var showsInformation = false
+
+    private var explanation: String {
+        language.text(
+            "Die Einordnung bezieht sich auf das Erraten des Passworts durch Brute-Force bei gleichverteilter Zufallsauswahl. Sie beschreibt den nominellen Auswahlraum. Die Bezeichnungen sind vereinfachte Stufen, keine Garantie: Sie bewerten keine reale Quantenhardware und sind kein thermodynamischer Nachweis. Andere Angriffswege werden nicht erfasst.",
+            "The classification refers to guessing the password by brute force with uniformly random selection. It describes the nominal selection space. The labels are simplified levels, not a guarantee: they do not assess real quantum hardware and are not thermodynamic proof. Other attack paths are not covered."
+        )
+    }
+
+    var body: some View {
+        Button {
+            showsInformation = true
+        } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(AppPalette.secondaryText)
+                .frame(width: 20, height: 20)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(true)
+        .help(explanation)
+        .accessibilityLabel(language.text("Information zur Stufe: \(title)", "Information about the level: \(title)"))
+        .accessibilityHint(language.text("Öffnet die Erklärung zur Einordnung.", "Opens an explanation of the classification."))
+        .popover(isPresented: $showsInformation, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                Text(explanation)
+                    .font(.system(size: 12, design: .rounded))
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Spacer()
+                    Button(language.text("Schließen", "Close")) {
+                        showsInformation = false
+                    }
+                    .keyboardShortcut(.cancelAction)
+                }
+            }
+            .padding(18)
+            .frame(width: 360)
+            .preferredColorScheme(.dark)
+        }
     }
 }
 
