@@ -4,13 +4,13 @@
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator Icon">
 
-[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.3.5](docs/RELEASE_NOTES_2.3.5.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
+[App herunterladen](https://github.com/michael-feinermann/password-generator/releases/latest) · [Release Notes 2.3.6](docs/RELEASE_NOTES_2.3.6.md) · [Technische Analyse](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md)
 
-Version 2.3.5, Build 12. Mit Developer ID signiert und am 4. Oktober 2026 über Xcode notarisiert. Signatur, angeheftetes Notarisierungsticket und Gatekeeper-Prüfung des finalen Pakets sind gültig.
+Version 2.3.6, Build 13. Am 5. Oktober 2026 mit Developer ID signiert und über Xcode notarisiert; Stapling, Gatekeeper und finale Releaseprüfung bestanden.
 
 Releasepolitik: Auf GitHub bleibt nur die aktuelle Version als Release mit Downloadassets und Release-Tag erhalten. Die Quellhistorie und historische Release Notes bleiben zum Nachlesen verfügbar. Der Downloadlink oben verweist stets auf das aktuelle Release.
 
-Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.3.5“.
+Eine native, lokale macOS-App für Seedphrases, EFF-Passphrasen, ASCII-Passwörter, PINs und Hexwerte. Oberfläche auf Deutsch und Englisch, ohne Netzwerkzugriff der App. Der sichtbare Appname lautet „Password Generator 2.3.6“.
 
 Die normale Fenstergröße von 1.060 × 840 Punkten ist die Mindestgröße. Inhalt und Typografie wachsen mit größeren Fenstern und im Vollbild. Apptexte verwenden mindestens Schriftgröße 14; Potenzen erscheinen gut lesbar in der Schreibweise `10^106` und `2^(n/2)`.
 
@@ -26,7 +26,7 @@ Die Entropieanzeige beschreibt die Größe des gleichverteilt abgetasteten Ausga
 
 ## Standardlängen und Farbstufen
 
-Version 2.3.5 startet die Formate mit diesen Längen:
+Version 2.3.6 startet die Formate mit diesen Längen:
 
 | Format | Standard | Nominelle Bits |
 |---|---|---|
@@ -88,13 +88,14 @@ BIP39-Wallets erwarten die Wörter üblicherweise mit Leerzeichen. Die interne B
 ```sh
 swift test -Xswiftc -warnings-as-errors
 zsh Scripts/package-app.sh
-zsh Scripts/verify-release.sh
-open "build/Password Generator 2.3.5.app"
+ALLOW_UNNOTARIZED_DEVELOPMENT=1 zsh Scripts/verify-release.sh
+python3 Scripts/test-release-checks.py
+open "build/Password Generator 2.3.6.app"
 ```
 
 Das Release ist für Apple Silicon (`arm64`) ab macOS 14 vorgesehen. Das signierte Bundle ist die verwendbare Anwendung. `swift run PasswordGeneratorApp` dient nur der Entwicklung; der nicht entsprechend signierte Prozess erfüllt die Laufzeitbedingungen zur Generierung nicht.
 
-Das Paket-Skript erzeugt `build/Password Generator 2.3.5.app`, `build/Password.Generator-2.3.5.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
+Das Paket-Skript erzeugt `build/Password Generator 2.3.6.app`, `build/Password.Generator-2.3.6.zip`, drei Hash-Sidecars und ein Integritätsmanifest. Ohne explizite `SIGN_IDENTITY` wird lokal ad hoc signiert. Mit einem Developer-ID-Zertifikat im Schlüsselbund kann per Fingerabdruck signiert werden. `NOTARY_PROFILE` aktiviert die optionale Notarisierung über ein vorhandenes Schlüsselbundprofil, anschließend Stapling und erneute ZIP-Erstellung. Zugangsdaten und private Schlüssel werden nicht im Projekt gespeichert. Der konkrete Signatur- und Notarisierungsstatus steht im jeweiligen Release und Integritätsmanifest. Das Projektverzeichnis bleibt `Seed-Phrase`; App, Swift-Paket, Module, Bundle-Kennung und Release-Dateien heißen nun Password Generator beziehungsweise PasswordGenerator.
 
 ## Mauspool und Generierung
 
@@ -118,17 +119,21 @@ Die vorhandenen Laufzeitprüfungen bleiben erhalten: gültige laufende Code-Sign
 
 Die Ausgabe erscheint zunächst verdeckt. Anzeigen erfordert eine Bestätigung und endet bestmöglich nach 60 Sekunden oder bei Kontextwechsel. Kopieren erfolgt nur auf ausdrücklichen Klick, mit `currentHostOnly`; die unveränderte Zwischenablage wird nach etwa 45 Sekunden bestmöglich geleert. Mauspool und temporäre Kryptopuffer werden beim Verwerfen bestmöglich überschrieben. Swift-Strings, Register- und Betriebssystemkopien können nicht garantiert vollständig gelöscht werden.
 
-Die App speichert keine erzeugten Passwörter in Dateien oder Preferences. Bildschirmaufnahmen, eine externe Kamera oder ein kompromittiertes Betriebssystem kann eine lokale App nicht zuverlässig verhindern.
+Von den Generatoreinstellungen wird ausschließlich die zuletzt gewählte Sprache lokal über `preferredLanguage=en` beziehungsweise `preferredLanguage=de` gespeichert. Ohne gültige Sprachpräferenz startet die App auf Englisch; die Sprachschaltflächen zeigen Englisch zuerst und Deutsch danach. Passwörter, Mausdaten, Generatorformat und Länge, Trennzeichen, Hex-Groß-/Kleinschreibung und Sicherheitsbestätigungen werden nicht in diesem Einstellungsspeicher abgelegt und beginnen bei jedem Neustart mit einem frischen Zustand. Die App speichert keine erzeugten Passwörter in Dateien oder Preferences. Bildschirmaufnahmen, eine externe Kamera oder ein kompromittiertes Betriebssystem kann eine lokale App nicht zuverlässig verhindern.
+
+Der rohe Masterkey wird unmittelbar nach der Initialisierung der fünf Generatorzustände überschrieben, bevor Passwortbytes angefordert werden. Diese Zustände werden vor der Übergabe des Ergebnisses an die Oberfläche bereinigt, auch bei Fehlern. Passwort und Mauspool liegen in eigenen Referenzpuffern und werden beim Verwerfen beziehungsweise regulären Beenden mit `memset_s` überschrieben. Kopien des Passwort-Wrappers teilen denselben gelöschten Speicher. Die Puffer verwenden eigene, seitenausgerichtete `mmap`-Bereiche. `mlock` versucht die Seiten gegen Auslagerung zu sperren; das ist bestmöglich. Verdeckte Wörter erzeugen keine Klartextstrings. Explizite Anzeige und Kopieren erzeugen weiterhin Swift- und Frameworkstrings. Eine unwiderrufliche Löschung jeder RAM-, Register-, UI- oder Betriebssystemkopie ist daher nicht garantiert. Erzwungenes Beenden kann die Bereinigung nicht ausführen. [Interner Sicherheits-Audit und verbleibende Grenzen](docs/SECURITY_AUDIT_2.3.6.md).
+
+`Scripts/verify-release.sh` verlangt standardmäßig eine notarisierte Developer-ID-Distribution, einschließlich erwartetem Team, Produkt, Version, Build, Hardened Runtime, minimalen Entitlements und sicheren Archivpfaden. `ALLOW_UNNOTARIZED_DEVELOPMENT=1` erlaubt ausdrücklich lokale Entwicklungsprüfungen und belegt keine Notarisierung. Die bestehende macOS-Fensterspeicherung bleibt erlaubt und unverändert.
 
 ## Integrität und Tests
 
-Die BIP39- und EFF-Wortlisten werden vor Verwendung gegen fest eingebaute SHA256-, SHA3-512- und Skein-1024-1024-Werte geprüft. Die App zeigt für jede Liste alle drei Digests an, Skein-1024-1024 jeweils nach SHA256 und SHA3-512. Die erwarteten Skein-Wortlistenwerte werden unabhängig mit der offiziellen C-Referenzimplementierung unter `Tests/Reference/Skein` über `Scripts/skein-reference-checksum.sh` gegengeprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.3.5.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
+Die BIP39- und EFF-Wortlisten werden vor Verwendung gegen fest eingebaute SHA256-, SHA3-512- und Skein-1024-1024-Werte geprüft. Die App zeigt für jede Liste alle drei Digests an, Skein-1024-1024 jeweils nach SHA256 und SHA3-512. Die erwarteten Skein-Wortlistenwerte werden unabhängig mit der offiziellen C-Referenzimplementierung unter `Tests/Reference/Skein` über `Scripts/skein-reference-checksum.sh` gegengeprüft. Das vollständige finale Release-ZIP wird mit SHA256, SHA3-512 und Skein-1024-1024 gehasht. Zu jedem Verfahren gehört eine eigene Prüfsummendatei. Die zusätzliche Skein-Datei heißt `Password.Generator-2.3.6.zip.skein-1024-1024`; das Integritätsmanifest enthält ihren Wert im Feld `skein-1024-1024`.
 
 `Scripts/verify-release.sh` prüft SHA256 und SHA3-512 unabhängig mit Python. Skein-1024-1024 wird über `Scripts/skein-reference-checksum.sh` mit der offiziellen C-Referenzimplementierung unter `Tests/Reference/Skein` kontrolliert. Das Prüfskript entpackt außerdem das ZIP und prüft Code-Signatur sowie Sandbox.
 
 Diese zusätzlichen Integritätsprüfsummen ersetzen oder ändern Apples Developer-ID-Signaturverfahren nicht. Das Erstellen dieser externen Prüfsummendateien und des Integritätsmanifests verändert weder das App-Bundle noch das finale ZIP. Hashwerte allein beweisen keine Herkunft.
 
-Testergebnisse für Version 2.3.5, Build 12: Alle 103 Release-Tests bestanden ohne Compilerwarnungen, darunter 74 Core-Tests und 29 App-Tests. Die vorige Version bestand außerdem die vollständige Debug-Suite. [Verifikation und Release-Nachweise](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
+Am 5. Oktober 2026 bestanden jeweils 120 XCTest-Tests in Debug, Release und Release mit AddressSanitizer (83 Core, 37 App), ohne Fehler, Compilerwarnungen oder gemeldete Speicherfehler. Alle 48 Release-Gate-Prüfungen bestanden (8 Positiv- und 40 Negativfälle). [Verifikation und Release-Nachweise](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 
 ## Logo und Icon
 

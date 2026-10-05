@@ -98,11 +98,50 @@ public enum PasswordGeneratorError: LocalizedError, Equatable {
 }
 
 public struct GeneratedPassword: Equatable, Sendable {
-    /// Words for BIP-39/EFF, individual characters for ASCII/PIN/hex.
-    public let components: [String]
-    public let text: String
+    private let storage: SensitiveBytes
+    private let ranges: [Range<Int>]
     public let entropyBits: Double
     public let mode: GeneratorMode
+
+    init(components: [String], entropyBits: Double, mode: GeneratorMode) {
+        var offset = 0
+        ranges = components.map { component in
+            let start = offset
+            offset += component.utf8.count
+            return start..<offset
+        }
+        storage = SensitiveBytes(count: offset)
+        storage.withUnsafeMutableBytes { bytes in
+            var index = 0
+            for component in components {
+                for byte in component.utf8 { bytes[index] = byte; index += 1 }
+            }
+        }
+        self.entropyBits = entropyBits
+        self.mode = mode
+    }
+
+    /// Words for BIP-39/EFF, individual characters for ASCII/PIN/hex.
+    /// Strings exist only when requested for display or export, never as stored state.
+    public var components: [String] {
+        storage.withLiveBytes { bytes in
+            ranges.map { String(decoding: bytes[$0], as: UTF8.self) }
+        } ?? []
+    }
+
+    public var text: String { exportText(wordSeparator: mode.usesWords ? " " : "") }
+    public var componentCount: Int { storage.isCleared ? 0 : ranges.count }
+    public var isCleared: Bool { storage.isCleared }
+
+    /// Overwrites the one owned byte allocation. Copies of this wrapper are invalidated
+    /// together. Previously exported Swift Strings or framework copies cannot be wiped here.
+    public func clear() { storage.clear() }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.mode == rhs.mode && lhs.entropyBits == rhs.entropyBits
+            && lhs.ranges == rhs.ranges && lhs.isCleared == rhs.isCleared
+            && lhs.text == rhs.text
+    }
 
     public var nominalSecurityLevel: NominalSecurityLevel {
         NominalSecurityLevel(nominalBits: entropyBits)
@@ -114,14 +153,18 @@ public struct GeneratedPassword: Equatable, Sendable {
     /// The fixed separator and hex letter case add no entropy to the result.
     public func exportText(wordSeparator: String? = nil, uppercaseHex: Bool = false) -> String {
         let separator = wordSeparator ?? (mode == .bip39 ? " " : "-")
-        switch mode {
-        case .bip39, .eff:
-            return components.joined(separator: separator)
-        case .hex:
-            return uppercaseHex ? text.uppercased() : text
-        case .ascii, .pin:
-            return text
-        }
+        return storage.withLiveBytes { bytes in
+            var output: [UInt8] = []
+            output.reserveCapacity(bytes.count + (mode.usesWords ? max(0, ranges.count - 1) * separator.utf8.count : 0))
+            defer { wipeNumericArray(&output) }
+            for (index, range) in ranges.enumerated() {
+                if mode.usesWords && index > 0 { output.append(contentsOf: separator.utf8) }
+                for byte in bytes[range] {
+                    output.append(mode == .hex && uppercaseHex && (97...102).contains(byte) ? byte - 32 : byte)
+                }
+            }
+            return String(decoding: output, as: UTF8.self)
+        } ?? ""
     }
 }
 
@@ -169,15 +212,16 @@ public struct PasswordGenerator: Sendable {
             case .hex: alphabet = Self.hexAlphabet
             case .bip39: preconditionFailure("Handled separately")
             }
-            components = try Self.uniformIndices(
+            var indices = try Self.uniformIndices(
                 count: configuration.length,
                 upperBound: alphabet.count,
                 randomProvider: randomProvider
-            ).map { alphabet[$0] }
+            )
+            defer { wipeNumericArray(&indices) }
+            components = indices.map { alphabet[$0] }
         }
         return GeneratedPassword(
             components: components,
-            text: components.joined(separator: configuration.mode.usesWords ? " " : ""),
             entropyBits: configuration.entropyBits,
             mode: configuration.mode
         )
@@ -196,6 +240,8 @@ public struct PasswordGenerator: Sendable {
         let acceptanceLimit = sourceRange - sourceRange % upperBound
         var result: [Int] = []
         result.reserveCapacity(count)
+        var succeeded = false
+        defer { if !succeeded { wipeNumericArray(&result) } }
         var consecutiveRejections = 0
         while result.count < count {
             let requestedCount = (count - result.count) * bytesPerCandidate
@@ -221,12 +267,11 @@ public struct PasswordGenerator: Sendable {
                 consecutiveRejections = 0
             }
         }
+        succeeded = true
         return result
     }
 
     private static func clear(_ bytes: inout [UInt8]) {
-        _ = bytes.withUnsafeMutableBytes {
-            $0.initializeMemory(as: UInt8.self, repeating: 0)
-        }
+        wipeNumericArray(&bytes)
     }
 }

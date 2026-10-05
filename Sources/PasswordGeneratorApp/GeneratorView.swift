@@ -382,27 +382,30 @@ struct GeneratorView: View {
                     .foregroundStyle(model.isMnemonicVisible ? AppPalette.amber : AppPalette.secondaryText)
 
                 if model.generatedPassword?.mode.usesWords == true {
+                    let wordCount = model.generatedPassword?.componentCount ?? 0
+                    let visibleWords = model.isMnemonicVisible ? model.mnemonicWords : []
                     ScrollView {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 3), spacing: 9) {
-                            ForEach(Array(model.mnemonicWords.enumerated()), id: \.offset) { index, word in
+                            ForEach(0..<wordCount, id: \.self) { index in
+                                let word = visibleWords.indices.contains(index) ? visibleWords[index] : nil
                                 HStack(spacing: 10) {
                                     Text(String(format: "%02d", index + 1))
                                         .foregroundStyle(AppPalette.teal)
                                         .appFont(size: 14, design: .monospaced)
-                                    Text(model.isMnemonicVisible ? word : "••••••••")
+                                    Text(word ?? "••••••••")
                                         .appFont(size: 15, weight: .semibold, design: .monospaced)
                                     Spacer(minLength: 0)
                                 }
                                 .padding(11)
                                 .background(AppPalette.wordChip, in: RoundedRectangle(cornerRadius: 10))
                                 .accessibilityElement(children: .ignore)
-                                .accessibilityLabel(model.isMnemonicVisible
-                                    ? tr("Wort \(index + 1), \(word)", "Word \(index + 1), \(word)")
+                                .accessibilityLabel(word != nil
+                                    ? tr("Wort \(index + 1), \(word ?? "")", "Word \(index + 1), \(word ?? "")")
                                     : tr("Wort \(index + 1), verdeckt", "Word \(index + 1), hidden"))
                             }
                         }
                     }
-                    .frame(height: CGFloat(min((model.mnemonicWords.count + 2) / 3, 7) * 52) * displayMetrics.scale)
+                    .frame(height: CGFloat(min((wordCount + 2) / 3, 7) * 52) * displayMetrics.scale)
                     .privacySensitive()
                 } else {
                     ScrollView {

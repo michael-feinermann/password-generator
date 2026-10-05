@@ -1,5 +1,7 @@
 import CryptoKit
 import Foundation
+import CommonCrypto
+import Darwin
 
 public enum MnemonicWordCount: Int, CaseIterable, Identifiable, Sendable {
     case twelve = 12
@@ -111,7 +113,8 @@ public struct BIP39: Sendable {
             throw BIP39Error.invalidEntropyLength(entropy.count)
         }
 
-        let checksum = [UInt8](SHA256.hash(data: Data(entropy)))
+        var checksum = Self.checksum(entropy)
+        defer { Self.clear(&checksum) }
         let totalBitCount = wordCount.entropyBitCount + wordCount.checksumBitCount
         var result: [String] = []
         result.reserveCapacity(wordCount.rawValue)
@@ -140,11 +143,7 @@ public struct BIP39: Sendable {
     public func validate(_ mnemonicWords: [String]) -> Bool {
         do {
             var recoveredEntropy = try entropy(from: mnemonicWords)
-            defer {
-                _ = recoveredEntropy.withUnsafeMutableBytes {
-                    $0.initializeMemory(as: UInt8.self, repeating: 0)
-                }
-            }
+            defer { Self.clear(&recoveredEntropy) }
             return true
         } catch {
             return false
@@ -158,6 +157,7 @@ public struct BIP39: Sendable {
 
         var allBits: [UInt8] = []
         allBits.reserveCapacity(mnemonicWords.count * 11)
+        defer { Self.clear(&allBits) }
         for word in mnemonicWords {
             guard let index = indexByWord[word] else { throw BIP39Error.unknownWord(word) }
             for shift in stride(from: 10, through: 0, by: -1) {
@@ -166,17 +166,53 @@ public struct BIP39: Sendable {
         }
 
         var entropy = [UInt8](repeating: 0, count: wordCount.entropyByteCount)
+        var returnsEntropy = false
+        defer {
+            // On success ownership passes to the caller; error paths retain no entropy.
+            if !returnsEntropy { Self.clear(&entropy) }
+        }
         for bitIndex in 0..<wordCount.entropyBitCount where allBits[bitIndex] == 1 {
             entropy[bitIndex / 8] |= UInt8(1 << (7 - (bitIndex % 8)))
         }
 
-        let digest = [UInt8](SHA256.hash(data: Data(entropy)))
+        var digest = Self.checksum(entropy)
+        defer { Self.clear(&digest) }
         for checksumIndex in 0..<wordCount.checksumBitCount {
             let supplied = allBits[wordCount.entropyBitCount + checksumIndex]
             let expected = UInt8(Self.bit(at: checksumIndex, in: digest))
             guard supplied == expected else { throw BIP39Error.invalidChecksum }
         }
+        returnsEntropy = true
         return entropy
+    }
+
+    /// Hash the caller's bytes directly, without creating a second Data allocation.
+    /// Only the digest is returned; the caller remains responsible for its input.
+    private static func checksum(_ entropy: [UInt8]) -> [UInt8] {
+        var context = CC_SHA256_CTX()
+        defer {
+            withUnsafeMutableBytes(of: &context) { buffer in
+                if let base = buffer.baseAddress {
+                    _ = memset_s(base, buffer.count, 0, buffer.count)
+                }
+            }
+        }
+        var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        _ = CC_SHA256_Init(&context)
+        entropy.withUnsafeBytes { input in
+            _ = CC_SHA256_Update(&context, input.baseAddress, CC_LONG(input.count))
+        }
+        digest.withUnsafeMutableBytes { output in
+            _ = CC_SHA256_Final(output.bindMemory(to: UInt8.self).baseAddress!, &context)
+        }
+        return digest
+    }
+
+    private static func clear(_ bytes: inout [UInt8]) {
+        bytes.withUnsafeMutableBytes { buffer in
+            guard let base = buffer.baseAddress, !buffer.isEmpty else { return }
+            _ = memset_s(base, buffer.count, 0, buffer.count)
+        }
     }
 
     private static func bit(at bitIndex: Int, in bytes: [UInt8]) -> Int {

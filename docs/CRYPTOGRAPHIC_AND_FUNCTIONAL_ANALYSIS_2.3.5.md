@@ -1,6 +1,6 @@
-# Technische Analyse von Password Generator 2.3.6
+# Technische Analyse von Password Generator 2.3.5
 
-Stand: 5. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.3.6, Build 13. Den vorigen Release beschreibt [die Analyse zu 2.3.5](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.3.5.md).
+Stand: 4. Oktober 2026. Diese Datei beschreibt die Ableitung und Verifikation für Version 2.3.5, Build 12. Den vorigen Release beschreibt [die Analyse zu 2.3.4](CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS_2.3.4.md).
 
 ## Datenfluss
 
@@ -147,11 +147,11 @@ BIP39 ohne Trenner ist nicht immer eindeutig rekonstruierbar: `leg alarm` und `l
 
 Die App benötigt vor Generierung, Anzeige und Kopieren eine gültige laufende Code-Signatur, Hardened Runtime, minimale Sandbox und keinen erkannten Debugger. POSIX-Core-Dumps sind deaktiviert. Die Ausgabe bleibt zunächst verdeckt; Anzeigen erfordert Bestätigung und wird bestmöglich nach 60 Sekunden beziehungsweise bei Kontextwechsel beendet. Die auf ausdrücklichen Klick befüllte Zwischenablage verwendet `currentHostOnly` und wird bestmöglich nach etwa 45 Sekunden geleert, wenn der Inhalt unverändert ist.
 
-Mauspool, Masterkey und gespeichertes Passwort verwenden eigene, seitenausgerichtete mmap-Bereiche mit bestmöglichem mlock. Der Masterkey wird unmittelbar nach Initialisierung der fünf Generatoren überschrieben, die abgeleiteten Zustände vor Veröffentlichung des Passworts bereinigt. Verwerfen beziehungsweise reguläres Beenden überschreiben kontrollierte Puffer mit memset_s und geben CommonCrypto-Kontexte frei. Alle Wrapperkopien des gespeicherten Ergebnisses werden gemeinsam invalidiert. Swift-Kopien, Register und Betriebssystempuffer verhindern eine garantierte vollständige Löschung. Screenshots, externe Kameras oder ein kompromittiertes Betriebssystem lassen sich damit nicht zuverlässig abwehren. Die App speichert erzeugte Passwörter nicht in Dateien oder Preferences und besitzt keine Netzwerkberechtigung. Von den Generatoreinstellungen wird ausschließlich die letzte Sprachwahl dauerhaft gespeichert. Die vorhandene macOS-Fensterspeicherung bleibt erlaubt und unverändert. Generatorformat, Länge, Trenner, Hex-Schreibweise, Sicherheitsbestätigung, Mauspool, erzeugte Ausgabe und Fehlermeldungen bleiben Sitzungszustand und werden beim Neustart nicht wiederhergestellt.
+Mauspool und temporäre Kryptopuffer werden beim Verwerfen bestmöglich überschrieben, CommonCrypto-Kontexte freigegeben. Swift-Kopien, Register und Betriebssystempuffer verhindern eine garantierte vollständige Löschung. Screenshots, externe Kameras oder ein kompromittiertes Betriebssystem lassen sich damit nicht zuverlässig abwehren. Die App speichert erzeugte Passwörter nicht in Dateien oder Preferences und besitzt keine Netzwerkberechtigung.
 
 ## Verifikation
 
-Version 2.3.6 setzt Englisch als Standardsprache und an die erste Stelle der Sprachauswahl, Deutsch an die zweite Stelle. Genau ein App-Präferenzfeld `preferredLanguage` speichert die letzte Sprachwahl als `en` oder `de`. Fehlende beziehungsweise ungültige Werte führen ohne Schreibzugriff beim Start zu Englisch. Vier isolierte Persistenztests prüfen den frischen Start, beide Sprachwechsel über Modellneustarts, ungültige Speicherwerte sowie den Neustart nach Generierung mit ausschließlich erhaltener Sprache und zurückgesetztem Sitzungszustand. Bestehende Modelltests verwenden eigene In-Memory-Sprachstores; die Persistenztests eigene temporäre UserDefaults-Suites. Die tatsächliche App-Präferenz wird durch Tests nicht verändert. Am 5. Oktober 2026 bestanden jeweils 120 XCTest-Tests im Debug- und Release-Build sowie im Release-Build mit AddressSanitizer: 83 Core-Tests und 37 App-Tests. Es gab keine Testfehler, Compilerwarnungen oder gemeldeten AddressSanitizer-Speicherfehler. Die 48 Release-Gate-Prüfungen bestehen ebenfalls, davon acht Positiv- und 40 Negativfälle. Rechenraten, Schwellen, kryptografische Ableitung und Passwortformate bleiben unverändert. Der interne Sicherheits-Audit verbessert die Speicherhaltung und Releaseprüfung; [Befunde und Grenzen](SECURITY_AUDIT_2.3.6.md).
+Version 2.3.5 erweitert ausschließlich den deutschen und englischen Erklärungstext sowie Quellenlinks. Alle 103 XCTest-Tests im Release-Build bestanden am 4. Oktober 2026 ohne Fehler oder Compilerwarnungen: 74 Core-Tests und 29 App-Tests. Verwendet wurde `swift test -c release -Xswiftc -warnings-as-errors`. Rechenraten, Schwellen, Kryptografie, Passwortformate und Layout bleiben unverändert.
 
 Für die vorherige Version 2.3.4 bestanden am 4. Oktober 2026 jeweils 103 XCTest-Tests im Debug- und Release-Build: 74 Core-Tests und 29 App-Tests, ohne Fehler oder Compilerwarnungen. Verwendet wurden `swift test -Xswiftc -warnings-as-errors` und `swift test -c release -Xswiftc -warnings-as-errors`. Die weiterhin vorhandenen Tests umfassen die vollständige kryptografische Ableitung, die Passwortformate, Fehlerverhalten und exakte Schwellen. Der SHA256-Wert der unveränderten Pipeline-Fixtures lautet `50541a981bb2fca83307cbfb86aec2643533a2675efc21301630e0d3afdfee0b`.
 
@@ -165,27 +165,37 @@ Die vollständigen Referenzen werden mit der unveränderten offiziellen Skein-C-
 
 Die AES-Prüfungen enthalten den AES-256-CTR-Testvektor aus NIST SP 800-38A, getrennte und zusammenhängende Reads, Zählerüberträge, das Ende des 128-Bit-Zählerraums, Clear und Fehlerbehandlung. Die vollständige Ableitung wird über die Blockgrenzen von AES, Skein-XOF und SHAKE hinweg verglichen. Alle fünf Ausgabeformate sowie ihre gültigen und ungültigen Grenzlängen und Exportoptionen werden geprüft.
 
-Das Release-ZIP erhält weiterhin separate SHA256-, SHA3-512- und Skein-1024-1024-Prüfsummendateien und ein Integritätsmanifest. `Scripts/verify-release.sh` vergleicht jedes Verfahren mit ZIP, Sidecar und Manifest. Python kontrolliert beide SHA-Werte unabhängig; `Scripts/skein-reference-checksum.sh` verwendet die offizielle C-Referenz. Das entpackte App-Bundle wird zusätzlich auf Code-Signatur und minimale Sandbox geprüft. Standardmäßig sind der notarisierte Modus, das erwartete Developer-ID-Team, Produkt-ID, Version, Build, Hardened Runtime, Ticket und Gatekeeper zwingende Releasebedingungen. Lokale Pakete benötigen ausdrücklich ALLOW_UNNOTARIZED_DEVELOPMENT=1. Archivpfade werden vor Extraktion geprüft. Hashwerte allein beweisen keine Herkunft.
+Das Release-ZIP erhält weiterhin separate SHA256-, SHA3-512- und Skein-1024-1024-Prüfsummendateien und ein Integritätsmanifest. `Scripts/verify-release.sh` vergleicht jedes Verfahren mit ZIP, Sidecar und Manifest. Python kontrolliert beide SHA-Werte unabhängig; `Scripts/skein-reference-checksum.sh` verwendet die offizielle C-Referenz. Das entpackte App-Bundle wird zusätzlich auf Code-Signatur und minimale Sandbox geprüft. Für notarisierte Pakete folgen Ticket- und Gatekeeper-Prüfung. Hashwerte allein beweisen keine Herkunft.
 
 ## Release-Nachweis
 
-Version 2.3.6, Build 13, wurde am 5. Oktober 2026 mit Developer ID Application für Team 2T6K9PGS55 signiert und über Xcode Direct Distribution notarisiert. Vorgangs-ID: `72D72EB3-A17C-478A-BAA1-08B0104F80FF`. Der Xcode Organizer meldet „Ready to distribute“. Das exportierte Bundle besitzt ein gültiges angeheftetes Ticket und wird von Gatekeeper als „Notarized Developer ID“ akzeptiert.
+Version 2.3.5, Build 12, wurde am 4. Oktober 2026 mit Developer ID signiert und über Xcodes Direct Distribution notarisiert. Der finale ZIP-Export wurde ohne erneuten Build oder erneute Signierung aus der freigegebenen Xcode-Fassung erstellt. Ressourcen und ausführbarer Code nach Entfernung der jeweiligen Signatur stimmen mit dem getesteten Paket überein.
 
-Der von seiner Signatur normalisierte Mach-O-Code stimmt bytegenau mit dem getesteten Paket überein; SHA256: `a55d2d57fc8f611882bd8be532b36a7b9e861c307db841107910a1e76e9071eb`. Die übrigen Ressourcen stimmen ebenfalls bytegenau überein. Die finale ZIP wurde aus diesem Export erzeugt, ohne Neubuild oder erneutes Signieren. CDHash der installierten App: `0d7996109aabfbab9290c20e3694e475e27a3645`.
+| Nachweis | Ergebnis |
+|---|---|
+| Xcode-Notarisierung | freigegeben; Submission-ID `4C2287FC-04D2-48D2-B737-A64720BEDBA9` |
+| CDHash des notarisierten Exports | `6cf16db5ec26a0bc29493e4c6dd66b18f2493969` |
+| SHA256 des um die Signatur bereinigten ausführbaren Codes | `69a8f5d5c153da676d0744ea3bfd3b1cdc562d6969320ca2ecb5d23ddc52ab2d` |
+| Code-Signatur | `codesign --verify --deep --strict` bestanden |
+| Ticket | `xcrun stapler validate` bestanden |
+| Gatekeeper | `spctl --assess --type execute` akzeptiert, Quelle `Notarized Developer ID` |
+| Installation | `/Applications/Password Generator 2.3.5.app`; alle Dateien einschließlich Signatur byteidentisch zum Xcode-Export |
 
-Installiert ist `/Applications/Password Generator 2.3.6.app`, bytegleich zum Xcode-Export. Die ältere Installation und ältere Entwicklungs-Appbundles wurden nach Verifikation wiederherstellbar in den Papierkorb verschoben. Xcode-Archive und Quellhistorie bleiben erhalten.
-
-Die native Accessibility-Prüfung bestätigt Englisch als frischen Start sowie Deutsch und Englisch nach regulärem Beenden und Neustart. Geänderte Hex-Länge 37, Großschreibung, EFF-Länge und beide Trennzeichen werden nach dem Neustart nicht wiederhergestellt. Stattdessen erscheinen BIP39 mit 24 Wörtern und Leerzeichen, EFF mit 20 Wörtern und Bindestrich sowie Hex mit 64 Kleinbuchstaben. Mauspool und Sicherheitsbestätigung beginnen frisch; bestehendes Fensterverhalten blieb unverändert. Geheime generierte Ausgaben wurden bei dieser UI-Prüfung nicht erhoben.
-
-Das finale Paket besteht `Scripts/verify-release.sh`: alle drei Hashwerte und unabhängigen Referenzen, sichere Archivstruktur, gültige Developer-ID-Signatur des erwarteten Teams, Produkt-ID/Version/Build, Hardened Runtime, minimale Sandbox, Stapling und Gatekeeper. Öffentliche Assets werden nach Veröffentlichung erneut heruntergeladen, byteweise verglichen und mit demselben Skript geprüft.
-
-Finale ZIP-Hashwerte:
+`Scripts/verify-release.sh` prüfte das finale ZIP erfolgreich einschließlich ZIP-Struktur, aller drei Sidecars, Integritätsmanifest, unabhängiger Python-Implementierungen für SHA256/SHA3-512, offizieller Skein-C-Referenz, entpackter Code-Signatur, Sandbox, Ticket und Gatekeeper.
 
 ```text
-SHA256: a0f44f9e34e2eaafefaa87698a3daa63195c543ccb472634e5be180ce41596bc
-SHA3-512: 63facefe43a3c863bd3ac695250b198e23f5212f8b76fb8f04b22826e1342470704fd5ed9773c8893ca0a082cb000e7b760e7a8aa54dea6203cb0b82af675783
-Skein-1024-1024: f2242a9584d28dedaffc1a61340ecea1e60378497cb48e13f22aa6de81d26e4dab6c1451ee186e5f4fea3f1b8ece675ab1a237b560d103bbaef85a18ee7d22fde793ab1ef01368ebb36ae86e05054c9912a2ea5e5a8ad2ef383646a59413a903ae804c540a0c45e1753d2ea076b226a1cfd8d1f541cd106cf1f083cc3e50945f
+Password.Generator-2.3.5.zip
+SHA256:
+69b7fb49e5bf79b84e31ec1b7caefa5471396ef1fa0fcaf43db923345e9a42e8
+SHA3-512:
+2a018698fbc03f17506756f08a651da9d9e00404378fe86393934b83f7cf8f8b4be8d06828d74e47881e81fe0669a4a084acf7c8bdacf2440d639bb96e235cf8
+Skein-1024-1024:
+f24e395693d2f042c5483907fe3d51f7ef09543fe21701867fee662d7797d0e2563b7519587243f24053a156376e4081fa730fd3596ca64b9518d1b8001bfb8b781effb52cc3ac4a5e5a2c7dd9529c01a8a3effec1d4ebb0183577510c6bff89da2b06d414386ed150d9243cf505596b060dfe0f0d9381963d8e4ec87616e751
 ```
+
+Die installierte und notarisierte Fassung wurde geöffnet. Das deutsche und englische Infofenster sowie der neue Quellenlink wurden per Accessibility geprüft; der Infoinhalt ist scrollbar. Die Accessibility-Ausgabe kürzt längere Textwerte, weshalb zusätzlich beide neuen Erklärungstexte im installierten signierten Programm geprüft wurden. Dies ist keine pixelbasierte Designkontrolle. Die bisherigen Mindestschriftgrößen und das Layout sind unverändert.
+
+Die vorherige Installation von 2.3.4 sowie ihre App-Kopien unter `build` wurden aus LaunchServices abgemeldet und in wiederherstellbare Papierkorbordner verschoben. Aktuell ist ausschließlich Version 2.3.5 installiert. Xcode-Archive und Quellhistorie bleiben als Nachweise erhalten. Das aktuelle öffentliche Paket ist unter [Release v2.3.5](https://github.com/michael-feinermann/password-generator/releases/tag/v2.3.5) verfügbar.
 
 ## Quellen
 

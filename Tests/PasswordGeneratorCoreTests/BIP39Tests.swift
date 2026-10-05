@@ -50,6 +50,21 @@ final class BIP39Tests: XCTestCase {
         XCTAssertThrowsError(try bip39.entropy(from: words)) { error in
             XCTAssertEqual(error as? BIP39Error, .invalidChecksum)
         }
+        XCTAssertFalse(bip39.validate(words))
+    }
+
+    func testUnknownFinalWordFailsAfterDecodingThePrefixWithoutChangingInput() throws {
+        let entropy = Array(UInt8(0)...UInt8(31))
+        let validWords = try bip39.mnemonic(from: entropy)
+        var invalidWords = validWords
+        invalidWords[23] = "not-in-the-word-list"
+        XCTAssertThrowsError(try bip39.entropy(from: invalidWords)) {
+            XCTAssertEqual($0 as? BIP39Error, .unknownWord("not-in-the-word-list"))
+        }
+        XCTAssertFalse(bip39.validate(invalidWords))
+        XCTAssertEqual(invalidWords[23], "not-in-the-word-list")
+        XCTAssertTrue(bip39.validate(validWords))
+        XCTAssertEqual(try bip39.entropy(from: validWords), entropy)
     }
 
     func testAllApplicableOfficialTrezorVectors() throws {

@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import Darwin
 
 public enum EntropyError: LocalizedError, Equatable {
     case insufficientMouseEvents(actual: Int, required: Int)
@@ -28,13 +29,26 @@ public enum SecureRandom {
         }
         if count == 0 { return [] }
         var result = [UInt8](repeating: 0, count: count)
-        let status = SecRandomCopyBytes(kSecRandomDefault, count, &result)
-        guard status == errSecSuccess else {
-            _ = result.withUnsafeMutableBytes {
-                $0.initializeMemory(as: UInt8.self, repeating: 0)
-            }
-            throw EntropyError.secureRandomFailure(status)
+        try fill(&result) { buffer in
+            SecRandomCopyBytes(kSecRandomDefault, buffer.count, buffer.baseAddress!)
         }
         return result
+    }
+
+    /// Erases even a partially filled buffer before reporting a provider failure.
+    /// The caller owns this buffer; this does not erase copies made by a provider.
+    static func fill(
+        _ bytes: inout [UInt8],
+        using provider: (UnsafeMutableRawBufferPointer) -> OSStatus
+    ) throws {
+        try bytes.withUnsafeMutableBytes { buffer in
+            let status = provider(buffer)
+            guard status == errSecSuccess else {
+                if let base = buffer.baseAddress, !buffer.isEmpty {
+                    _ = memset_s(base, buffer.count, 0, buffer.count)
+                }
+                throw EntropyError.secureRandomFailure(status)
+            }
+        }
     }
 }

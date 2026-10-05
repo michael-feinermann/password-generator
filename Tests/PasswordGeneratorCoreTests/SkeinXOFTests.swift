@@ -69,6 +69,27 @@ final class SkeinXOFTests: XCTestCase {
         XCTAssertEqual(copy.read(count: 258), Array(expected[127..<385]))
     }
 
+    func testConsumedBytesAndClearedStateAreOverwrittenWhileStorageIsAlive() throws {
+        let vector = try XCTUnwrap(loadVectors().first)
+        var stream = Skein1024XOFStream(vector.messageBytes)
+        XCTAssertEqual(stream.read(count: 7), Array(vector.outputBytes.prefix(7)))
+        let consumedBlock = try XCTUnwrap(
+            Mirror(reflecting: stream).children.first { $0.label == "block" }?.value as? [UInt8]
+        )
+        XCTAssertEqual(Array(consumedBlock.prefix(7)), [UInt8](repeating: 0, count: 7))
+        XCTAssertEqual(Array(consumedBlock.dropFirst(7)), Array(vector.outputBytes[7..<128]))
+
+        stream.clear()
+        for label in ["chain", "block"] {
+            let field = try XCTUnwrap(Mirror(reflecting: stream).children.first { $0.label == label })
+            if let words = field.value as? [UInt64] {
+                XCTAssertEqual(words, [UInt64](repeating: 0, count: 16))
+            } else {
+                XCTAssertEqual(field.value as? [UInt8], [UInt8](repeating: 0, count: 128))
+            }
+        }
+    }
+
     private struct Vector: Decodable {
         let label: String
         let message: String

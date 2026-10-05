@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "PasswordGenerator",
-    defaultLocalization: "de",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],

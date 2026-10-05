@@ -1,5 +1,5 @@
 import Foundation
-import CryptoKit
+import CommonCrypto
 import Darwin
 
 public enum EntropyPoolError: LocalizedError, Equatable {
@@ -30,9 +30,11 @@ public final class EntropyPool {
     public static let requiredMouseEventCount = capacity
     public private(set) var shuffleCount = 0
     public private(set) var absorbedEventCount: UInt64 = 0
-    public var eventCount: Int { records.count }
+    public var eventCount: Int { order.count }
 
-    private var records: [[UInt8]] = []
+    private static let recordByteCount = 89
+    // Fixed owned allocation avoids Array growth and copy-on-write event copies.
+    private let records = SensitiveBytes(count: capacity * recordByteCount)
     private var order: [Int] = []
     private var writeOffset = 0
     private var isCleared = false
@@ -40,7 +42,6 @@ public final class EntropyPool {
 
     public init(randomProvider: @escaping (Int) throws -> [UInt8] = SecureRandom.bytes) throws {
         self.randomProvider = randomProvider
-        records.reserveCapacity(Self.capacity)
         order.reserveCapacity(Self.capacity)
         // The startup shuffle is a no-op for an empty pool. No hash is computed.
         try shuffle()
@@ -49,30 +50,30 @@ public final class EntropyPool {
     /// Capture the complete canonical event. No hashing occurs during collection.
     public func absorb(_ record: MouseEntropyRecord) {
         guard !isCleared else { return }
-        var encoded: [UInt8] = [1]
-        func append(_ value: UInt64) {
-            for shift in stride(from: 0, to: 64, by: 8) {
-                encoded.append(UInt8(truncatingIfNeeded: value >> shift))
+        records.withUnsafeMutableBytes { bytes in
+            var offset = writeOffset * Self.recordByteCount
+            // Replace an old event in place; no secret event array is released uncleaned.
+            bytes[offset] = 1
+            offset += 1
+            func append(_ value: UInt64) {
+                for shift in stride(from: 0, to: 64, by: 8) {
+                    bytes[offset] = UInt8(truncatingIfNeeded: value >> shift)
+                    offset += 1
+                }
             }
+            append(absorbedEventCount)
+            append(record.uptimeNanoseconds)
+            append(record.eventTimestamp.bitPattern)
+            append(record.x.bitPattern)
+            append(record.y.bitPattern)
+            append(record.deltaX.bitPattern)
+            append(record.deltaY.bitPattern)
+            append(record.canvasWidth.bitPattern)
+            append(record.canvasHeight.bitPattern)
+            append(record.modifierFlags)
+            append(record.pressedMouseButtons)
         }
-        append(absorbedEventCount)
-        append(record.uptimeNanoseconds)
-        append(record.eventTimestamp.bitPattern)
-        append(record.x.bitPattern)
-        append(record.y.bitPattern)
-        append(record.deltaX.bitPattern)
-        append(record.deltaY.bitPattern)
-        append(record.canvasWidth.bitPattern)
-        append(record.canvasHeight.bitPattern)
-        append(record.modifierFlags)
-        append(record.pressedMouseButtons)
-        if records.count < Self.capacity {
-            order.append(records.count)
-            records.append(encoded)
-        } else {
-            wipePoolBytes(&records[writeOffset])
-            records[writeOffset] = encoded
-        }
+        if order.count < Self.capacity { order.append(order.count) }
         writeOffset = (writeOffset + 1) % Self.capacity
         absorbedEventCount &+= 1
     }
@@ -100,32 +101,60 @@ public final class EntropyPool {
         }
         try shuffle()
         var serializedPool: [UInt8] = []
-        serializedPool.reserveCapacity(eventCount * 89)
-        for index in order { serializedPool.append(contentsOf: records[index]) }
+        serializedPool.reserveCapacity(eventCount * Self.recordByteCount)
+        records.withUnsafeBytes { bytes in
+            for index in order {
+                let offset = index * Self.recordByteCount
+                serializedPool.append(contentsOf: bytes[offset..<(offset + Self.recordByteCount)])
+            }
+        }
         var skeinDigest: [UInt8] = []
         var sha3Digest: [UInt8] = []
         var sha512Digest: [UInt8] = []
-        var master: [UInt8] = []
+        let master = SensitiveBytes(count: 256)
         var operatingSystemBytes: [UInt8] = []
         defer {
             wipePoolBytes(&serializedPool)
             wipePoolBytes(&skeinDigest)
             wipePoolBytes(&sha3Digest)
             wipePoolBytes(&sha512Digest)
-            wipePoolBytes(&master)
+            master.clear()
             wipePoolBytes(&operatingSystemBytes)
         }
         skeinDigest = Skein.hash1024(serializedPool)
         sha3Digest = SHA3.hash512(serializedPool)
-        sha512Digest = Array(SHA512.hash(data: Data(serializedPool)))
-        master = skeinDigest + sha3Digest + sha512Digest
+        sha512Digest = [UInt8](repeating: 0, count: Int(CC_SHA512_DIGEST_LENGTH))
+        // Direct hashing avoids an additional immutable Data copy of the entire pool.
+        var sha512Context = CC_SHA512_CTX()
+        defer {
+            withUnsafeMutableBytes(of: &sha512Context) { bytes in
+                _ = memset_s(bytes.baseAddress, bytes.count, 0, bytes.count)
+            }
+        }
+        _ = CC_SHA512_Init(&sha512Context)
+        serializedPool.withUnsafeBytes { input in
+            _ = CC_SHA512_Update(&sha512Context, input.baseAddress, CC_LONG(input.count))
+            sha512Digest.withUnsafeMutableBufferPointer { output in
+                _ = CC_SHA512_Final(output.baseAddress, &sha512Context)
+            }
+        }
+        master.withUnsafeMutableBytes { bytes in
+            for index in 0..<128 { bytes[index] = skeinDigest[index] }
+            for index in 0..<64 { bytes[128 + index] = sha3Digest[index]; bytes[192 + index] = sha512Digest[index] }
+        }
         operatingSystemBytes = try checkedRandomBytes(count: 256, provider: randomProvider)
-        for index in master.indices { master[index] ^= operatingSystemBytes[index] }
+        master.withUnsafeMutableBytes { bytes in
+            for index in bytes.indices { bytes[index] ^= operatingSystemBytes[index] }
+        }
         wipePoolBytes(&operatingSystemBytes)
-        try Self.shuffleDigestBits(&master, randomProvider: randomProvider)
+        try master.withUnsafeMutableBytes { bytes in
+            try Self.shuffleDigestBits(bytes, randomProvider: randomProvider)
+        }
         // A separate fresh mask follows the permutation; never reuse the first mask.
         operatingSystemBytes = try checkedRandomBytes(count: 256, provider: randomProvider)
-        for index in master.indices { master[index] ^= operatingSystemBytes[index] }
+        master.withUnsafeMutableBytes { bytes in
+            for index in bytes.indices { bytes[index] ^= operatingSystemBytes[index] }
+        }
         return try PasswordByteStream(master: master, randomProvider: randomProvider)
     }
 
@@ -134,6 +163,15 @@ public final class EntropyPool {
     /// fresh, buffered OS randomness and unbiased descending Fisher-Yates swaps.
     static func shuffleDigestBits(
         _ bytes: inout [UInt8],
+        randomProvider: @escaping (Int) throws -> [UInt8]
+    ) throws {
+        try bytes.withUnsafeMutableBytes { buffer in
+            try shuffleDigestBits(buffer, randomProvider: randomProvider)
+        }
+    }
+
+    private static func shuffleDigestBits(
+        _ bytes: UnsafeMutableRawBufferPointer,
         randomProvider: @escaping (Int) throws -> [UInt8]
     ) throws {
         precondition(bytes.count == 256)
@@ -151,8 +189,8 @@ public final class EntropyPool {
     }
 
     public func clear() {
-        for index in records.indices { wipePoolBytes(&records[index]) }
-        records.removeAll(keepingCapacity: false)
+        records.clear()
+        wipeNumericArray(&order)
         order.removeAll(keepingCapacity: false)
         writeOffset = 0
         absorbedEventCount = 0
@@ -160,7 +198,7 @@ public final class EntropyPool {
     }
 
     deinit {
-        for index in records.indices { wipePoolBytes(&records[index]) }
+        records.clear()
     }
 }
 
@@ -174,20 +212,31 @@ public final class PasswordByteStream {
     private let randomProvider: (Int) throws -> [UInt8]
     private var isCleared = false
 
-    init(master: [UInt8], randomProvider: @escaping (Int) throws -> [UInt8]) throws {
+    convenience init(master: [UInt8], randomProvider: @escaping (Int) throws -> [UInt8]) throws {
+        let ownedMaster = SensitiveBytes(count: master.count)
+        ownedMaster.withUnsafeMutableBytes { bytes in
+            for index in master.indices { bytes[index] = master[index] }
+        }
+        defer { ownedMaster.clear() }
+        try self.init(master: ownedMaster, randomProvider: randomProvider)
+    }
+
+    init(master: SensitiveBytes, randomProvider: @escaping (Int) throws -> [UInt8]) throws {
         precondition(master.count == 256)
+        // No raw master survives initialization, including a failing AES initialization.
+        defer { master.clear() }
         self.randomProvider = randomProvider
-        var skeinFragment = Array(master[0..<128])
+        var skeinFragment = master.withUnsafeBytes { Array($0[0..<128]) }
         skeinStream = Skein1024XOFStream(skeinFragment)
         wipePoolBytes(&skeinFragment)
         for offset in stride(from: 128, to: 192, by: 32) {
-            var fragment = Array(master[offset..<(offset + 32)])
+            var fragment = master.withUnsafeBytes { Array($0[offset..<(offset + 32)]) }
             shakeStreams.append(SHAKE256Stream(fragment))
             wipePoolBytes(&fragment)
         }
         do {
             for offset in stride(from: 192, to: 256, by: 32) {
-                var fragment = Array(master[offset..<(offset + 32)])
+                var fragment = master.withUnsafeBytes { Array($0[offset..<(offset + 32)]) }
                 defer { wipePoolBytes(&fragment) }
                 aesStreams.append(try AES256CTRStream(key: fragment))
             }

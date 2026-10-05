@@ -35,7 +35,9 @@ public enum SHA3 {
     public static func hash512(_ data: Data) -> Data {
         var bytes = Array(data)
         defer { clear(&bytes) }
-        return Data(hash512(bytes))
+        var digest = hash512(bytes)
+        defer { clear(&digest) }
+        return Data(digest)
     }
 
     /// Computes a 64-byte SHA3-512 digest.

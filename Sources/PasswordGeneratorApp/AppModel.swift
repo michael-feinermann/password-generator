@@ -10,7 +10,9 @@ final class AppModel: ObservableObject {
         case generated
     }
 
-    @Published var language: AppLanguage = .german
+    @Published var language: AppLanguage {
+        didSet { languagePreferences.saveLanguage(language) }
+    }
     @Published var selectedMode: GeneratorMode = .bip39 {
         didSet {
             if selectedMode != oldValue {
@@ -45,6 +47,7 @@ final class AppModel: ObservableObject {
     private let randomProvider: (Int) throws -> [UInt8]
     private let pasteboard: NSPasteboard
     private let secureRuntimeCheck: @MainActor () -> SecureRuntimeAssessment
+    private let languagePreferences: any LanguagePreferences
 
     static let mnemonicRevealDurationSeconds = 60
     static let poolShuffleIntervalSeconds = 6
@@ -55,11 +58,14 @@ final class AppModel: ObservableObject {
             SecureRuntimeAssessment.current,
         randomProvider: @escaping (Int) throws -> [UInt8] = SecureRandom.bytes,
         shuffleInterval: Duration = .seconds(poolShuffleIntervalSeconds),
-        pasteboard: NSPasteboard = .general
+        pasteboard: NSPasteboard = .general,
+        languagePreferences: any LanguagePreferences = UserDefaultsLanguagePreferences()
     ) {
         self.secureRuntimeCheck = secureRuntimeCheck
         self.randomProvider = randomProvider
         self.pasteboard = pasteboard
+        self.languagePreferences = languagePreferences
+        _language = Published(initialValue: languagePreferences.loadLanguage())
         runtimeSecurity = secureRuntimeCheck()
         do {
             let implementation = try PasswordGenerator()
@@ -178,30 +184,29 @@ final class AppModel: ObservableObject {
         guard verifySecureRuntime(discardGeneratedSecretOnFailure: false) else { return }
 
         do {
-            // makeStream shuffles immediately before deriving this generation's material.
-            let stream = try entropyPool.makeStream()
-            defer { stream.clear() }
+            let result = try generateAndClearStream(generator: generator, pool: entropyPool, configuration: configuration)
             poolShuffleCount = entropyPool.shuffleCount
-            let result = try generator.generate(
-                configuration: configuration,
-                randomProvider: stream.bytes(count:)
-            )
             if result.mode == .bip39, !generator.bip39.validate(result.components) {
+                result.clear()
                 throw BIP39Error.invalidChecksum
             }
             generatedPassword = result
             isMnemonicVisible = false
             phase = .generated
         } catch {
+            poolShuffleCount = entropyPool.shuffleCount
             errorMessage = .from(error)
         }
     }
 
     func copyMnemonic() {
-        guard phase == .generated, isMnemonicVisible, !generatedText.isEmpty else { return }
+        guard phase == .generated, !isTerminated, isMnemonicVisible,
+              let result = generatedPassword, !result.isCleared, result.componentCount > 0 else { return }
         guard verifySecureRuntime(discardGeneratedSecretOnFailure: true) else { return }
+        let text = result.exportText(wordSeparator: wordSeparator, uppercaseHex: uppercaseHex)
+        guard !text.isEmpty else { return }
         _ = pasteboard.prepareForNewContents(with: [.currentHostOnly])
-        guard pasteboard.setString(generatedText, forType: .string) else {
+        guard pasteboard.setString(text, forType: .string) else {
             errorMessage = .clipboardFailed
             return
         }
@@ -227,7 +232,8 @@ final class AppModel: ObservableObject {
     }
 
     func revealMnemonic() {
-        guard phase == .generated, !generatedText.isEmpty else { return }
+        guard phase == .generated, !isTerminated,
+              let result = generatedPassword, !result.isCleared, result.componentCount > 0 else { return }
         guard verifySecureRuntime(discardGeneratedSecretOnFailure: true) else { return }
         isMnemonicVisible = true
         mnemonicConcealTask?.cancel()
@@ -240,11 +246,7 @@ final class AppModel: ObservableObject {
 
     func reset() {
         discardSecret()
-        entropyPool?.clear()
-        entropyPool = nil
-        isPoolActive = false
-        mouseEventCount = 0
-        poolShuffleCount = 0
+        clearPool()
         userConfirmedSecureEnvironment = false
         phase = .collecting
         guard !isTerminated else { return }
@@ -260,15 +262,31 @@ final class AppModel: ObservableObject {
         poolShuffleTask?.cancel()
         poolShuffleTask = nil
         discardSecret()
-        entropyPool?.clear()
-        entropyPool = nil
-        isPoolActive = false
+        clearPool()
+        generator = nil
         userConfirmedSecureEnvironment = false
-        mouseEventCount = 0
         phase = .collecting
     }
 
     func dismissError() { errorMessage = nil }
+
+    /// Wipe derived stream states before publishing an output or returning an error.
+    /// The pool owns and clears the temporary masterkey during makeStream().
+    private func generateAndClearStream(
+        generator: PasswordGenerator, pool: EntropyPool, configuration: GeneratorConfiguration
+    ) throws -> GeneratedPassword {
+        let stream = try pool.makeStream()
+        defer { stream.clear() }
+        return try generator.generate(configuration: configuration, randomProvider: stream.bytes(count:))
+    }
+
+    private func clearPool() {
+        entropyPool?.clear()
+        entropyPool = nil
+        isPoolActive = false
+        mouseEventCount = 0
+        poolShuffleCount = 0
+    }
 
     private func initializePool() throws {
         // EntropyPool owns its initial shuffle; later shuffles use macOS random bytes.
@@ -289,11 +307,14 @@ final class AppModel: ObservableObject {
     }
 
     private func discardSecret() {
-        clearClipboardIfUnchanged()
         clipboardClearTask?.cancel()
         clipboardClearTask = nil
-        concealMnemonic()
+        // Invalidate shared secure storage before publishing removal to observers.
+        // Previously materialized Swift/UI/pasteboard strings remain outside this buffer.
+        generatedPassword?.clear()
         generatedPassword = nil
+        concealMnemonic()
+        clearClipboardIfUnchanged()
         isClipboardClearScheduled = false
     }
 

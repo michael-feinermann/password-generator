@@ -190,10 +190,14 @@ public struct Skein1024XOFStream {
                 position = 0
             }
             let copied = min(block.count - position, count - outputOffset)
-            output.replaceSubrange(
-                outputOffset..<(outputOffset + copied),
-                with: block[position..<(position + copied)]
-            )
+            for index in 0..<copied {
+                output[outputOffset + index] = block[position + index]
+            }
+            // Already returned bytes are no longer needed by this stream.
+            block.withUnsafeMutableBytes { buffer in
+                guard let base = buffer.baseAddress else { return }
+                _ = memset_s(base.advanced(by: position), buffer.count - position, 0, copied)
+            }
             position += copied
             outputOffset += copied
         }

@@ -38,6 +38,24 @@ final class SHA3Tests: XCTestCase {
         }
     }
 
+    func testSHAKEClearOverwritesOwnedStateAndPreservesExplicitValueCopies() throws {
+        var stream = SHAKE256Stream(Array(UInt8(0)...UInt8(31)))
+        _ = stream.read(count: 137)
+        var independentCopy = stream
+        defer { independentCopy.clear() }
+        stream.clear()
+        stream.clear()
+        let state = try XCTUnwrap(
+            Mirror(reflecting: stream).children.first { $0.label == "state" }?.value as? [UInt64]
+        )
+        XCTAssertEqual(state, [UInt64](repeating: 0, count: 25))
+        // Public value semantics are retained: clearing one value cannot erase another.
+        let copiedState = try XCTUnwrap(
+            Mirror(reflecting: independentCopy).children.first { $0.label == "state" }?.value as? [UInt64]
+        )
+        XCTAssertNotEqual(copiedState, state)
+    }
+
     private func hex(_ data: Data) -> String {
         data.map { String(format: "%02x", $0) }.joined()
     }

@@ -94,6 +94,12 @@ final class AESCTRTests: XCTestCase {
         XCTAssertEqual(try stream.read(count: 1).count, 1)
         stream.clear()
         stream.clear()
+        for label in ["counter", "block"] {
+            let bytes = try XCTUnwrap(
+                Mirror(reflecting: stream).children.first { $0.label == label }?.value as? [UInt8]
+            )
+            XCTAssertEqual(bytes, [UInt8](repeating: 0, count: 16))
+        }
         for count in [0, 1, 16] {
             XCTAssertThrowsError(try stream.read(count: count)) {
                 XCTAssertEqual($0 as? AES256CTRStreamError, .cleared)

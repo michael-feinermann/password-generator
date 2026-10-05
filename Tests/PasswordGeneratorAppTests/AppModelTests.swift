@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import XCTest
 import PasswordGeneratorCore
 @testable import PasswordGeneratorApp
@@ -25,7 +26,7 @@ final class AppModelTests: XCTestCase {
     }
 
     func testLanguageSwitchKeepsMouseSessionAndLocalizesMessages() {
-        let model = AppModel()
+        let model = createModel()
         defer { model.prepareForTermination() }
         collectMinimum(on: model)
         model.record(sample(index: AppModel.requiredMouseEventCount))
@@ -73,7 +74,7 @@ final class AppModelTests: XCTestCase {
     }
 
     func testUnsignedTestHostCannotGenerateRealPassword() {
-        let model = AppModel()
+        let model = createModel()
         defer { model.prepareForTermination() }
         collectMinimum(on: model)
         model.userConfirmedSecureEnvironment = true
@@ -165,7 +166,7 @@ final class AppModelTests: XCTestCase {
             let assessment = secureRuntimeAssessment()
             let pasteboard = NSPasteboard.withUniqueName()
             var randomCalls = 0
-            let model = AppModel(
+            let model = createModel(
                 secureRuntimeCheck: { assessment },
                 randomProvider: { count in
                     randomCalls += 1
@@ -213,7 +214,7 @@ final class AppModelTests: XCTestCase {
         let assessment = secureRuntimeAssessment()
         let pasteboard = NSPasteboard.withUniqueName()
         var randomCalls = 0
-        let model = AppModel(
+        let model = createModel(
             secureRuntimeCheck: { assessment },
             randomProvider: { count in
                 randomCalls += 1
@@ -277,7 +278,7 @@ final class AppModelTests: XCTestCase {
     func testInvalidLengthBlocksGenerationAndEntropyDisplay() {
         let assessment = secureRuntimeAssessment()
         var randomCalls = 0
-        let model = AppModel(
+        let model = createModel(
             secureRuntimeCheck: { assessment },
             randomProvider: { count in
                 randomCalls += 1
@@ -353,7 +354,7 @@ final class AppModelTests: XCTestCase {
 
     func testRandomFailurePreventsGeneration() {
         let assessment = secureRuntimeAssessment()
-        let model = AppModel(
+        let model = createModel(
             secureRuntimeCheck: { assessment },
             randomProvider: { _ in throw EntropyError.secureRandomFailure(-1) }
         )
@@ -368,7 +369,7 @@ final class AppModelTests: XCTestCase {
 
     func testRuntimeSecurityIsRecheckedImmediatelyBeforeGeneration() {
         let box = RuntimeAssessmentBox(secureRuntimeAssessment())
-        let model = AppModel(secureRuntimeCheck: { box.value })
+        let model = createModel(secureRuntimeCheck: { box.value })
         defer { model.prepareForTermination() }
         model.userConfirmedSecureEnvironment = true
         collectMinimum(on: model)
@@ -396,16 +397,19 @@ final class AppModelTests: XCTestCase {
 
     func testRuntimeFailureBeforeRevealDiscardsPasswordAndPool() {
         let box = RuntimeAssessmentBox(secureRuntimeAssessment())
-        let model = AppModel(secureRuntimeCheck: { box.value })
+        let model = createModel(secureRuntimeCheck: { box.value })
         defer { model.prepareForTermination() }
         model.userConfirmedSecureEnvironment = true
         collectMinimum(on: model)
         model.generate()
+        let retainedResult = model.generatedPassword
         box.value = secureRuntimeAssessment(debuggerAbsent: false)
         model.revealMnemonic()
         XCTAssertEqual(model.phase, .collecting)
         XCTAssertEqual(model.mouseEventCount, 0)
         XCTAssertNil(model.generatedPassword)
+        XCTAssertEqual(retainedResult?.isCleared, true)
+        XCTAssertEqual(retainedResult?.text, "")
         XCTAssertFalse(model.isMnemonicVisible)
         XCTAssertEqual(model.errorMessage, .secureRuntimeUnavailable)
     }
@@ -426,6 +430,150 @@ final class AppModelTests: XCTestCase {
         XCTAssertNil(model.generatedPassword)
         XCTAssertFalse(model.userConfirmedSecureEnvironment)
         XCTAssertTrue(model.canCollectMouseEvents)
+    }
+
+    func testDiscardClearsSharedResultBeforePublishingRemovalAndClearsOwnedClipboard() throws {
+        for mode in [GeneratorMode.bip39, .ascii] {
+            let pasteboard = NSPasteboard.withUniqueName()
+            let assessment = secureRuntimeAssessment()
+            let model = createModel(secureRuntimeCheck: { assessment }, pasteboard: pasteboard)
+            defer { model.prepareForTermination() }
+            model.selectedMode = mode
+            model.userConfirmedSecureEnvironment = true
+            collectMinimum(on: model)
+            model.generate()
+            let retainedResult = try XCTUnwrap(model.generatedPassword)
+            XCTAssertFalse(retainedResult.isCleared)
+            model.revealMnemonic()
+            model.copyMnemonic()
+            XCTAssertNotNil(pasteboard.string(forType: .string))
+
+            var observedRemoval = false
+            let observation = model.$generatedPassword.dropFirst().sink { publishedResult in
+                if publishedResult == nil {
+                    observedRemoval = true
+                    XCTAssertTrue(retainedResult.isCleared)
+                }
+            }
+            model.reset()
+            observation.cancel()
+
+            XCTAssertTrue(observedRemoval)
+            XCTAssertTrue(retainedResult.isCleared)
+            XCTAssertTrue(retainedResult.components.isEmpty)
+            XCTAssertTrue(retainedResult.text.isEmpty)
+            XCTAssertNil(model.generatedPassword)
+            XCTAssertTrue(model.generatedText.isEmpty)
+            XCTAssertTrue(model.mnemonicWords.isEmpty)
+            XCTAssertFalse(model.isMnemonicVisible)
+            XCTAssertFalse(model.isClipboardClearScheduled)
+            XCTAssertNil(pasteboard.string(forType: .string))
+            XCTAssertEqual(model.mouseEventCount, 0)
+            XCTAssertEqual(model.phase, .collecting)
+            XCTAssertTrue(model.isPoolActive)
+            XCTAssertFalse(model.canGenerate)
+            XCTAssertFalse(model.userConfirmedSecureEnvironment)
+        }
+    }
+
+    func testTerminationClearsSharedResultAndPoolAndCannotRestartGeneration() throws {
+        let assessment = secureRuntimeAssessment()
+        let pasteboard = NSPasteboard.withUniqueName()
+        var randomCalls = 0
+        let model = createModel(
+            secureRuntimeCheck: { assessment },
+            randomProvider: { count in
+                randomCalls += 1
+                return [UInt8](repeating: 0, count: count)
+            },
+            shuffleInterval: .seconds(3_600),
+            pasteboard: pasteboard
+        )
+        defer { model.prepareForTermination() }
+        model.userConfirmedSecureEnvironment = true
+        collectMinimum(on: model)
+        model.generate()
+        let retainedResult = try XCTUnwrap(model.generatedPassword)
+        model.revealMnemonic()
+        model.copyMnemonic()
+        XCTAssertNotNil(pasteboard.string(forType: .string))
+
+        model.prepareForTermination()
+        let callsAfterTermination = randomCalls
+        model.prepareForTermination()
+        model.record(sample(index: 0))
+        model.userConfirmedSecureEnvironment = true
+        model.generate()
+        model.revealMnemonic()
+        model.copyMnemonic()
+        model.reset()
+
+        XCTAssertTrue(retainedResult.isCleared)
+        XCTAssertTrue(retainedResult.text.isEmpty)
+        XCTAssertTrue(retainedResult.components.isEmpty)
+        XCTAssertEqual(randomCalls, callsAfterTermination)
+        XCTAssertNil(model.generatedPassword)
+        XCTAssertTrue(model.generatedText.isEmpty)
+        XCTAssertFalse(model.isMnemonicVisible)
+        XCTAssertFalse(model.isClipboardClearScheduled)
+        XCTAssertNil(pasteboard.string(forType: .string))
+        XCTAssertEqual(model.mouseEventCount, 0)
+        XCTAssertEqual(model.poolShuffleCount, 0)
+        XCTAssertEqual(model.phase, .collecting)
+        XCTAssertFalse(model.isPoolActive)
+        XCTAssertFalse(model.canCollectMouseEvents)
+        XCTAssertFalse(model.canGenerate)
+        XCTAssertFalse(model.userConfirmedSecureEnvironment)
+    }
+
+    func testDiscardAndTerminationPreserveClipboardReplacedByAnotherApp() throws {
+        for terminate in [false, true] {
+            let assessment = secureRuntimeAssessment()
+            let pasteboard = NSPasteboard.withUniqueName()
+            let model = createModel(secureRuntimeCheck: { assessment }, pasteboard: pasteboard)
+            defer { model.prepareForTermination() }
+            model.selectedMode = .pin
+            model.userConfirmedSecureEnvironment = true
+            collectMinimum(on: model)
+            model.generate()
+            let retainedResult = try XCTUnwrap(model.generatedPassword)
+            model.revealMnemonic()
+            model.copyMnemonic()
+            pasteboard.clearContents()
+            XCTAssertTrue(pasteboard.setString("replacement from another app", forType: .string))
+
+            if terminate { model.prepareForTermination() } else { model.reset() }
+
+            XCTAssertTrue(retainedResult.isCleared)
+            XCTAssertNil(model.generatedPassword)
+            XCTAssertFalse(model.isClipboardClearScheduled)
+            XCTAssertEqual(pasteboard.string(forType: .string), "replacement from another app")
+        }
+    }
+
+    func testRuntimeFailureBeforeCopyClearsSharedResultWithoutChangingClipboard() throws {
+        let box = RuntimeAssessmentBox(secureRuntimeAssessment())
+        let pasteboard = NSPasteboard.withUniqueName()
+        let model = createModel(secureRuntimeCheck: { box.value }, pasteboard: pasteboard)
+        defer { model.prepareForTermination() }
+        model.userConfirmedSecureEnvironment = true
+        collectMinimum(on: model)
+        model.generate()
+        let retainedResult = try XCTUnwrap(model.generatedPassword)
+        model.revealMnemonic()
+        XCTAssertTrue(pasteboard.setString("existing clipboard content", forType: .string))
+        box.value = secureRuntimeAssessment(debuggerAbsent: false)
+
+        model.copyMnemonic()
+
+        XCTAssertTrue(retainedResult.isCleared)
+        XCTAssertTrue(retainedResult.components.isEmpty)
+        XCTAssertNil(model.generatedPassword)
+        XCTAssertFalse(model.isMnemonicVisible)
+        XCTAssertFalse(model.isClipboardClearScheduled)
+        XCTAssertEqual(model.mouseEventCount, 0)
+        XCTAssertEqual(model.errorMessage, .secureRuntimeUnavailable)
+        XCTAssertEqual(pasteboard.string(forType: .string), "existing clipboard content")
     }
 
     func testWindowMouseObserverDoesNotInterceptControlsAndFiltersStationaryEvents() throws {
@@ -458,9 +606,24 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(samples.count, 4)
     }
 
+    private func createModel(
+        secureRuntimeCheck: @escaping @MainActor () -> SecureRuntimeAssessment = SecureRuntimeAssessment.current,
+        randomProvider: @escaping (Int) throws -> [UInt8] = SecureRandom.bytes,
+        shuffleInterval: Duration = .seconds(6),
+        pasteboard: NSPasteboard = .withUniqueName()
+    ) -> AppModel {
+        AppModel(
+            secureRuntimeCheck: secureRuntimeCheck,
+            randomProvider: randomProvider,
+            shuffleInterval: shuffleInterval,
+            pasteboard: pasteboard,
+            languagePreferences: InMemoryLanguagePreferences()
+        )
+    }
+
     private func secureModel(shuffleInterval: Duration = .seconds(6)) -> AppModel {
         let assessment = secureRuntimeAssessment()
-        return AppModel(secureRuntimeCheck: { assessment }, shuffleInterval: shuffleInterval)
+        return createModel(secureRuntimeCheck: { assessment }, shuffleInterval: shuffleInterval)
     }
 
     private func collectMinimum(on model: AppModel) {
@@ -488,4 +651,11 @@ final class AppModelTests: XCTestCase {
 private final class RuntimeAssessmentBox {
     var value: SecureRuntimeAssessment
     init(_ value: SecureRuntimeAssessment) { self.value = value }
+}
+
+@MainActor
+private final class InMemoryLanguagePreferences: LanguagePreferences {
+    private var language = AppLanguage.english
+    func loadLanguage() -> AppLanguage { language }
+    func saveLanguage(_ language: AppLanguage) { self.language = language }
 }
