@@ -1,0 +1,134 @@
+{
+  "upstreamRepository": "Kalyna",
+  "upstreamCommit": "218f6062ce5185408138e6bd416d85f6aa2c7795",
+  "change": "Only ReleaseKeyGenerator.cs certificate subject changed to CN=Password Generator Release. No algorithm, serialization, key-storage, lockfile, or project changes.",
+  "files": [
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/HybridKeyEnvelope.cs",
+      "originalSHA256": "6aaa081e31ad64d81c1555f1dee4c3f5bcb5674d0c43090773bbb6feb423f045",
+      "isolatedSHA256": "6aaa081e31ad64d81c1555f1dee4c3f5bcb5674d0c43090773bbb6feb423f045"
+    },
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/LockedBufferTransfer.cs",
+      "originalSHA256": "fa1b9235ae1bd8b052981e61765e4c6e4a92ba0d29a9cd501ffcb5ba42763721",
+      "isolatedSHA256": "fa1b9235ae1bd8b052981e61765e4c6e4a92ba0d29a9cd501ffcb5ba42763721"
+    },
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/MacBoundSecretFile.cs",
+      "originalSHA256": "58237929e1bffc92c202d64940b23afd637cd2c70feb2a2336edb62dcf432641",
+      "isolatedSHA256": "58237929e1bffc92c202d64940b23afd637cd2c70feb2a2336edb62dcf432641"
+    },
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/Program.cs",
+      "originalSHA256": "ec5d086b40fbb1b0107ff7b31d2b27df0689a7d1501723c25a06a4399d4998b8",
+      "isolatedSHA256": "ec5d086b40fbb1b0107ff7b31d2b27df0689a7d1501723c25a06a4399d4998b8"
+    },
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/ReleaseKeyGenerator.cs",
+      "originalSHA256": "91a861f8e0a537cb9ed047879387f09953b9735058abe3e26c5257bad87f7732",
+      "isolatedSHA256": "7d1ee7d68b3bfa6f2b5d122ee96c82b7c098b524e31616953a130819c5ded7f7"
+    },
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/UsbWrappingKey.cs",
+      "originalSHA256": "080179d72da950d9f6c90b7da2bb98d4c4470fb0e604de2444d21e5a59a926c2",
+      "isolatedSHA256": "080179d72da950d9f6c90b7da2bb98d4c4470fb0e604de2444d21e5a59a926c2"
+    },
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/KeepVaultMac.HybridSigner.csproj",
+      "originalSHA256": "418db7c26af4c5f75f9b577bef2e795089c9cce57e8983d048ea84e599f70c89",
+      "isolatedSHA256": "418db7c26af4c5f75f9b577bef2e795089c9cce57e8983d048ea84e599f70c89"
+    },
+    {
+      "path": "KeepVaultMac/Packaging/HybridSigner/packages.lock.json",
+      "originalSHA256": "445b25f57a3a97cadad21e7df8f0129d39b52eb921c87ea2335d7108a761ed03",
+      "isolatedSHA256": "445b25f57a3a97cadad21e7df8f0129d39b52eb921c87ea2335d7108a761ed03"
+    },
+    {
+      "path": "KeepVaultMac/global.json",
+      "originalSHA256": "c39786ab1a147662bbe4db015f900165178875ec4a872ddae53bc0c90771ac34",
+      "isolatedSHA256": "c39786ab1a147662bbe4db015f900165178875ec4a872ddae53bc0c90771ac34"
+    },
+    {
+      "path": "KeepVaultMac/Directory.Build.props",
+      "originalSHA256": "04b533b99d15ad42b7c49badf2250e8ab4b8b89f87cce64c9795a7085cfb3fb4",
+      "isolatedSHA256": "04b533b99d15ad42b7c49badf2250e8ab4b8b89f87cce64c9795a7085cfb3fb4"
+    },
+    {
+      "path": "KalynaArchiver/Services/SecureMemory.cs",
+      "originalSHA256": "78bad22e1db00105c5c11d601bc3c23ed3e13cc0eb7467f2e08f42bb1f373f5e",
+      "isolatedSHA256": "78bad22e1db00105c5c11d601bc3c23ed3e13cc0eb7467f2e08f42bb1f373f5e"
+    },
+    {
+      "path": "KalynaArchiver.Signing/HybridSignatureService.cs",
+      "originalSHA256": "5979ea5971e67df4e037f8878df9450c0aead66113eddbe15d093859e4f84050",
+      "isolatedSHA256": "5979ea5971e67df4e037f8878df9450c0aead66113eddbe15d093859e4f84050"
+    },
+    {
+      "path": "KalynaArchiver.Signing/Mldsa87.cs",
+      "originalSHA256": "31df5ffaf5413cd7e18287cfc4e160fe08758ecf13ee11f8e3f8a04920c68bfb",
+      "isolatedSHA256": "31df5ffaf5413cd7e18287cfc4e160fe08758ecf13ee11f8e3f8a04920c68bfb"
+    },
+    {
+      "path": "KalynaArchiver.Signing/Mldsa87Reference.cs",
+      "originalSHA256": "5c76b4ef8a5337596772d3951bf57d49e36ce067da755f80dac10103ed8ad1a9",
+      "isolatedSHA256": "5c76b4ef8a5337596772d3951bf57d49e36ce067da755f80dac10103ed8ad1a9"
+    },
+    {
+      "path": "KalynaArchiver.Signing/Sha3_512Compat.cs",
+      "originalSHA256": "d3149fe88028185dfac184abe086219a1caa81d2fe52f0133fbdf89301acd084",
+      "isolatedSHA256": "d3149fe88028185dfac184abe086219a1caa81d2fe52f0133fbdf89301acd084"
+    }
+  ],
+  "nativeReference": {
+    "source": "KeepVaultMac/Native/osx-arm64/libmldsa87_ref.dylib",
+    "sha256": "14544e9dbc2ab6d1ad0d38d49eab95cc42ed80acc27a2cb615836362cd545382",
+    "implementation": "pq-crystals/dilithium@d35ba3fe5449bee3e6d43e1f296c3ca818bd36be",
+    "exportedImplementationVerified": "pq-crystals/dilithium@d35ba3fe5449bee3e6d43e1f296c3ca818bd36be"
+  },
+  "dependencies": [
+    {
+      "id": "BouncyCastle.Cryptography",
+      "version": "2.6.2",
+      "lockContentHashSHA512": "7oWOcvnntmMKNzDLsdxAYqApt+AjpRpP2CShjMfIa3umZ42UQMvH0tl1qAliYPNYO6vTdcGMqnRrCPmsfzTI1w==",
+      "archiveSHA256": "623936fb1fd171579c706390390711282898cf2c759a5167852e5ab82208f8cb",
+      "archiveSHA512": "4e1a32f937eebba134f1c6646c0b554edaa1bc41969dec5816d11c3c285906e106377113ea6c1cb0b161749ff08ae8ad39df05956b62abe2274d4b3060f0daef",
+      "source": "https://api.nuget.org/v3/index.json"
+    },
+    {
+      "id": "System.Security.Cryptography.Pkcs",
+      "version": "10.0.11",
+      "lockContentHashSHA512": "8IV+rI3xN/Mkq9MsSX7VZTv9T9Wt+tyhHLwBX9VNZBk8m8kknEs1JeTSjI2x9M2L/fSja+c2WSE5n5Yy0GXdoQ==",
+      "archiveSHA256": "f8be992fbffd55ec8c94e24370d8d5fd16fb14cc5772d2de91f591394d2d3083",
+      "archiveSHA512": "b1d275a1bcc89ed5dbfa0cab2be3f74fa72e913e8aaeb5b9cd1f35392d655baa9e07cb18af934524260ce8fe07dbb1a15eb87077a9884c60c303e576cb6d9638",
+      "source": "https://api.nuget.org/v3/index.json"
+    }
+  ],
+  "sdk": {
+    "version": "10.0.400",
+    "architecture": "osx-arm64",
+    "archiveURL": "https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.400/dotnet-sdk-10.0.400-osx-arm64.tar.gz",
+    "archiveSHA512": "e440e9a58d4ff7741c8342ac3e086fa9ee2dadc25e01c0449a88317a74cfbd63625b8092c3b2a131ae14b16ab3401e9cc470e578e4c65a72a0b5786bd2308cde",
+    "hostDeveloperID": "Microsoft Corporation (UBF8T346G9)"
+  },
+  "buildOutputs": [
+    {
+      "path": "artifacts/bin/KeepVaultMac.HybridSigner/release/KeepVaultMac.HybridSigner.dll",
+      "sha256": "d19743f5c8758717f22ad5b1a7e362581ebfb8a75c700eba1c8a8e0a40add18c"
+    },
+    {
+      "path": "artifacts/bin/KeepVaultMac.HybridSigner/release/BouncyCastle.Cryptography.dll",
+      "sha256": "e5eeaf6d263c493619982fd3638e6135077311d08c961e1fe128f9107d29ebc6"
+    },
+    {
+      "path": "artifacts/bin/KeepVaultMac.HybridSigner/release/System.Security.Cryptography.Pkcs.dll",
+      "sha256": "bfa2791b9ed388b5211fbe07dc2875558f60ceec3e7abf785f8eac7f7f7f72de"
+    }
+  ],
+  "validation": {
+    "build": "Release with -warnaserror; 0 warnings; 0 errors",
+    "lockedRestore": true,
+    "originalLockfileUnchanged": true,
+    "usageSmokeCheck": "exit 64 and expected usage without invoking any command",
+    "keyOperationsPerformed": false
+  }
+}

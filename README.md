@@ -131,7 +131,9 @@ Both the BIP39 and EFF wordlists are checked against embedded SHA256, SHA3-512, 
 
 `Scripts/verify-release.sh` independently checks SHA256 and SHA3-512 using Python. It checks Skein-1024-1024 through `Scripts/skein-reference-checksum.sh`, which uses the official C reference implementation in `Tests/Reference/Skein`. The verifier also extracts the ZIP and checks the code signature and sandbox.
 
-These additional integrity checksums do not replace or change Apple's Developer ID signing process. Creating these external checksum files and the integrity manifest does not modify the app bundle or the final ZIP. Hash values alone do not prove provenance.
+The release also has detached RSA-PSS/SHA-512 (RSA-4096) and ML-DSA-87 signatures, using a separate Password Generator signing identity. Both signatures must verify. A signed inventory binds every file and directory of the installed app to its product, version and build. Public keys and their SHA-256, SHA3-512 and Skein-1024-1024 pins are in `Signing/trust.json`. See [hybrid signing and verification](docs/HYBRID_SIGNING.md) for key storage, verification and trust requirements.
+
+These additional checks do not replace or change Apple's Developer ID signing process. The external signatures, checksum files and manifests do not modify the app bundle or the final ZIP. The hybrid signatures are checked by the verification tools; the running app retains its existing Apple signature checks. Hash values alone do not prove provenance.
 
 On 5 October 2026, all 120 XCTest tests passed in Debug, Release and Release with AddressSanitizer (83 Core, 37 App), without failures, compiler warnings or reported memory errors. All 48 release-gate checks passed (8 positive, 40 negative). [Verification scope and release evidence (German)](docs/CRYPTOGRAPHIC_AND_FUNCTIONAL_ANALYSIS.md#verifikation).
 

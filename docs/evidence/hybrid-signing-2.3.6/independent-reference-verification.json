@@ -1,0 +1,227 @@
+{
+  "schema": "password-generator-independent-hybrid-verification-v1",
+  "created_utc": "2026-10-05T11:18:29.406488+00:00",
+  "product_version": "2.3.6",
+  "all_passed": true,
+  "sidecars_verified": 9,
+  "rsa_verifier": "OpenSSL 3.6.3 9 Jun 2026 (Library: OpenSSL 3.6.3 9 Jun 2026)",
+  "rsa_parameters": {
+    "modulus_bits": 4096,
+    "hash": "SHA-512",
+    "mgf1_hash": "SHA-512",
+    "salt_bytes": 64
+  },
+  "mldsa_verifier": {
+    "implementation": "pq-crystals/dilithium@d35ba3fe5449bee3e6d43e1f296c3ca818bd36be",
+    "library_sha256": "14544e9dbc2ab6d1ad0d38d49eab95cc42ed80acc27a2cb615836362cd545382",
+    "algorithm": "pure ML-DSA-87",
+    "context_ascii": "KalynaZpaqVault/HybridArtifactSignature/v1"
+  },
+  "payload": "ASCII(KalynaZpaqVault/HybridArtifactSignature/SHA-512/v1 followed by NUL) || Int64LE(file_length) || SHA512(file_bytes)",
+  "trust_source": "Signing/trust.json and independently provisioned public files; no private keys accessed",
+  "rsa_spki_sha256": "0f5192d845ff3805af93af7c3b507afba4fdc677bf53389deca430e5127608fd",
+  "mldsa_public_key_sha256": "2f4bb3ff9c087f2726bc5caba1e3a10e834d7ae06b79415cd1e5875c89fe4fc1",
+  "certificate_sha256": "53250b19af37563e61ae2748cbc68a39a466ce471ad44c918edf834316e5592a",
+  "script_sha256": "38ee6b2dbd494386cae24865a06d2fc837a2e5cbfe0633b469e9a12f6d490591",
+  "negative_controls_passed": 63,
+  "checks": [
+    {
+      "target": "Password.Generator-2.3.6.bundle-inventory.json",
+      "sidecar": "Password.Generator-2.3.6.bundle-inventory.json.khsig",
+      "target_size": 2378,
+      "target_sha256": "31b9c8408ffeb9c8690708bd4d20283a1727ea48cdc177782057ce4258524aca",
+      "target_sha512": "47fe1539176d2cd43b563fd075bd9419e069535d7f1e7fedb45137850d6cf49b8ddfa07a4785db2aa10f96fea921e58eff34d07f008c7c9bc708bf7f19bf1fd0",
+      "sidecar_sha256": "24a0f85e607a6bbdf74f35235857499dfdc19448e8cac6287187769081d6e68a",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.bundle-inventory.json.sha3",
+      "sidecar": "Password.Generator-2.3.6.bundle-inventory.json.sha3.khsig",
+      "target_size": 129,
+      "target_sha256": "3dce80603012dc35f3b716c50dbd6d3ad04411770654015f4a852223b16678a2",
+      "target_sha512": "e34a34b6300907017709a52484a2d1acc525344380b44d25db4157e601c67b060eedac8ae0d2b043a73ae071925c0216a814a9a4424acbbf691e063f48266f58",
+      "sidecar_sha256": "a5c621c6f7e235fe8fc51357136306bb90574eb460917e8b663b1b68022b577b",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.bundle-inventory.json.skein",
+      "sidecar": "Password.Generator-2.3.6.bundle-inventory.json.skein.khsig",
+      "target_size": 257,
+      "target_sha256": "933d2ab6790b39626f1d9b3797963975d85ac864bd0f13034e4f2a9f8357e5f7",
+      "target_sha512": "bffe74947bbe0cdfc6fe4ae0d9c494f9ad4dbc06d1396763bf29dc94c9f5831c5c6c32e844e2ec97db7335ff37df19d434653629467eb482b76fc6a1945eea26",
+      "sidecar_sha256": "d9f93dc90330f657a759d0415b41364476863fee64d906d3c7328e91cebde9f9",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.integrity.txt",
+      "sidecar": "Password.Generator-2.3.6.integrity.txt.khsig",
+      "target_size": 963,
+      "target_sha256": "bd1f5b30a0166eb0ecd68f46208ecc90e74ff1947af0c65cc1b3f55b6e6d3a01",
+      "target_sha512": "4de1e9f24c7033c2479c4f43be9d8ddc094cf5c2b74a372c09223b0601009e944724bc1713bba6dafe390706b8cae82e366360a96635e56acf327ea0f2ee7637",
+      "sidecar_sha256": "ecf7c8d950a6a0f9993fa133e14835540b77f9835cfb346b7189b8ff28f5456c",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.integrity.txt.sha3",
+      "sidecar": "Password.Generator-2.3.6.integrity.txt.sha3.khsig",
+      "target_size": 129,
+      "target_sha256": "6b52888dcd97ee9dfc45dc6db571defb8bcc22b50cbbded2d87018cdcada14a9",
+      "target_sha512": "5e22cc47850c8290c29c5e57bbb7186088dfc6d90e146192e670c0ec0a5482793a6dbc5d1be19f3c13845ee873c56a701f8460c1631b09afa205a885a781c8c6",
+      "sidecar_sha256": "a162efc59eb90347e4e1a476a4e9bdc39abef2e5768bc71c8ea00934f5e6bf6e",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.integrity.txt.skein",
+      "sidecar": "Password.Generator-2.3.6.integrity.txt.skein.khsig",
+      "target_size": 257,
+      "target_sha256": "1ee66bc62e3c63b3128ff2c23d803856364d7ff362e5bbdf8e126c65c67f8fc1",
+      "target_sha512": "287564790f91348fdffb8241984d86753112ca2cf2f58ed89bbb5d1b6e8eaca85fbf0da256e16206a7f229d1a4b3698162c296f8b79d25c8be07c44f5f0c47e2",
+      "sidecar_sha256": "09e6d8b42150c35ede3fac154b9d1e78dc1f553c81b38160342780637eadd3ee",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.zip",
+      "sidecar": "Password.Generator-2.3.6.zip.khsig",
+      "target_size": 2771371,
+      "target_sha256": "a0f44f9e34e2eaafefaa87698a3daa63195c543ccb472634e5be180ce41596bc",
+      "target_sha512": "f44cd96d65eadb278136b5cc88d4baa1bfa48e182e12ec440f75ef02d0d0bd3461918931c75d3825149041c2707f611b2acc808a417e9fe44a6e8b5073217655",
+      "sidecar_sha256": "cd3273f7d85145c8ae45b5b2b8b645c810ec7b3e2f3aae6e7e34dcc9b98f158b",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.zip.sha3",
+      "sidecar": "Password.Generator-2.3.6.zip.sha3.khsig",
+      "target_size": 129,
+      "target_sha256": "3db51d1312474fe8b833509a02b29a6fc8f48c62751a79a5f7cf16d4ac446de4",
+      "target_sha512": "c53e773c15884eb1eef0dc5f7f279756e2761b0ef42ef9d40ecced09e2bf72ed36af9c7e527341129d9ceb4f26be2a5d84143841a8e9d04a4653428963351479",
+      "sidecar_sha256": "16eabfcbed2c08462bfc8c9f07b502aa4d1abc16c124a30a9b2e0826ecf19eee",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    },
+    {
+      "target": "Password.Generator-2.3.6.zip.skein",
+      "sidecar": "Password.Generator-2.3.6.zip.skein.khsig",
+      "target_size": 257,
+      "target_sha256": "9482f136e08dd6d71d7425e826e3c8ac0b3c59a42ea4cb72428b2882dab4a913",
+      "target_sha512": "6313742d29ef030dc7c96296b9aa59bdc2c21fd6f5cf4e4dc5cbe321af05bd350b38e88490e28689d8008e6a80ff719fb554d1b9f8e9ed315619cfcc3971c027",
+      "sidecar_sha256": "e51450cf4364a679af96157885772cccdf87974068365489909b073bfed8d293",
+      "strict_parser": true,
+      "public_certificate_exact_match": true,
+      "length_and_sha512_match": true,
+      "rsa_pss_sha512_mgf1_sha512_salt64_verified": true,
+      "mldsa87_native_reference_verified": true,
+      "negative_controls": {
+        "rsa_modified_payload_rejected": true,
+        "rsa_modified_signature_rejected": true,
+        "rsa_wrong_salt32_rejected": true,
+        "rsa_wrong_mgf1_sha256_rejected": true,
+        "mldsa_modified_payload_rejected": true,
+        "mldsa_modified_signature_rejected": true,
+        "mldsa_empty_context_rejected": true
+      }
+    }
+  ]
+}

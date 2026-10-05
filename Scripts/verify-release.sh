@@ -82,6 +82,15 @@ env \
 BIN_DIR="$(swift build -c release --show-bin-path)"
 CHECKSUM_BIN="$BIN_DIR/PasswordGeneratorChecksum"
 
+# Public distributions require both independent hybrid signatures before any
+# archive extraction. The trust file comes from this separately trusted checkout.
+if [[ "$MANIFEST_SIGNATURE_MODE" == "developer-id-notarized" ]]; then
+    "$PYTHON_BIN" "$SCRIPT_DIR/verify-hybrid-signatures.py" \
+        --release-dir "$BUILD_DIR" \
+        --trust "$PROJECT_DIR/Signing/trust.json" \
+        --checksum-tool "$CHECKSUM_BIN"
+fi
+
 EXPECTED_SHA256="$(awk 'NR == 1 {print $1}' "$SHA256_PATH")"
 EXPECTED_SHA3="$(awk 'NR == 1 {print $1}' "$SHA3_PATH")"
 EXPECTED_SKEIN="$(awk 'NR == 1 {print $1}' "$SKEIN_PATH")"
@@ -168,6 +177,13 @@ fi
 trap 'rm -rf -- "$VERIFY_TEMP_DIR"' EXIT
 ditto -x -k "$ZIP_PATH" "$VERIFY_TEMP_DIR"
 EXTRACTED_APP="$VERIFY_TEMP_DIR/Password Generator 2.3.6.app"
+if [[ "$MANIFEST_SIGNATURE_MODE" == "developer-id-notarized" ]]; then
+    "$PYTHON_BIN" "$SCRIPT_DIR/verify-hybrid-signatures.py" \
+        --release-dir "$BUILD_DIR" \
+        --trust "$PROJECT_DIR/Signing/trust.json" \
+        --checksum-tool "$CHECKSUM_BIN" \
+        --app "$EXTRACTED_APP"
+fi
 /usr/bin/codesign --verify --deep --strict --verbose=2 "$EXTRACTED_APP"
 SIGNATURE_INFORMATION="$(/usr/bin/codesign -dv --verbose=4 "$EXTRACTED_APP" 2>&1)"
 

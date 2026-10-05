@@ -3,3 +3,10 @@ build/
 DerivedData/
 *.xcuserstate
 .DS_Store
+__pycache__/
+# Private release material is stored only on the external signing volume.
+*.pfx
+*.p12
+*-private.key*
+*wrapping-key*
+*.password.*

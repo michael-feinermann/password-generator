@@ -1,0 +1,16 @@
+{
+  "schema": "password-generator-hybrid-release-verification-v1",
+  "version": "2.3.6",
+  "build": "13",
+  "artifact_sha256": "a0f44f9e34e2eaafefaa87698a3daa63195c543ccb472634e5be180ce41596bc",
+  "app_modified": false,
+  "apple_signature_and_notarization": "valid",
+  "hybrid_sidecars": 9,
+  "independent_native_mldsa_and_openssl_rsa": "passed",
+  "negative_native_controls": 63,
+  "release_gate_checks": 48,
+  "key_volume_detached": true,
+  "hybrid_verifier_tests": 136,
+  "hybrid_verifier_positive_tests": 6,
+  "hybrid_verifier_negative_tests": 130
+}
