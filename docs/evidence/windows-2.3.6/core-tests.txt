@@ -1,0 +1,14 @@
+PASS Runtime cryptographic self-test and Windows RNG
+PASS Independent SHA3-512 / SHAKE256 NIST vectors
+PASS Independent Skein hash / advancing XOF reference vectors
+PASS Independent AES-256-CTR vectors, partial blocks, carry, exhaustion
+PASS BIP39 official English vectors and checksum failures
+PASS Bundled BIP39/EFF triple integrity and tamper rejection
+PASS All generator modes, limits, separators, case, leading zeroes
+PASS Unbiased complete byte/two-byte domain sampling
+PASS Invalid input and broken random source fail closed
+PASS Independent complete pipeline, boundaries, overwritten shuffled pools
+PASS Digest bit permutation intermediates and bit count preservation
+PASS Pool readiness, bounded transcript, disposal and zeroization
+PASS Nominal levels and continuous attack-cost model boundaries
+{"status":"passed","groups":13,"assertions":9743,"failures":0,"framework":".NET 10.0.12","os":"Microsoft Windows 10.0.26300"}

@@ -1,5 +1,7 @@
 # Password Generator für macOS
 
+Native Windows-Portierung 2.3.6: [Build, Installation und Signaturprüfung](Windows/README.md).
+
 [English](README.md) | Deutsch
 
 <img src="Assets/PasswordGeneratorIcon.png" width="128" alt="Password Generator Icon">

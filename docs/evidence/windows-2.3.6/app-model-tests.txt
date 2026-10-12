@@ -1,0 +1,2 @@
+Model gates, native clipboard formats, conditional cleanup, context handling, and language checks passed. Waiting for real 45/60-second timers.
+PASS AppModel: 33 assertions, including real 45-second clipboard and 60-second reveal timers.

@@ -1,0 +1,8 @@
+  Wiederherzustellende Projekte werden ermittelt...
+  "C:\Dev\Password Generator\Windows\PasswordGenerator.App\PasswordGenerator.App.csproj" wiederhergestellt (in 149 ms.).
+  "C:\Dev\Password Generator\Windows\PasswordGenerator.Security\PasswordGenerator.Security.csproj" wiederhergestellt (in 147 ms.).
+  "C:\Dev\Password Generator\Windows\PasswordGenerator.Core\PasswordGenerator.Core.csproj" wiederhergestellt (in 147 ms.).
+  PasswordGenerator.Core -> C:\Dev\Password Generator\Windows\PasswordGenerator.Core\bin\Release\net10.0\PasswordGenerator.Core.dll
+  PasswordGenerator.Security -> C:\Dev\Password Generator\Windows\PasswordGenerator.Security\bin\Release\net10.0-windows\PasswordGenerator.Security.dll
+  PasswordGenerator.App -> C:\Dev\Password Generator\Windows\PasswordGenerator.App\bin\Release\net10.0-windows\win-x64\PasswordGenerator.dll
+  PasswordGenerator.App -> C:\Dev\Password Generator\Windows\artifacts\app\

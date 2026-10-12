@@ -1,0 +1,27 @@
+name: Windows build and security tests
+on:
+  push:
+    paths: ['Windows/**', 'Sources/PasswordGeneratorCore/Resources/**', 'Tests/**', '.github/workflows/windows.yml']
+  pull_request:
+    paths: ['Windows/**', 'Sources/PasswordGeneratorCore/Resources/**', 'Tests/**', '.github/workflows/windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+        with:
+          dotnet-version: '10.0.x'
+      - name: Crypto and functional known answers
+        run: dotnet run --project Windows/PasswordGenerator.Tests -c Release
+      - name: App lifecycle, reveal and private clipboard tests
+        run: dotnet run --project Windows/PasswordGenerator.App.Tests -c Release
+      - name: Hybrid integrity adversarial tests
+        run: dotnet run --project Windows/PasswordGenerator.Security.Tests -c Release
+      - name: WPF warnings-as-errors build
+        run: dotnet build Windows/PasswordGenerator.App -c Release
+      - name: Dependency vulnerability check
+        run: dotnet list Windows/PasswordGenerator.App package --vulnerable --include-transitive

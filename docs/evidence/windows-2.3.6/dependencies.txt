@@ -1,0 +1,9 @@
+  Wiederherzustellende Projekte werden ermittelt...
+  "C:\Dev\Password Generator\Windows\PasswordGenerator.App\PasswordGenerator.App.csproj" wiederhergestellt (in 121 ms.).
+  2 von 3 Projekten sind für die Wiederherstellung auf dem neuesten Stand.
+
+Die folgenden Quellen wurden verwendet:
+   https://api.nuget.org/v3/index.json
+   C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+
+Für das angegebene Projekt "PasswordGenerator.App" liegen gemäß den aktuellen Quellen keine anfälligen Pakete vor.

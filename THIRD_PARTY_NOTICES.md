@@ -4,6 +4,11 @@
 
 The unmodified English BIP39 word list is distributed in `Sources/PasswordGeneratorCore/Resources/english.txt` and in the application bundle.
 
+The Windows port embeds canonical LF copies of the same unmodified BIP39 and EFF
+files in `Windows/PasswordGenerator.Core/Resources`. It uses the same specifications
+and reference fixtures for its local C# implementation. The self-contained Windows
+app includes Microsoft's .NET runtime notices and these wordlist license notices.
+
 Source: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
 
 Specification and authors: Marek Palatinus, Pavol Rusnak, Aaron Voisine, Sean Bowe. BIP39 is published under the MIT License: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki

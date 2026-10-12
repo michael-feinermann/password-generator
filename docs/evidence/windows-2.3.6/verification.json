@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-12",
+  "version": "2.3.6",
+  "build": 14,
+  "upstream": "3300f560dcbb2ff7396e3250e66afcca04e2ca10",
+  "platform": "Windows 10.0.26300 x64",
+  "dotnetRuntime": "10.0.12",
+  "dotnetSdk": "10.0.401",
+  "coreAssertions": 9743,
+  "coreGroups": 13,
+  "appAssertions": 33,
+  "securityChecks": 37,
+  "installedFiles": 405,
+  "installedDirectories": 14,
+  "installedInventory": "verified RSA4096 PSS/SHA512 AND ML-DSA87",
+  "openssl": "3.5.7 independent inventory and ZIP signature verification passed",
+  "archiveExactInventory": "405 files 14 directories 147817322 uncompressed bytes",
+  "archiveSha256": "F7B87C74809DA426AFE2DB62AF2662354230D331FD9764C24B18E09191002D2F",
+  "keyDirectory": "A:\\Passoword Generator Keys",
+  "privateKeyExclusion": "staged filenames and source private-key header scan; final app payload filenames: passed",
+  "interfaceVerification": "Actual installed launch, initial 401-file GUI runtime gate observed positive; final 405-file package exact verification and process Responding. Coordinate interaction unavailable under window capture exclusion.",
+  "limitations": [
+    "No Apple App Sandbox or notarization",
+    "No publicly trusted Authenticode publisher",
+    "DPAPI decryption depends on Windows user profile",
+    "No independent antivirus scan completed",
+    "No interactive GUI generation sequence completed"
+  ]
+}

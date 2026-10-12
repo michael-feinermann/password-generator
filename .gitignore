@@ -10,3 +10,12 @@ __pycache__/
 *-private.key*
 *wrapping-key*
 *.password.*
+# Windows builds and all private release material.
+**/bin/
+**/obj/
+*.dpapi
+*.pkcs8
+*.pem
+Windows/CryptoProbe/
+Windows/artifacts/
+Windows/TestResults/

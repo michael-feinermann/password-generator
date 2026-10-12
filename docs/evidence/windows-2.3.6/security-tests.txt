@@ -1,0 +1,38 @@
+PASS both signatures and exact inventory
+PASS rejects manifest mutation
+PASS rejects manifest truncated
+PASS rejects RSA mutation
+PASS rejects ML-DSA mutation
+PASS rejects RSA truncated
+PASS rejects ML-DSA trailing byte
+PASS rejects file modified
+PASS rejects extra file
+PASS rejects extra directory
+PASS rejects missing file
+PASS rejects wrong product
+PASS rejects wrong version
+PASS rejects wrong build
+PASS rejects wrong architecture
+PASS rejects unknown schema
+PASS rejects path traversal
+PASS rejects alternate stream
+PASS rejects case alias
+PASS rejects directory aliases file
+PASS rejects negative size
+PASS rejects invalid digest
+PASS rejects signed size mismatch
+PASS rejects signed digest mismatch
+PASS rejects unknown signed JSON member
+PASS rejects actual directory junction
+PASS rejects wrong RSA anchor
+PASS rejects wrong ML-DSA anchor
+PASS rejects unsafe path []
+PASS rejects unsafe path [/root]
+PASS rejects unsafe path [../file]
+PASS rejects unsafe path [file\path]
+PASS rejects unsafe path [folder//file]
+PASS rejects unsafe path [file.]
+PASS rejects unsafe path [file ]
+PASS rejects unsafe path [folder/../file]
+PASS rejects unsafe path [f:stream]
+PASS: 37 security checks (positive, signatures, identity, inventory, paths).
