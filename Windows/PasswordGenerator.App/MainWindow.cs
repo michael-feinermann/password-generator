@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Effects;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using PasswordGenerator.Core;
@@ -18,7 +19,7 @@ namespace PasswordGenerator.App;
 /// <summary>Native Windows adaptation of the 2.3.6 SwiftUI window.</summary>
 public sealed class MainWindow : Window
 {
-    private static readonly Brush Teal = Brush("#3BE0C4"), Secondary = Brush("#A8B2C1"), Muted = Brush("#8995A8"), Amber = Brush("#FFB84D");
+    private static readonly Brush Teal = Brush("#3BE0C4"), Secondary = Brush("#AFB1B5"), Muted = Brush("#979A9E"), Amber = Brush("#FFB84D");
     private readonly AppModel model = new();
     private readonly StackPanel page = new();
     private readonly ScrollViewer scroller = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
@@ -36,6 +37,8 @@ public sealed class MainWindow : Window
     private Slider? lengthSlider;
     private readonly Dictionary<int, Button> bipLengthButtons = [];
     private readonly List<TextBlock> materializedSecrets = [];
+    private readonly List<UniformGrid> legendGrids = [];
+    private UniformGrid securityGrid = null!;
     private string lastLanguage = "";
     private GeneratorMode lastMode = (GeneratorMode)(-1);
     private int lastLength = -1;
@@ -58,14 +61,18 @@ public sealed class MainWindow : Window
     {
         Title = "Password Generator 2.3.6";
         Width = MinWidth = 1060; Height = MinHeight = 840;
-        Background = Brush("#060B12"); Foreground = Brushes.White; FontFamily = new("Segoe UI"); FontSize = 14;
+        Background = Brush("#060B12"); Foreground = Brushes.White; FontFamily = new("Segoe UI Variable, Segoe UI"); FontSize = 14;
+        UseLayoutRounding = true; SnapsToDevicePixels = true;
+        TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.CanResize;
-        WindowChrome.SetWindowChrome(this, new WindowChrome { CaptionHeight = 0, ResizeBorderThickness = new(6), GlassFrameThickness = new(0), CornerRadius = new(0), UseAeroCaptionButtons = false });
+        WindowChrome.SetWindowChrome(this, new WindowChrome { CaptionHeight = 34, ResizeBorderThickness = new(6), GlassFrameThickness = new(0), CornerRadius = new(0), UseAeroCaptionButtons = false });
         Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/PasswordGenerator.ico"));
         page.LayoutTransform = scaleTransform;
         scroller.Content = page;
-        Content = scroller;
+        var frame = new DockPanel();
+        var titleBar = TitleBar(); DockPanel.SetDock(titleBar, Dock.Top); frame.Children.Add(titleBar);
+        frame.Children.Add(scroller); Content = frame;
         model.Changed += Update;
         model.Error += message => MessageBox.Show(this, message, Tr("Aktion fehlgeschlagen", "Action failed"), MessageBoxButton.OK, MessageBoxImage.Error);
         SizeChanged += (_, _) => ResizeContent();
@@ -92,7 +99,7 @@ public sealed class MainWindow : Window
     private string Tr(string german, string english) => model.Tr(german, english);
     private CultureInfo Culture => CultureInfo.GetCultureInfo(model.Language == "de" ? "de-DE" : "en-US");
     private static Brush Brush(string hex) => (Brush)new BrushConverter().ConvertFromString(hex)!;
-    private static TextBlock Text(string text, double size = 14, Brush? color = null, FontWeight? weight = null) => new() { Text = text, FontSize = size, Foreground = color ?? Brushes.White, FontWeight = weight ?? FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center };
+    private static TextBlock Text(string text, double size = 14, Brush? color = null, FontWeight? weight = null) => new() { Text = text, FontSize = size, Foreground = color ?? Brushes.White, FontWeight = weight ?? FontWeights.Normal, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
     private static StackPanel Vertical(double gap = 0) => new() { Orientation = Orientation.Vertical, Margin = new(0, gap, 0, 0) };
     private static Button Button(string label, Action click, string id)
     {
@@ -103,23 +110,67 @@ public sealed class MainWindow : Window
         return button;
     }
     private static Border Surface(UIElement child, string color = "#0E141D", double radius = 23, Thickness? padding = null) => new() { Background = Brush(color), BorderBrush = Brush("#232C38"), BorderThickness = new(1), CornerRadius = new(radius), Padding = padding ?? new(22), Child = child };
+    private static Style Theme(string key) => (Style)Application.Current.FindResource(key);
+    private static void SelectSegment(Button button, bool selected)
+    {
+        button.Style = Theme(selected ? "SelectedSegmentedButton" : "SegmentedButton");
+        AutomationProperties.SetItemStatus(button, selected ? "Selected" : "");
+    }
+    private static Border SegmentTrack(Panel segments) => Surface(segments, "#131A23", 10, new(3));
+    private static UIElement Symbol(string kind, double size = 16, Brush? color = null)
+    {
+        // Small vector symbols avoid font-dependent Unicode/emoji rendering.
+        var data = kind switch
+        {
+            "lock" => "M5,10 L5,7 C5,0 15,0 15,7 L15,10 M3,10 L17,10 L17,20 L3,20 Z M10,14 L10,17",
+            "cursor" => "M3,2 L3,18 L7,14 L11,21 L14,19 L10,13 L17,13 Z M16,2 L20,2 M18,5 L21,7",
+            "shuffle" => "M1,5 L5,5 C9,5 11,17 15,17 L21,17 M17,13 L21,17 L17,21 M1,17 L5,17 C9,17 11,5 15,5 L21,5 M17,1 L21,5 L17,9",
+            "shield" => "M11,1 L20,4 L20,11 C20,16 16,20 11,22 C6,20 2,16 2,11 L2,4 Z M6,11 L10,15 L16,8",
+            "desktop" => "M1,2 L21,2 L21,16 L1,16 Z M11,16 L11,21 M6,21 L16,21",
+            "atom" => "M2,11 C2,5 20,5 20,11 C20,17 2,17 2,11 M6,3 C11,0 20,16 15,19 C10,22 1,6 6,3 M15,3 C20,6 11,22 6,19 C1,16 10,0 15,3 M10,11 L12,11",
+            "minimize" => "M3,11 L17,11",
+            "maximize" => "M4,4 L16,4 L16,16 L4,16 Z",
+            "close" => "M4,4 L16,16 M16,4 L4,16",
+            "warning" => "M11,2 L22,21 L0,21 Z M11,8 L11,14 M11,17 L11,18",
+            "half" => "M11,1 A10,10 0 1 1 11,21 A10,10 0 1 1 11,1 M11,1 L11,21 M3,7 L11,7 M1,11 L11,11 M3,15 L11,15",
+            "bars" => "M2,20 L2,13 L6,13 L6,20 Z M9,20 L9,8 L13,8 L13,20 Z M16,20 L16,2 L20,2 L20,20 Z",
+            "layers" => "M11,1 L22,6 L11,11 L0,6 Z M0,11 L11,16 L22,11 M0,16 L11,21 L22,16",
+            _ => "M11,1 A10,10 0 1 1 11,21 A10,10 0 1 1 11,1 M11,9 L11,16 M11,5 L11,6"
+        };
+        return new Viewbox { Width = size, Height = size, Stretch = Stretch.Uniform, Child = new System.Windows.Shapes.Path { Data = Geometry.Parse(data), Stroke = color ?? Teal, StrokeThickness = 1.6, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round, StrokeLineJoin = PenLineJoin.Round } };
+    }
+    private UIElement TitleBar()
+    {
+        var bar = new DockPanel { Height = 34, Background = Brush("#090F17"), LastChildFill = true };
+        var controls = new StackPanel { Orientation = Orientation.Horizontal };
+        foreach (var item in new[] { ("minimize", "MinimizeWindow", Tr("Minimieren", "Minimize"), (Action)(() => WindowState = WindowState.Minimized)), ("maximize", "MaximizeWindow", Tr("Maximieren / Wiederherstellen", "Maximize / restore"), (Action)(() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized)), ("close", "CloseWindow", Tr("Schließen", "Close"), (Action)Close) })
+        {
+            var button = Button(item.Item3, item.Item4, item.Item2); button.Style = Theme(item.Item1 == "close" ? "CloseWindowButton" : "WindowControlButton");
+            button.Content = Symbol(item.Item1, 12, Secondary); button.ToolTip = item.Item3;
+            WindowChrome.SetIsHitTestVisibleInChrome(button, true); controls.Children.Add(button);
+        }
+        DockPanel.SetDock(controls, Dock.Right); bar.Children.Add(controls);
+        var caption = Text(Title, 14, Muted); caption.Margin = new(16, 0, 0, 0); bar.Children.Add(caption);
+        return bar;
+    }
     private Border Card(string step, string title, string subtitle, UIElement content)
     {
         var stack = Vertical();
         var heading = new DockPanel { Margin = new(0, 0, 0, 18) };
-        var number = Surface(Text(step, 14, Teal, FontWeights.Bold), "#102B2C", 8, new(9, 6, 9, 6));
+        var stepText = Text(step, 14, Teal, FontWeights.Bold); stepText.FontFamily = new("Consolas");
+        var number = Surface(stepText, "#12282E", 8, new(9, 6, 9, 6)); number.BorderThickness = new(0);
         number.Margin = new(0, 0, 13, 0); number.VerticalAlignment = VerticalAlignment.Top;
         DockPanel.SetDock(number, Dock.Left); heading.Children.Add(number);
         var titles = Vertical(); titles.Children.Add(Text(title, 18, weight: FontWeights.Bold));
-        titles.Children.Add(Text(subtitle, color: Secondary)); heading.Children.Add(titles);
+        var description = Text(subtitle, color: Secondary); description.Margin = new(0, 3, 0, 0); titles.Children.Add(description); heading.Children.Add(titles);
         stack.Children.Add(heading); stack.Children.Add(content);
-        var card = Surface(stack); card.Margin = new(0, 0, 0, 20); return card;
+        var card = Surface(stack); card.Effect = new DropShadowEffect { Color = Colors.Black, Opacity = 0.16, BlurRadius = 24, ShadowDepth = 10, Direction = 270 }; card.Margin = new(0, 0, 0, 20); return card;
     }
 
     private void BuildPage()
     {
         building = true;
-        lengthInput = null; lengthSlider = null; bipLengthButtons.Clear();
+        lengthInput = null; lengthSlider = null; bipLengthButtons.Clear(); legendGrids.Clear();
         ClearMaterializedSecrets();
         page.Children.Clear();
         page.Children.Add(Header()); page.Children.Add(SecurityStrip());
@@ -133,51 +184,48 @@ public sealed class MainWindow : Window
     private UIElement Header()
     {
         var header = new DockPanel { Margin = new(0, 0, 0, 20), LastChildFill = true };
-        var windowButtons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
-        windowButtons.Children.Add(Button("−", () => WindowState = WindowState.Minimized, "MinimizeWindow"));
-        windowButtons.Children.Add(Button("□", () => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized, "MaximizeWindow"));
-        windowButtons.Children.Add(Button("×", Close, "CloseWindow"));
-        DockPanel.SetDock(windowButtons, Dock.Right); header.Children.Add(windowButtons);
-        var language = new StackPanel { Orientation = Orientation.Horizontal, Margin = new(14, 0, 14, 0), VerticalAlignment = VerticalAlignment.Center };
+        var language = new StackPanel { Orientation = Orientation.Horizontal };
         foreach (var code in new[] { "en", "de" })
         {
             var languageButton = Button(code.ToUpperInvariant(), () => model.SetLanguage(code), "Language_" + code);
-            if (model.Language == code) languageButton.Background = Brush("#123936");
+            SelectSegment(languageButton, model.Language == code); languageButton.Padding = new(8, 6, 8, 6); languageButton.Margin = new(0, 0, code == "en" ? 3 : 0, 0);
+            AutomationProperties.SetName(languageButton, code == "en" ? "English" : "Deutsch");
             language.Children.Add(languageButton);
         }
-        AutomationProperties.SetName(language, Tr("Sprache", "Language")); DockPanel.SetDock(language, Dock.Right); header.Children.Add(language);
-        var logo = new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Assets/PasswordGeneratorLogo.png")), Width = 58, Height = 58, Margin = new(0, 0, 16, 0) };
-        DockPanel.SetDock(logo, Dock.Left); header.Children.Add(logo);
+        AutomationProperties.SetName(language, Tr("Sprache", "Language")); var languageTrack = SegmentTrack(language); languageTrack.VerticalAlignment = VerticalAlignment.Center; languageTrack.Margin = new(16, 0, 0, 0); DockPanel.SetDock(languageTrack, Dock.Right); header.Children.Add(languageTrack);
+        var logo = new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Assets/PasswordGeneratorLogo.png")), Width = 58, Height = 58 };
+        var logoTile = Surface(logo, "#10252D", 17, new(0)); logoTile.BorderThickness = new(0); logoTile.Margin = new(0, 0, 16, 0);
+        DockPanel.SetDock(logoTile, Dock.Left); header.Children.Add(logoTile);
         var brand = Vertical(); brand.Children.Add(Text(Title, 29, weight: FontWeights.Bold));
-        brand.Children.Add(Text(Tr("Seedphrasen, Wortpasswörter, ASCII, PINs und Hex. Lokal auf deinem PC.", "Seed phrases, word passwords, ASCII, PINs, and hex. Locally on your PC."), color: Secondary));
+        var subtitle = Text(Tr("Seedphrasen, Wortpasswörter, ASCII, PINs und Hex. Lokal auf deinem PC.", "Seed phrases, word passwords, ASCII, PINs, and hex. Locally on your PC."), color: Secondary); subtitle.Margin = new(0, 4, 0, 0); brand.Children.Add(subtitle);
         brand.MouseLeftButtonDown += (_, e) => { if (e.ClickCount == 2) WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; else DragMove(); };
         header.Children.Add(brand); return header;
     }
     private UIElement SecurityStrip()
     {
-        var grid = new UniformGrid { Columns = 2, Margin = new(0, 0, 0, 14) };
-        AddBadge("◆", "Windows CSPRNG", "BCryptGenRandom / .NET", grid);
-        AddBadge("↗", Tr("Mauspool", "Mouse pool"), Tr("4.096 Bewegungen", "4,096 movements"), grid);
-        AddBadge("⇄", "Fisher–Yates", Tr("Alle 6 s und vor Generierung", "Every 6 sec and before generation"), grid);
-        runtimeText = AddBadge("✓", Tr("Laufzeitschutz", "Runtime protection"), "", grid);
+        var grid = new UniformGrid { Columns = 2, Margin = new(-6, -6, -6, 14) }; securityGrid = grid;
+        AddBadge("lock", "Windows CSPRNG", "BCryptGenRandom / .NET", grid);
+        AddBadge("cursor", Tr("Mauspool", "Mouse pool"), Tr("4.096 Bewegungen", "4,096 movements"), grid);
+        AddBadge("shuffle", "Fisher–Yates", Tr("Alle 6 s und vor Generierung", "Every 6 sec and before generation"), grid);
+        runtimeText = AddBadge("shield", Tr("Laufzeitschutz", "Runtime protection"), "", grid);
         return grid;
     }
     private static TextBlock AddBadge(string icon, string title, string detail, Panel parent)
     {
-        var dock = new DockPanel(); var symbol = Text(icon, 20, Teal, FontWeights.Bold); symbol.Margin = new(0, 0, 12, 0); DockPanel.SetDock(symbol, Dock.Left); dock.Children.Add(symbol);
-        var labels = Vertical(); labels.Children.Add(Text(title, weight: FontWeights.Bold)); var description = Text(detail, color: Muted); labels.Children.Add(description); dock.Children.Add(labels);
-        var surface = Surface(dock, "#131A23", 14, new(12, 10, 12, 10)); surface.Margin = new(0, 0, 6, 6); parent.Children.Add(surface); return description;
+        var dock = new DockPanel(); var symbol = Surface(Symbol(icon, 16), "#172C32", 8, new(0)); symbol.Width = symbol.Height = 28; symbol.BorderThickness = new(0); symbol.VerticalAlignment = VerticalAlignment.Center; symbol.Margin = new(0, 0, 10, 0); DockPanel.SetDock(symbol, Dock.Left); dock.Children.Add(symbol);
+        var labels = Vertical(); labels.Children.Add(Text(title, weight: FontWeights.Bold)); var description = Text(detail, color: Muted); description.Margin = new(0, 1, 0, 0); labels.Children.Add(description); dock.Children.Add(labels);
+        var surface = Surface(dock, "#131A23", 14, new(12, 10, 12, 10)); surface.Margin = new(6); parent.Children.Add(surface); return description;
     }
     private Border ConfigurationCard()
     {
         var contents = Vertical(); var controls = Vertical(); configurationControls = controls;
-        var modes = new UniformGrid { Columns = 5, Margin = new(0, 0, 0, 16) };
+        var modes = new UniformGrid { Columns = 5 };
         foreach (var mode in Enum.GetValues<GeneratorMode>())
         {
             var button = Button(ModeTitle(mode), () => model.SetMode(mode), "Mode_" + mode);
-            button.Margin = new(0, 0, 5, 0); if (model.Mode == mode) button.Background = Brush("#123936"); modes.Children.Add(button);
+            SelectSegment(button, model.Mode == mode); button.Margin = new(0, 0, mode == GeneratorMode.Hex ? 0 : 3, 0); modes.Children.Add(button);
         }
-        controls.Children.Add(modes);
+        var modeTrack = SegmentTrack(modes); modeTrack.Margin = new(0, 0, 0, 16); AutomationProperties.SetName(modeTrack, Tr("Passworttyp", "Password type")); controls.Children.Add(modeTrack);
         if (model.Mode == GeneratorMode.Bip39)
         {
             var counts = new UniformGrid { Columns = 5 };
@@ -185,9 +233,9 @@ public sealed class MainWindow : Window
             {
                 var button = Button(Tr($"{count} Wörter", $"{count} words"), () => model.SetLength(count), "Length_" + count);
                 bipLengthButtons[count] = button;
-                button.Margin = new(0, 0, 5, 0); if (model.Length == count) button.Background = Brush("#123936"); counts.Children.Add(button);
+                SelectSegment(button, model.Length == count); button.Margin = new(0, 0, count == 24 ? 0 : 3, 0); counts.Children.Add(button);
             }
-            controls.Children.Add(counts);
+            var countTrack = SegmentTrack(counts); AutomationProperties.SetName(countTrack, Tr("Wortanzahl", "Word count")); controls.Children.Add(countTrack);
         }
         else
         {
@@ -199,8 +247,10 @@ public sealed class MainWindow : Window
             length.TextChanged += (_, _) => { if (building) return; model.SetLength(int.TryParse(length.Text, NumberStyles.Integer, Culture, out var parsed) ? parsed : 0); };
             DockPanel.SetDock(length, Dock.Left); row.Children.Add(length);
             var range = model.Mode.LengthRange();
-            var decrease = Button("−", () => model.SetLength(Math.Clamp(model.Length - 1, range.Min, range.Max)), "DecreaseLength"); DockPanel.SetDock(decrease, Dock.Left); row.Children.Add(decrease);
-            var increase = Button("+", () => model.SetLength(Math.Clamp(model.Length + 1, range.Min, range.Max)), "IncreaseLength"); increase.Margin = new(3, 0, 12, 0); DockPanel.SetDock(increase, Dock.Left); row.Children.Add(increase);
+            var stepper = new StackPanel { Orientation = Orientation.Horizontal };
+            var decrease = Button("−", () => model.SetLength(Math.Clamp(model.Length - 1, range.Min, range.Max)), "DecreaseLength"); SelectSegment(decrease, false); decrease.Width = 32; AutomationProperties.SetName(decrease, Tr("Länge verringern", "Decrease length")); stepper.Children.Add(decrease);
+            var increase = Button("+", () => model.SetLength(Math.Clamp(model.Length + 1, range.Min, range.Max)), "IncreaseLength"); SelectSegment(increase, false); increase.Width = 32; AutomationProperties.SetName(increase, Tr("Länge erhöhen", "Increase length")); stepper.Children.Add(increase);
+            var stepperTrack = SegmentTrack(stepper); stepperTrack.Margin = new(0, 0, 14, 0); DockPanel.SetDock(stepperTrack, Dock.Left); row.Children.Add(stepperTrack);
             var rangeLabel = Text($"{range.Min}…{range.Max}", color: Secondary); rangeLabel.Margin = new(12, 0, 0, 0); DockPanel.SetDock(rangeLabel, Dock.Right); row.Children.Add(rangeLabel);
             var slider = new Slider { Minimum = range.Min, Maximum = range.Max, Value = Math.Clamp(model.Length, range.Min, range.Max), TickFrequency = 1, IsSnapToTickEnabled = true, VerticalAlignment = VerticalAlignment.Center };
             lengthSlider = slider;
@@ -219,15 +269,22 @@ public sealed class MainWindow : Window
             AutomationProperties.SetName(separator, Tr("Trennzeichen beim Kopieren", "Separator when copying")); AutomationProperties.SetAutomationId(separator, "WordSeparator");
             separator.TextChanged += (_, _) => { model.Separator = separator.Text; };
             DockPanel.SetDock(separator, Dock.Left); exportRow.Children.Add(separator);
-            exportRow.Children.Add(Text(Tr("Leer = ohne Trennzeichen", "Empty = no separator"), color: Secondary)); contents.Children.Add(exportRow);
+            var separatorHint = Text(model.Separator == " " ? Tr("Ein Leerzeichen", "One space") : Tr("Leer = ohne Trennzeichen", "Empty = no separator"), color: Secondary);
+            separator.TextChanged += (_, _) => separatorHint.Text = separator.Text == " " ? Tr("Ein Leerzeichen", "One space") : Tr("Leer = ohne Trennzeichen", "Empty = no separator");
+            exportRow.Children.Add(separatorHint); contents.Children.Add(exportRow);
             if (model.Mode == GeneratorMode.Bip39) { var note = Text(Tr("Für den Wallet-Import Leerzeichen verwenden. Ohne Trennzeichen gehen Wortgrenzen verloren. Das Trennzeichen ändert nur den kopierten Text.", "Use spaces for wallet import. Without a separator, word boundaries are lost. The separator changes only the copied text."), color: Secondary); note.Margin = new(0, 7, 0, 0); contents.Children.Add(note); }
         }
         else if (model.Mode == GeneratorMode.Hex)
         {
-            var hex = new CheckBox { Content = Tr("Großbuchstaben (A bis F)", "Uppercase (A to F)"), IsChecked = model.UppercaseHex, Margin = new(0, 15, 0, 7) };
-            AutomationProperties.SetAutomationId(hex, "UppercaseHex");
-            hex.Checked += (_, _) => { model.UppercaseHex = true; RenderSecret(); }; hex.Unchecked += (_, _) => { model.UppercaseHex = false; RenderSecret(); };
-            contents.Children.Add(hex); contents.Children.Add(Text(Tr("Gilt für Anzeige und Kopieren. Ein Wechsel erzeugt keinen neuen Schlüssel und verändert seine Entropie nicht.", "Applies to display and copying. Switching case does not generate a new key or change its entropy."), color: Secondary));
+            var hexChoices = new UniformGrid { Columns = 2 };
+            Button? lowercase = null, uppercase = null;
+            void SetCase(bool value) { model.UppercaseHex = value; SelectSegment(lowercase!, !value); SelectSegment(uppercase!, value); RenderSecret(); }
+            lowercase = Button(Tr("Kleinbuchstaben (a bis f)", "Lowercase (a to f)"), () => SetCase(false), "LowercaseHex");
+            uppercase = Button(Tr("Großbuchstaben (A bis F)", "Uppercase (A to F)"), () => SetCase(true), "UppercaseHex");
+            SelectSegment(lowercase, !model.UppercaseHex); SelectSegment(uppercase, model.UppercaseHex); lowercase.Margin = new(0, 0, 3, 0);
+            hexChoices.Children.Add(lowercase); hexChoices.Children.Add(uppercase);
+            var hexTrack = SegmentTrack(hexChoices); hexTrack.Margin = new(0, 15, 0, 7); AutomationProperties.SetName(hexTrack, Tr("Hex-Ausgabe", "Hex output")); contents.Children.Add(hexTrack);
+            contents.Children.Add(Text(Tr("Gilt für Anzeige und Kopieren. Ein Wechsel erzeugt keinen neuen Schlüssel und verändert seine Entropie nicht.", "Applies to display and copying. Switching case does not generate a new key or change its entropy."), color: Secondary));
         }
         return Card("01", Tr("Typ und Länge wählen", "Choose type and length"), ModeDescription(), contents);
     }
@@ -239,12 +296,15 @@ public sealed class MainWindow : Window
         progress = new ProgressBar { Minimum = 0, Maximum = EntropyPool.RequiredMouseEventCount, Margin = new(0, 15, 0, 15) }; AutomationProperties.SetName(progress, Tr("Mauspool füllen", "Fill mouse pool")); contents.Children.Add(progress);
         contents.Children.Add(Text(Tr("Der Pool hält die letzten 4.096 Bewegungen. Die Mausdaten erhalten keinen geschätzten Entropiewert.", "The pool retains the most recent 4,096 movements. Mouse data is not assigned an estimated entropy value."), color: Secondary));
         var confirmContent = Vertical(); confirmContent.Children.Add(Text(Tr("Sichere Umgebung bestätigen", "Confirm a secure environment"), weight: FontWeights.Bold));
-        confirmContent.Children.Add(Text(Tr("PC offline · keine Aufnahme, Bildschirmfreigabe oder Fernwartung · vertrauenswürdiges System", "PC offline · no recording, screen sharing, or remote support · trusted system"), color: Secondary));
+        var confirmSubtitle = Text(Tr("PC offline · keine Aufnahme, Bildschirmfreigabe oder Fernwartung · vertrauenswürdiges System", "PC offline · no recording, screen sharing, or remote support · trusted system"), color: Secondary); confirmSubtitle.Margin = new(0, 4, 0, 0); confirmContent.Children.Add(confirmSubtitle);
         confirmation = new CheckBox { Content = confirmContent, IsChecked = model.Confirmed, Margin = new(0, 18, 0, 18), ToolTip = Tr("Wird bei App-Wechsel, Minimierung, Ruhezustand oder Sitzungswechsel zurückgesetzt.", "Resets when switching apps, minimizing, sleeping, or changing sessions.") };
-        AutomationProperties.SetAutomationId(confirmation, "SecureEnvironmentConfirmation"); confirmation.Checked += (_, _) => { model.Confirmed = true; UpdateCounters(); }; confirmation.Unchecked += (_, _) => { model.Confirmed = false; UpdateCounters(); }; contents.Children.Add(confirmation);
-        var actions = new DockPanel(); generateButton = Button(Tr("✦ Passwort erzeugen", "✦ Generate password"), model.Generate, "GeneratePassword"); generateButton.Padding = new(25, 14, 25, 14); generateButton.Background = new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#29BFA9"), (Color)ColorConverter.ConvertFromString("#3F7AF2"), 0); DockPanel.SetDock(generateButton, Dock.Right); actions.Children.Add(generateButton);
+        AutomationProperties.SetAutomationId(confirmation, "SecureEnvironmentConfirmation");
+        AutomationProperties.SetName(confirmation, Tr("Sichere Umgebung bestätigen", "Confirm a secure environment"));
+        AutomationProperties.SetHelpText(confirmation, Tr("Wird bei App-Wechsel, Minimierung, Ruhezustand oder Sitzungswechsel zurückgesetzt.", "Resets when switching apps, minimizing, sleeping, or changing sessions."));
+        confirmation.Checked += (_, _) => { model.Confirmed = true; UpdateCounters(); }; confirmation.Unchecked += (_, _) => { model.Confirmed = false; UpdateCounters(); }; contents.Children.Add(confirmation);
+        var actions = new DockPanel(); generateButton = Button(Tr("✦ Passwort erzeugen", "✦ Generate password"), model.Generate, "GeneratePassword"); generateButton.Style = Theme("PrimaryButton"); generateButton.Padding = new(20, 12, 20, 12); DockPanel.SetDock(generateButton, Dock.Right); actions.Children.Add(generateButton);
         shuffleText = Text("", color: Muted); shuffleText.FontFamily = new("Consolas"); actions.Children.Add(shuffleText); contents.Children.Add(actions);
-        var runtimeDetail = Text(model.Security.IsEnforced ? "" : Tr("Die Generierung erfordert gültige RSA-4096- und ML-DSA-87-Signaturen, Integritätsprüfung und eine Laufzeit ohne Debugger.", "Generation requires valid RSA-4096 and ML-DSA-87 signatures, integrity verification, and a runtime without a debugger."), color: Amber); runtimeDetail.Margin = new(0, 12, 0, 0); contents.Children.Add(runtimeDetail);
+        if (!model.Security.IsEnforced) { var runtimeDetail = Text(Tr("Die Generierung erfordert gültige RSA-4096- und ML-DSA-87-Signaturen, Integritätsprüfung und eine Laufzeit ohne Debugger.", "Generation requires valid RSA-4096 and ML-DSA-87 signatures, integrity verification, and a runtime without a debugger."), color: Amber); runtimeDetail.Margin = new(0, 12, 0, 0); contents.Children.Add(runtimeDetail); }
         return Card("02", Tr("Maus im ganzen Fenster bewegen", "Move the mouse anywhere in the window"), Tr("Alle Bewegungen und Ziehbewegungen fließen ein, auch über Schaltflächen und nach der Generierung.", "All movements and drags are included, also over controls and after generation."), contents);
     }
     private Border ResultCard()
@@ -264,7 +324,7 @@ public sealed class MainWindow : Window
         var discard = Button(Tr("Verwerfen", "Discard"), () =>
         {
             if (MessageBox.Show(this, Tr("Das Passwort wird nicht gespeichert und kann danach nicht wiederhergestellt werden. Für das nächste Passwort wird ein neuer Mauspool gesammelt.\n\nPasswort wirklich verwerfen?", "The password is not stored and cannot be recovered afterwards. A new mouse pool will be collected for the next password.\n\nDiscard this password?"), Tr("Passwort verwerfen?", "Discard password?"), MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel) == MessageBoxResult.OK) model.Reset();
-        }, "DiscardPassword"); discard.Foreground = Brush("#FF9E9E"); discard.Background = Brush("#23171E"); discard.Margin = new(12, 0, 0, 0); DockPanel.SetDock(discard, Dock.Right); footer.Children.Add(discard);
+        }, "DiscardPassword"); discard.Style = Theme("DangerButton"); discard.Margin = new(12, 0, 0, 0); DockPanel.SetDock(discard, Dock.Right); footer.Children.Add(discard);
         copyButton = Button(Tr("Kopieren · 45 s", "Copy · 45 sec"), model.Copy, "CopyPassword"); copyButton.Margin = new(12, 0, 0, 0); DockPanel.SetDock(copyButton, Dock.Right); footer.Children.Add(copyButton);
         clipboardText = Text("", color: Secondary); footer.Children.Add(clipboardText); contents.Children.Add(footer);
         var proof = Vertical(); proof.Children.Add(Text(RandomExplanation(), color: Secondary));
@@ -282,36 +342,56 @@ public sealed class MainWindow : Window
     private UIElement EntropyIndicator(double? bits, bool showLegend)
     {
         var stack = Vertical(); var headline = new DockPanel();
-        var rating = Button(Rating(bits) + "  ⓘ", () => ShowEntropyInformation(bits), "EntropyInformation"); rating.Background = RatingBrush(bits); rating.MaxWidth = 380; DockPanel.SetDock(rating, Dock.Right); headline.Children.Add(rating);
+        var rating = Button(Rating(bits), () => ShowEntropyInformation(bits), "EntropyInformation"); rating.Style = Theme("QuietButton"); rating.Background = RatingBrush(bits); rating.BorderBrush = RatingAccent(bits); rating.Foreground = RatingText(bits); rating.Padding = new(12, 10, 12, 10); rating.MaxWidth = 360; rating.Margin = new(18, 0, 0, 0);
+        var ratingContent = new DockPanel(); var ratingSymbol = Symbol(RatingSymbol(bits), 16, RatingText(bits)); DockPanel.SetDock(ratingSymbol, Dock.Left); ratingContent.Children.Add(ratingSymbol);
+        var info = Symbol("info", 17, RatingText(bits)); var infoSpace = new Border { Child = info, Margin = new(10, 0, 0, 0) }; DockPanel.SetDock(infoSpace, Dock.Right); ratingContent.Children.Add(infoSpace);
+        var ratingTitle = Text(Rating(bits), color: RatingText(bits), weight: FontWeights.Bold); ratingTitle.Margin = new(8, 0, 0, 0); ratingContent.Children.Add(ratingTitle); rating.Content = ratingContent;
+        DockPanel.SetDock(rating, Dock.Right); headline.Children.Add(rating);
         var value = Vertical(); value.Children.Add(Text(Tr("Nominelle Entropie", "Nominal entropy"), color: Secondary, weight: FontWeights.SemiBold));
-        value.Children.Add(Text((bits?.ToString("N1", Culture) ?? "…") + Tr(" Bit", " bits") + (model.Mode == GeneratorMode.Bip39 && bits != null ? Tr(" · ohne Prüfsumme", " · excluding checksum") : ""), 27, weight: FontWeights.Bold)); headline.Children.Add(value); stack.Children.Add(headline);
+        var entropyValue = Text("", 27, weight: FontWeights.Bold); entropyValue.Margin = new(0, 4, 0, 0);
+        entropyValue.Inlines.Add(new System.Windows.Documents.Run(bits?.ToString("N1", Culture) ?? "…"));
+        entropyValue.Inlines.Add(new System.Windows.Documents.Run(Tr("  Bit", "  bits")) { FontSize = 14, FontWeight = FontWeights.Medium, Foreground = Secondary });
+        if (model.Mode == GeneratorMode.Bip39 && bits != null) entropyValue.Inlines.Add(new System.Windows.Documents.Run(Tr("  ohne Prüfsumme", "  excluding checksum")) { FontSize = 14, FontWeight = FontWeights.Normal, Foreground = Secondary });
+        value.Children.Add(entropyValue); headline.Children.Add(value); stack.Children.Add(headline);
         var estimates = Vertical(); estimates.Margin = new(0, 12, 0, 0);
         estimates.Children.Add(AttackRow(Tr("Exascale-Computer", "Exascale computer"), Tr("Vollsuche · 10^18 Prüfungen/s", "Full search · 10^18 checks/s"), bits, false));
+        estimates.Children.Add(new Border { Height = 1, Background = Brush("#232C38"), Margin = new(0, 10, 0, 10) });
         estimates.Children.Add(AttackRow(Tr("Petahertz-Quantencomputer", "Petahertz quantum computer"), Tr("Grover · 10^15 vollständige Iterationen/s", "Grover · 10^15 complete iterations/s"), bits, true));
-        estimates.Children.Add(Text(Tr("Hypothetische Modelle, keine gemessenen Angriffszeiten.", "Hypothetical models, not measured attack times."), color: Secondary)); stack.Children.Add(Surface(estimates, "#0B1119", 11, new(12)));
+        var modelNote = Text(Tr("Hypothetische Modelle, keine gemessenen Angriffszeiten.", "Hypothetical models, not measured attack times."), color: Secondary); modelNote.Margin = new(0, 10, 0, 0); estimates.Children.Add(modelNote);
+        var estimateSurface = Surface(estimates, "#0B1119", 11, new(12)); estimateSurface.Margin = new(0, 12, 0, 0); estimateSurface.BorderThickness = new(0); estimates.Margin = new(0); stack.Children.Add(estimateSurface);
         if (showLegend)
         {
-            var legend = new UniformGrid { Columns = 2, Margin = new(0, 12, 0, 12) };
+            var legend = new UniformGrid { Columns = 2, Margin = new(-7, 12, -7, 12) }; legendGrids.Add(legend);
             foreach (var sample in new[] { 64.0, 128, 256, 1024 })
             {
-                var item = Vertical(); item.Margin = new(0, 0, 8, 8); item.Children.Add(new Border { Height = 4, Background = RatingBrush(sample), Margin = new(0, 0, 0, 6) });
-                item.Children.Add(Text(sample switch { 64 => Tr("< 128 Bit", "< 128 bits"), 128 => Tr("128 bis < 256 Bit", "128 to < 256 bits"), 256 => Tr("256 bis < 1.024 Bit", "256 to < 1,024 bits"), _ => Tr("≥ 1.024 Bit", "≥ 1,024 bits") }, weight: FontWeights.Bold)); item.Children.Add(Text(Rating(sample), color: Secondary)); legend.Children.Add(item);
+                var selected = Rating(bits) == Rating(sample);
+                var item = Vertical(); item.Margin = new(7, 0, 7, 12); item.Children.Add(new Border { Height = 5, CornerRadius = new(3), Background = RatingAccent(sample), Opacity = selected ? 1 : 0.44, Margin = new(0, 0, 0, 7) });
+                var entry = new DockPanel(); var glyph = new Border { Child = Symbol(RatingSymbol(sample), 15, RatingText(sample)), Margin = new(0, 3, 7, 0), VerticalAlignment = VerticalAlignment.Top }; DockPanel.SetDock(glyph, Dock.Left); entry.Children.Add(glyph);
+                var labels = Vertical(); labels.Children.Add(Text(sample switch { 64 => Tr("< 128 Bit", "< 128 bits"), 128 => Tr("128 bis < 256 Bit", "128 to < 256 bits"), 256 => Tr("256 bis < 1.024 Bit", "256 to < 1,024 bits"), _ => Tr("≥ 1.024 Bit", "≥ 1,024 bits") }, color: selected ? Brushes.White : Secondary, weight: FontWeights.Bold));
+                var level = Text(Rating(sample), color: Secondary); level.Margin = new(0, 2, 0, 0); labels.Children.Add(level); entry.Children.Add(labels); item.Children.Add(entry); legend.Children.Add(item);
             }
             stack.Children.Add(legend);
         }
         stack.Children.Add(Text(Tr("Nomineller Auswahlraum bei gleichverteilter Auswahl. Keine Messung der Zufallsquelle und keine Garantie für die Gesamtsicherheit.", "Nominal selection space with uniform sampling. No measurement of the random source and no guarantee of overall security."), color: Secondary));
-        var surface = Surface(stack, "#111923", 16, new(16)); surface.Margin = new(0, 16, 0, 0); return surface;
+        var surface = Surface(stack, "#111923", 16, new(16)); var accent = ((SolidColorBrush)RatingAccent(bits)).Color;
+        surface.Background = new SolidColorBrush(Color.FromArgb(12, accent.R, accent.G, accent.B)); surface.BorderBrush = new SolidColorBrush(Color.FromArgb(71, accent.R, accent.G, accent.B));
+        surface.Margin = new(0, 16, 0, 0); return surface;
     }
     private UIElement AttackRow(string title, string detail, double? bits, bool grover)
     {
         double? seconds = bits.HasValue ? (grover ? Math.Log10(Math.PI / 4) + bits.Value / 2 * Math.Log10(2) - 15 : bits.Value * Math.Log10(2) - 18) : null;
-        var stack = Vertical(); stack.Margin = new(0, 0, 0, 12);
-        var row = new DockPanel(); var duration = Text("≈ " + Duration(seconds), weight: FontWeights.Bold); DockPanel.SetDock(duration, Dock.Right); row.Children.Add(duration); row.Children.Add(Text(title, weight: FontWeights.SemiBold)); stack.Children.Add(row);
-        stack.Children.Add(Text(detail + (!grover && bits.HasValue ? Tr(" · im Mittel ≈ ", " · on average ≈ ") + Duration(seconds + Math.Log10((1 + Math.Pow(2, -bits.Value)) / 2)) : ""), color: Secondary));
+        var stack = Vertical();
+        var row = new DockPanel(); var duration = Text("≈ " + Duration(seconds), weight: FontWeights.Bold); duration.Margin = new(10, 0, 0, 0); DockPanel.SetDock(duration, Dock.Right); row.Children.Add(duration);
+        var icon = new Border { Child = Symbol(grover ? "atom" : "desktop", 15, Brushes.White), Margin = new(0, 0, 8, 0) }; DockPanel.SetDock(icon, Dock.Left); row.Children.Add(icon); row.Children.Add(Text(title, weight: FontWeights.SemiBold)); stack.Children.Add(row);
+        var detailRow = new DockPanel { Margin = new(0, 5, 0, 0) };
+        if (!grover && bits.HasValue) { var mean = Text(Tr("im Mittel ≈ ", "on average ≈ ") + Duration(seconds + Math.Log10((1 + Math.Pow(2, -bits.Value)) / 2)), color: Secondary); mean.Margin = new(12, 0, 0, 0); DockPanel.SetDock(mean, Dock.Right); detailRow.Children.Add(mean); }
+        detailRow.Children.Add(Text(detail, color: Secondary)); stack.Children.Add(detailRow);
         const double budget = 3e71; var landauer = 1.380649e-23 * 2.7 * Math.Log(2); var energyThreshold = Math.Log2(budget / landauer);
         if (grover) energyThreshold = 2 * (energyThreshold - Math.Log2(Math.PI / 4));
         var years = seconds - Math.Log10(365.25 * 24 * 60 * 60);
-        stack.Children.Add(Text(Tr("Landauer-Budget: ", "Landauer budget: ") + (bits == null ? "—" : bits > energyThreshold ? Tr("Suchaufwand > Budget", "search cost > budget") : Tr("Suchaufwand im Budget", "search cost within budget")) + "  ·  " + Tr("10^106-Jahre-Horizont: ", "10^106-year horizon: ") + (years == null ? "—" : years > 106 ? Tr("überschritten", "exceeded") : Tr("innerhalb", "within")), color: Secondary)); return stack;
+        var status = new Grid { Margin = new(0, 5, 0, 0) }; status.ColumnDefinitions.Add(new()); status.ColumnDefinitions.Add(new());
+        status.Children.Add(Text(Tr("Landauer-Budget: ", "Landauer budget: ") + (bits == null ? "—" : bits > energyThreshold ? Tr("Suchaufwand > Budget", "search cost > budget") : Tr("Suchaufwand im Budget", "search cost within budget")), color: bits > energyThreshold ? Teal : Secondary));
+        var horizon = Text(Tr("10^106-Jahre-Horizont: ", "10^106-year horizon: ") + (years == null ? "—" : years > 106 ? Tr("überschritten", "exceeded") : Tr("innerhalb", "within")), color: years > 106 ? Teal : Secondary); horizon.HorizontalAlignment = HorizontalAlignment.Right; horizon.Margin = new(12, 0, 0, 0); Grid.SetColumn(horizon, 1); status.Children.Add(horizon); stack.Children.Add(status); return stack;
     }
     private string Duration(double? logarithm)
     {
@@ -323,7 +403,10 @@ public sealed class MainWindow : Window
         return mantissa.ToString("G3", Culture) + " × 10^" + exponent.ToString("F0", CultureInfo.InvariantCulture) + " " + unit.Item2;
     }
     private string Rating(double? bits) => bits == null ? Tr("Noch keine Einordnung", "Not rated yet") : bits < 128 ? Tr("knackbar", "crackable") : bits < 256 ? Tr("nicht quantensicher", "not quantum-safe") : bits < 1024 ? Tr("praktisch nicht angreifbar", "practically unattackable") : Tr("thermodynamisch nicht angreifbar", "thermodynamically unattackable");
-    private static Brush RatingBrush(double? bits) => Brush(bits == null ? "#334356" : bits < 128 ? "#642B35" : bits < 256 ? "#665427" : bits < 1024 ? "#425A2A" : "#12472E");
+    private static Brush RatingBrush(double? bits) => Brush(bits == null ? "#131A23" : bits < 128 ? "#40171F" : bits < 256 ? "#403314" : bits < 1024 ? "#2B3D17" : "#12472E");
+    private static Brush RatingAccent(double? bits) => Brush(bits == null ? "#7A8FA8" : bits < 128 ? "#F25769" : bits < 256 ? "#F7C247" : bits < 1024 ? "#B5ED75" : "#2E9E63");
+    private static Brush RatingText(double? bits) => Brush(bits == null ? "#C7D1E0" : bits < 128 ? "#FFBAC4" : bits < 256 ? "#FFE094" : bits < 1024 ? "#D6FFAB" : "#D9FFE8");
+    private static string RatingSymbol(double? bits) => bits == null ? "info" : bits < 128 ? "warning" : bits < 256 ? "half" : bits < 1024 ? "bars" : "layers";
     private void ShowEntropyInformation(double? bits)
     {
         var dialog = new Window { Owner = this, Title = Rating(bits), Width = 740, Height = 680, MinWidth = 520, MinHeight = 400, WindowStartupLocation = WindowStartupLocation.CenterOwner, Background = Background, Foreground = Foreground, FontFamily = FontFamily, FontSize = Math.Max(14, FontSize) };
@@ -356,8 +439,10 @@ public sealed class MainWindow : Window
                 lastLength = model.Length;
                 if (lengthInput != null && !lengthInput.IsKeyboardFocused) lengthInput.Text = model.Length == 0 ? "" : model.Length.ToString(Culture);
                 if (lengthSlider != null) lengthSlider.Value = Math.Clamp(model.Length, lengthSlider.Minimum, lengthSlider.Maximum);
-                foreach (var pair in bipLengthButtons) pair.Value.Background = Brush(model.Length == pair.Key ? "#123936" : "#132033");
+                foreach (var pair in bipLengthButtons) SelectSegment(pair.Value, model.Length == pair.Key);
+                legendGrids.Clear();
                 entropyHost.Child = EntropyIndicator(model.Configuration?.EntropyBits, showLegend: true);
+                ApplyResponsiveColumns();
             }
             finally { building = false; }
         }
@@ -411,11 +496,20 @@ public sealed class MainWindow : Window
     private void ClearMaterializedSecrets() { foreach (var text in materializedSecrets) text.Text = ""; materializedSecrets.Clear(); }
     private void ResizeContent()
     {
-        var width = Math.Max(ActualWidth, 1060); var height = Math.Max(ActualHeight, 840);
+        ApplyLayout(Math.Max(ActualWidth, 1060), Math.Max(ActualHeight, 840));
+    }
+    private void ApplyLayout(double width, double height)
+    {
         var scale = Math.Sqrt(width / 1060) * Math.Sqrt(height / 840);
         scaleTransform.ScaleX = scaleTransform.ScaleY = scale;
         page.Width = Math.Max(600, (width - 18) / scale - 60);
         page.Margin = new(30, 28, 30, 28);
+        ApplyResponsiveColumns();
+    }
+    private void ApplyResponsiveColumns()
+    {
+        if (securityGrid != null) securityGrid.Columns = page.Width + 60 >= 1200 ? 4 : 2;
+        foreach (var legend in legendGrids) legend.Columns = page.Width + 60 >= 1400 ? 4 : 2;
     }
     private void InitializeNativeWindow()
     {

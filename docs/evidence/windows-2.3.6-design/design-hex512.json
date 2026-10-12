@@ -1,0 +1,14 @@
+{
+  "output": "C:\\Dev\\Password Generator\\Windows\\artifacts\\design-hex512.png",
+  "width": 1060,
+  "height": 2419,
+  "language": "de",
+  "mode": "Hex",
+  "phase": "Generated",
+  "publicFixtureOnly": true,
+  "nativeWindowCreated": false,
+  "textBlocks": 88,
+  "buttons": 15,
+  "controlChecks": 5,
+  "checks": []
+}

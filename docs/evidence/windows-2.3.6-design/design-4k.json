@@ -1,0 +1,14 @@
+{
+  "output": "C:\\Dev\\Password Generator\\Windows\\artifacts\\design-4k.png",
+  "width": 3840,
+  "height": 4229,
+  "language": "de",
+  "mode": "Bip39",
+  "phase": "Ready",
+  "publicFixtureOnly": true,
+  "nativeWindowCreated": false,
+  "textBlocks": 63,
+  "buttons": 13,
+  "controlChecks": 23,
+  "checks": []
+}

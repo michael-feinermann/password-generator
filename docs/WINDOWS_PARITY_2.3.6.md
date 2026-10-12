@@ -141,3 +141,8 @@ successful runtime gate. Interactive generation through the installed GUI,
 a fresh final GUI accessibility check and visual identity were not established.
 Capture exclusion prevented reliable coordinate automation. See the
 [audit](WINDOWS_SECURITY_AUDIT_2.3.6.md) for recorded evidence and scope.
+
+The subsequent [design correction](WINDOWS_DESIGN_2.3.6.md) adds a reusable
+macOS-aligned theme, rendered layout checks with public fixtures and a fresh
+installed accessibility/runtime check. Native window-control automation and
+pixel-identical macOS rendering remain outside that verification.

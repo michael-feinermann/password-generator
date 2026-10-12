@@ -23,5 +23,7 @@ jobs:
         run: dotnet run --project Windows/PasswordGenerator.Security.Tests -c Release
       - name: WPF warnings-as-errors build
         run: dotnet build Windows/PasswordGenerator.App -c Release
+      - name: WPF layout and control checks with public fixtures
+        run: dotnet run --project Windows/PasswordGenerator.DesignPreview -c Release -- --matrix Windows/artifacts/design-ci
       - name: Dependency vulnerability check
         run: dotnet list Windows/PasswordGenerator.App package --vulnerable --include-transitive

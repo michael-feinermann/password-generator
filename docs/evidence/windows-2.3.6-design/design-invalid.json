@@ -1,0 +1,14 @@
+{
+  "output": "C:\\Dev\\Password Generator\\Windows\\artifacts\\design-invalid.png",
+  "width": 1060,
+  "height": 1426,
+  "language": "de",
+  "mode": "Ascii",
+  "phase": "Ready",
+  "publicFixtureOnly": true,
+  "nativeWindowCreated": false,
+  "textBlocks": 58,
+  "buttons": 10,
+  "controlChecks": 26,
+  "checks": []
+}

@@ -1,0 +1,20 @@
+{
+  "Date": "2026-10-12",
+  "Version": "2.3.6",
+  "Build": 14,
+  "Files": 405,
+  "Directories": 14,
+  "InventorySha256": "3D4CDB57F3BDE3B40C4745596847DB459FB2FD6AB86E9E816964716B4D54B6AE",
+  "ArchiveSha256": "5BF72E372F1350B6701A37B6AF7803AF5E7071503D0F0766C365FDE5598E3401",
+  "Rsa4096Verified": true,
+  "MlDsa87Verified": true,
+  "IndependentOpenSslVerified": true,
+  "ArchiveExactInventoryVerified": true,
+  "InstalledExactInventoryVerified": true,
+  "InstalledAccessibilityRuntimeGate": "Signatures · integrity · no debugger",
+  "VisualsUsePublicFixturesOnly": true,
+  "NativeWindowControlAutomation": "Not verified: capture exclusion makes input geometry unavailable",
+  "AppModelAndSecurityCodeChanged": false,
+  "LayoutScenes": 120,
+  "ControlAssertions": 1620.0
+}

@@ -12,6 +12,9 @@ The interface uses the original artwork, English/German text, concealed output,
 explicit reveal/copy, time/context concealment and conditional clipboard cleanup.
 Only the language selection is persisted.
 
+The [Windows design correction](../docs/WINDOWS_DESIGN_2.3.6.md) records the
+macOS-aligned control theme, source comparison and public-fixture previews.
+
 This is a functional port, with native Windows controls. Apple's App Sandbox,
 Hardened Runtime and notarization cannot be reproduced by a standalone WPF app.
 The Windows runtime checks both detached signatures on an exact file/directory
