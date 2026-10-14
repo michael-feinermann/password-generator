@@ -44,6 +44,15 @@ mouse-event shortcut is compiled into the app. Rebuilding needs a new inventory
 signature from the private key owner. Publish refuses to overwrite an existing
 output directory, and installation refuses to overwrite an existing app.
 
+Installation creates `Password Generator` in the Start menu Programs folder,
+with the installed executable as its icon and target. To repair this entry
+without reinstalling or changing the signed files, run
+`Windows/Scripts/Register-StartMenu.ps1`. Its `-AllUsers` switch places the
+shortcut in the shared Programs folder and requires administrator rights;
+the application itself stays in the original user's installation directory.
+For a new installation, `Install-Windows.ps1 -AllUsersStartMenu` selects this
+same shared shortcut location.
+
 ## Signing keys and verification
 
 Private signing material is stored only in `A:\Passoword Generator Keys`, exactly

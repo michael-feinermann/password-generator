@@ -1,5 +1,6 @@
 param([Parameter(Mandatory)][string]$PackageDirectory,
-      [string]$InstallDirectory = (Join-Path $env:LOCALAPPDATA 'Programs\Password Generator 2.3.6'))
+      [string]$InstallDirectory = (Join-Path $env:LOCALAPPDATA 'Programs\Password Generator 2.3.6'),
+      [switch]$AllUsersStartMenu)
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
 $dotnet = Join-Path $env:ProgramFiles 'dotnet\dotnet.exe'
@@ -21,12 +22,6 @@ try {
     Get-ChildItem -LiteralPath $package -Force | Copy-Item -Destination $target -Recurse -Force
     & $dotnet run --project (Join-Path $repo 'Windows\PasswordGenerator.Signing') -c Release -- verify $target
     if ($LASTEXITCODE -ne 0) { throw 'Installed inventory verification failed.' }
-    $shell = New-Object -ComObject WScript.Shell
-    $shortcutDir = Join-Path ([Environment]::GetFolderPath('StartMenu')) 'Programs'
-    $shortcut = $shell.CreateShortcut((Join-Path $shortcutDir 'Password Generator 2.3.6.lnk'))
-    $shortcut.TargetPath = Join-Path $target 'PasswordGenerator.exe'
-    $shortcut.WorkingDirectory = $target
-    $shortcut.Description = 'Password Generator 2.3.6 — Windows'
-    $shortcut.Save()
+    & (Join-Path $PSScriptRoot 'Register-StartMenu.ps1') -InstalledExecutable (Join-Path $target 'PasswordGenerator.exe') -AllUsers:$AllUsersStartMenu
     Write-Output "Installed and verified: $target"
 } catch { throw "Installation was not completed: $($_.Exception.Message). Partial files are preserved for inspection at $target" }
